@@ -16,7 +16,7 @@ export default defineConfig({
   },
   base: '/landing-template/',
   build: {
-    outDir: '../playground/public/landing-template',
+    outDir: '../playground/public/landing-template-assets',
     emptyOutDir: true,
     rollupOptions: {
       output: {
