@@ -18,12 +18,18 @@ use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\LockController;
 use App\Http\Controllers\MailController;
+use App\Http\Controllers\LandingTemplateController;
 use App\Http\Controllers\SavedViewController;
 use App\Support\Guide;
 use App\Support\HelpArticles;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+Route::get('/landing-template', LandingTemplateController::class)->name('landing-template');
+Route::get('/landing-template/{path?}', LandingTemplateController::class)
+    ->where('path', '.*')->name('landing-template.app');
+Route::get('/api/landing-template', LandingTemplateController::class)->name('landing-template.data');
 
 /*
  | Resource segments come from the registry rather than a literal list, so a
