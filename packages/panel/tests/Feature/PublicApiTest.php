@@ -8,6 +8,7 @@ use Alxtexh\Panel\Api\ApiToken;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
+use Alxtexh\Panel\Tests\Fixtures\Resources\ArticleResource;
 use Alxtexh\Panel\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -62,7 +63,7 @@ final class PublicApiTest extends TestCase
              * carrying `articles:read` grants nothing and answers 403, which
              * reads as a broken endpoint rather than a mis-named ability.
              */
-            ['view_any_articles', 'view_articles', 'create_articles', 'update_articles'],
+            ['view_any_articles', 'view_articles', 'create_articles', 'update_articles', 'delete_articles'],
         )['plaintext'];
     }
 
@@ -163,5 +164,46 @@ final class PublicApiTest extends TestCase
     public function test_an_undocumented_resource_has_no_api(): void
     {
         $this->api('GET', '/api/v1/nothing-like-this')->assertNotFound();
+    }
+
+    /**
+     * The API must honor the same resource lifecycle as the panel UI.
+     *
+     * An integration is still a write path. If it skips these callbacks, a
+     * host can see one result from the browser and a different result from its
+     * webhook or provisioning service, which is a reliability bug rather than
+     * an API stylistic difference.
+     */
+    public function test_api_writes_run_the_resource_lifecycle_hooks(): void
+    {
+        ArticleResource::resetLifecycleEvents();
+
+        $created = $this->api('POST', '/api/v1/articles', [
+            'title' => 'Created through API',
+            'status' => 'draft',
+        ])->assertCreated();
+
+        $id = $created->json('data.id');
+
+        $this->assertSame(
+            ['beforeValidate', 'afterValidate', 'beforeCreate', 'afterCreate'],
+            ArticleResource::$lifecycleEvents,
+        );
+
+        ArticleResource::resetLifecycleEvents();
+
+        $this->api('PATCH', "/api/v1/articles/{$id}", ['title' => 'Updated through API'])
+            ->assertOk();
+
+        $this->assertSame(
+            ['beforeValidate', 'afterValidate', 'beforeUpdate', 'afterUpdate'],
+            ArticleResource::$lifecycleEvents,
+        );
+
+        ArticleResource::resetLifecycleEvents();
+
+        $this->api('DELETE', "/api/v1/articles/{$id}")->assertNoContent();
+
+        $this->assertSame(['beforeDelete', 'afterDelete'], ArticleResource::$lifecycleEvents);
     }
 }

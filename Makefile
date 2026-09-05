@@ -43,8 +43,12 @@ test-fast: ## Run the fast application unit and focused feature gate
 	@cd $(PLAYGROUND) && timeout 120s php artisan test --testsuite=Feature --filter='RecordWrite|CrossTenant|Authorization|ExportOwnership|ImportHttp|BulkAction' --stop-on-failure
 
 .PHONY: test-playground-feature
-test-playground-feature: ## Run the complete playground feature suite with a hard bound
-	@cd $(PLAYGROUND) && timeout 180s php artisan test --testsuite=Feature --stop-on-failure
+test-playground-feature: ## Run the deterministic playground feature suite with a hard bound
+	@cd $(PLAYGROUND) && timeout 180s php artisan test --testsuite=FeatureFast --stop-on-failure
+
+.PHONY: test-playground-performance
+test-playground-performance: ## Run the benchmark-heavy playground performance suite with a hard bound
+	@cd $(PLAYGROUND) && timeout 180s php artisan test --testsuite=Performance --stop-on-failure
 
 .PHONY: test-security
 test-security: ## Run tenant, authorization, auth, upload, API, and webhook checks

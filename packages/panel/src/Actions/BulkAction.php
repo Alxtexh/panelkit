@@ -146,6 +146,20 @@ final class BulkAction
         return $this;
     }
 
+    /**
+     * Use the collection-level policy ability for this bulk operation.
+     *
+     * `deleteAny` is intentionally distinct from `delete`: the first answers
+     * whether this actor may run a bulk delete at all, while the latter is used
+     * only when `authorizeIndividualRecords()` is enabled for each row.
+     */
+    public function authorizeAny(string $ability): self
+    {
+        $this->ability = str_ends_with($ability, 'Any') ? $ability : $ability.'Any';
+
+        return $this;
+    }
+
     public function authorizeIndividualRecords(bool $authorize = true): self
     {
         $this->authorizeIndividualRecords = $authorize;
@@ -281,6 +295,14 @@ final class BulkAction
         return $this->ability;
     }
 
+    /** The record-level counterpart of an `*Any` collection ability. */
+    public function getRecordAbility(): string
+    {
+        return str_ends_with($this->ability, 'Any')
+            ? substr($this->ability, 0, -3)
+            : $this->ability;
+    }
+
     public function getChunkSize(): int
     {
         return $this->chunkSize;
@@ -324,6 +346,7 @@ final class BulkAction
             'icon' => $this->icon,
             'destructive' => $this->destructive,
             'color' => $this->color,
+            'ability' => $this->ability,
             'authorizeIndividualRecords' => $this->authorizeIndividualRecords,
             // A destructive action always confirms, even if the definition
             // forgot to say so.

@@ -158,7 +158,12 @@ defineExpose({ openContextMenu })
             </template>
 
             <!-- A labelled ActionGroup still collapses - grouping stays the tool it already was. -->
-            <PkDropdown v-for="group in dropdownGroups" :key="group.label" align="end">
+            <PkDropdown
+                v-for="group in dropdownGroups"
+                :key="group.label"
+                align="end"
+                placement="left"
+            >
                 <template #trigger>
                     <button
                         type="button"

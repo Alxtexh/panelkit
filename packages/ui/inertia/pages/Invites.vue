@@ -171,8 +171,8 @@ function roleLabel(roleId: string): string {
         >
             <p class="text-sm">Revoke the invitation for <strong>{{ pending.find((row) => row.id === pendingRevoke)?.email ?? `#${pendingRevoke}` }}</strong>?</p>
             <template #footer>
-                <Button variant="ghost" size="sm" @click="pendingRevoke = null">Cancel</Button>
-                <Button variant="destructive" size="sm" @click="revoke">Revoke invitation</Button>
+                <Button variant="outline" @click="pendingRevoke = null">Cancel</Button>
+                <Button variant="destructive" @click="revoke">Revoke invitation</Button>
             </template>
         </PkModal>
     </div>

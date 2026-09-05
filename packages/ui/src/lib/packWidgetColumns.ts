@@ -69,7 +69,15 @@ export function packWidgetColumns<T extends { span?: ResponsiveSpan }>(
             return
         }
 
-        const columns: T[][] = Array.from({ length: count }, () => [])
+        // Do not render an empty flex track for a final solo widget. An empty
+        // second track makes one card occupy half the dashboard and leaves a
+        // conspicuous blank half beside it. Once there are two items, the
+        // normal independent tracks are retained so collapsing one still
+        // cannot stretch or leave a shared-grid hole in the other.
+        const columns: T[][] = Array.from(
+            { length: Math.min(count, pending.length) },
+            () => [],
+        )
 
         pending.forEach((item, index) => {
             columns[index % count].push(item)

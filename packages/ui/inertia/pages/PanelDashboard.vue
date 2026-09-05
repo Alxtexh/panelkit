@@ -321,6 +321,10 @@ function stat(key: string) {
         | undefined
 }
 
+function retryWidget(dataKey: string) {
+    router.reload({ only: [dataKey], preserveState: true, preserveScroll: true })
+}
+
 function series(key: string): Series {
     return (
         ((page.props as Record<string, any>)[`chart_${key}`] as Series | undefined) ?? emptySeries()
@@ -676,6 +680,8 @@ const widgetDragId = ref<string | null>(null)
  * only render, while this is on.
  */
 const rearrangingLayout = ref(false)
+const savingLayout = ref(false)
+const layoutSaveError = ref(false)
 
 function onWidgetDragStart(id: string, event: DragEvent) {
     if (!props.userDashboards || !rearrangingLayout.value) {
@@ -697,11 +703,18 @@ function onWidgetDragEnd() {
 }
 
 async function persistLayout(items: readonly { id: string; span: number; hidden: boolean }[]) {
+    if (savingLayout.value) {
+        return
+    }
+
     const href = props.prefix ? `/${props.prefix}/settings/appearance` : '/settings/appearance'
     const body = toPersistedLayout(items)
 
+    savingLayout.value = true
+    layoutSaveError.value = false
+
     try {
-        await fetch(href, {
+        const response = await fetch(href, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -715,9 +728,15 @@ async function persistLayout(items: readonly { id: string; span: number; hidden:
             body: JSON.stringify({ dashboardLayout: body }),
         })
 
+        if (!response.ok) {
+            throw new Error(`Layout save failed (${response.status})`)
+        }
+
         router.reload({ only: ['dashboardLayout', 'widgets', 'charts', 'tables'] })
     } catch {
-        // Keep the previous layout on failure.
+        layoutSaveError.value = true
+    } finally {
+        savingLayout.value = false
     }
 }
 
@@ -727,7 +746,7 @@ async function onWidgetDrop(targetId: string, event: DragEvent) {
     const from = widgetDragId.value
     widgetDragId.value = null
 
-    if (!props.userDashboards || !from || from === targetId) {
+    if (!props.userDashboards || savingLayout.value || !from || from === targetId) {
         return
     }
 
@@ -815,7 +834,10 @@ function layoutLabel(item: AnyLayoutItem): string {
 <template>
     <Head :title="heading" />
 
-    <div :class="[PAGE_SHELL, '@container/main pk-dashboard flex flex-col gap-4', `pk-dashboard-${design}`]">
+    <div
+        :class="[PAGE_SHELL, '@container/main pk-dashboard flex flex-col gap-4', `pk-dashboard-${design}`]"
+        data-slot="dashboard-page"
+    >
         <RenderHook position="dashboard.before" :hooks="renderHooks" />
 
         <!--
@@ -858,7 +880,10 @@ function layoutLabel(item: AnyLayoutItem): string {
             </Deferred>
         </PkBoundary>
 
-        <div class="flex flex-wrap items-center justify-between gap-3">
+        <div
+            class="flex flex-wrap items-end justify-between gap-4 border-b border-border/70 pb-4"
+            data-slot="dashboard-header"
+        >
             <div class="min-w-0">
                 <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
                     {{ heading }}
@@ -1107,6 +1132,7 @@ function layoutLabel(item: AnyLayoutItem): string {
                     :aria-pressed="rearrangingLayout"
                     :aria-label="rearrangingLayout ? 'Done rearranging' : 'Rearrange widgets'"
                     :title="rearrangingLayout ? 'Done rearranging' : 'Rearrange widgets'"
+                    :disabled="savingLayout"
                     @click="rearrangingLayout = !rearrangingLayout"
                 >
                     <svg
@@ -1121,10 +1147,17 @@ function layoutLabel(item: AnyLayoutItem): string {
                         <path d="m3 16 4 4 4-4M7 20V4m14 4-4-4-4 4m4-4v16" />
                     </svg>
                 </button>
+                <span v-if="savingLayout" class="text-muted-foreground text-xs" role="status">
+                    Saving layout…
+                </span>
+                <span v-else-if="layoutSaveError" class="text-destructive text-xs" role="alert">
+                    Layout could not be saved. Try moving a widget again.
+                </span>
             </div>
             <template v-for="(band, bandIndex) in layoutBands" :key="`layout-${bandIndex}`">
                 <div
                     v-if="band.type === 'wide'"
+                    data-slot="dashboard-widget"
                     :draggable="rearrangingLayout"
                     :class="widgetDragId === band.item.id ? 'opacity-40' : ''"
                     @dragstart="onWidgetDragStart(band.item.id, $event)"
@@ -1159,6 +1192,7 @@ function layoutLabel(item: AnyLayoutItem): string {
                             class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex size-6 shrink-0 items-center justify-center rounded border transition-colors"
                             :aria-label="band.item.span >= 2 ? 'Narrow' : 'Widen'"
                             title="Column span"
+                            :disabled="savingLayout"
                             @click.stop="toggleWidgetSpan(band.item.id)"
                         >
                             <svg
@@ -1196,6 +1230,8 @@ function layoutLabel(item: AnyLayoutItem): string {
                                         :trend="stat(band.item.key)?.trend"
                                         :sparkline="stat(band.item.key)?.sparkline"
                                         :error="stat(band.item.key)?.error"
+                                        retryable
+                                        @retry="retryWidget(`stat_${band.item.key}`)"
                                     />
                                 </template>
                             </Deferred>
@@ -1220,7 +1256,8 @@ function layoutLabel(item: AnyLayoutItem): string {
                 </div>
                 <div
                     v-else
-                    class="flex flex-col items-start gap-3 @lg/main:flex-row"
+                    class="w-full"
+                    :class="band.columns.length > 1 ? 'flex flex-col items-start gap-3 @lg/main:flex-row' : ''"
                     data-slot="dashboard-widget-columns"
                 >
                     <div
@@ -1231,6 +1268,7 @@ function layoutLabel(item: AnyLayoutItem): string {
                         <div
                             v-for="item in column"
                             :key="item.id"
+                            data-slot="dashboard-widget"
                             :draggable="rearrangingLayout"
                             :class="widgetDragId === item.id ? 'opacity-40' : ''"
                             @dragstart="onWidgetDragStart(item.id, $event)"
@@ -1265,6 +1303,7 @@ function layoutLabel(item: AnyLayoutItem): string {
                                     class="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex size-6 shrink-0 items-center justify-center rounded border transition-colors"
                                     aria-label="Widen"
                                     title="Column span"
+                                    :disabled="savingLayout"
                                     @click.stop="toggleWidgetSpan(item.id)"
                                 >
                                     <svg
@@ -1296,6 +1335,8 @@ function layoutLabel(item: AnyLayoutItem): string {
                                                 :trend="stat(item.key)?.trend"
                                                 :sparkline="stat(item.key)?.sparkline"
                                                 :error="stat(item.key)?.error"
+                                                retryable
+                                                @retry="retryWidget(`stat_${item.key}`)"
                                             />
                                         </template>
                                     </Deferred>
@@ -1342,7 +1383,7 @@ function layoutLabel(item: AnyLayoutItem): string {
                 />
             </slot>
             <template v-for="(band, bandIndex) in chartBands" :key="bandIndex">
-                <div v-if="band.type === 'wide'" class="w-full">
+                <div v-if="band.type === 'wide'" class="w-full" data-slot="dashboard-widget">
                     <DashboardChartPane
                         :chart="band.item"
                         :series="series(band.item.key)"
@@ -1356,7 +1397,8 @@ function layoutLabel(item: AnyLayoutItem): string {
                 </div>
                 <div
                     v-else
-                    class="flex flex-col items-start gap-3 @lg/main:flex-row"
+                    class="w-full"
+                    :class="band.columns.length > 1 ? 'flex flex-col items-start gap-3 @lg/main:flex-row' : ''"
                     data-slot="dashboard-widget-columns"
                 >
                     <div
@@ -1364,7 +1406,7 @@ function layoutLabel(item: AnyLayoutItem): string {
                         :key="columnIndex"
                         class="flex w-full min-w-0 flex-1 flex-col gap-3"
                     >
-                        <div v-for="chart in column" :key="chart.key">
+                        <div v-for="chart in column" :key="chart.key" data-slot="dashboard-widget">
                             <DashboardChartPane
                                 :chart="chart"
                                 :series="series(chart.key)"

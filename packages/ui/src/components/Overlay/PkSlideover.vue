@@ -24,8 +24,9 @@
  * THE BODY SCROLLS, NOT THE PANEL. Header and footer stay put, so the primary
  * action in a long filter form is never scrolled out of reach.
  */
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
 import { OVERLAY_FORM_MEASURE, SLIDEOVER_BODY, SLIDEOVER_WIDTH } from '../../lib/pageShell'
+import { acquireScrollLock, releaseScrollLock } from '../../lib/scrollLock'
 import type { SlideoverSize } from '../../lib/pageShell'
 
 const props = withDefaults(
@@ -59,9 +60,12 @@ const props = withDefaults(
 const emit = defineEmits<{ (e: 'close'): void }>()
 
 const panel = ref<HTMLElement | null>(null)
+const titleId = `pk-slideover-title-${useId()}`
+const descriptionId = `pk-slideover-description-${useId()}`
+const scrollLockOwner = Symbol('pk-slideover')
 
 let restoreFocusTo: HTMLElement | null = null
-let previousOverflow = ''
+let ownsScrollLock = false
 
 /**
  * Tracks whether a press STARTED on the backdrop.
@@ -139,8 +143,8 @@ watch(
     async (isOpen) => {
         if (isOpen) {
             restoreFocusTo = document.activeElement as HTMLElement | null
-            previousOverflow = document.body.style.overflow
-            document.body.style.overflow = 'hidden'
+            acquireScrollLock(scrollLockOwner)
+            ownsScrollLock = true
             document.addEventListener('keydown', onKeydown)
 
             await nextTick()
@@ -149,17 +153,27 @@ watch(
             return
         }
 
-        document.body.style.overflow = previousOverflow
-        document.removeEventListener('keydown', onKeydown)
-        // Focus goes back where it came from, or the trigger appears to vanish.
-        restoreFocusTo?.focus?.()
-        restoreFocusTo = null
+        if (ownsScrollLock) {
+            const wasLastOverlay = releaseScrollLock(scrollLockOwner)
+            ownsScrollLock = false
+            document.removeEventListener('keydown', onKeydown)
+            // Focus goes back where it came from, or the trigger appears to vanish.
+            if (wasLastOverlay) {
+                restoreFocusTo?.focus?.()
+            }
+            restoreFocusTo = null
+        }
     },
+    { immediate: true },
 )
 
 onBeforeUnmount(() => {
     document.removeEventListener('keydown', onKeydown)
-    document.body.style.overflow = previousOverflow
+
+    if (ownsScrollLock) {
+        releaseScrollLock(scrollLockOwner)
+        ownsScrollLock = false
+    }
 })
 </script>
 
@@ -188,19 +202,25 @@ onBeforeUnmount(() => {
             <aside
                 v-if="open"
                 ref="panel"
+                data-pk-overlay
                 class="bg-background fixed inset-y-0 z-50 flex h-dvh max-h-dvh max-w-full flex-col shadow-2xl"
                 :class="[panelWidth, side === 'left' ? 'left-0 border-r' : 'right-0 border-l']"
                 role="dialog"
                 aria-modal="true"
                 :aria-busy="busy ? 'true' : undefined"
-                :aria-label="title"
+                :aria-labelledby="titleId"
+                :aria-describedby="description ? descriptionId : undefined"
             >
                 <header
                     class="bg-background flex shrink-0 items-start justify-between gap-3 border-b px-4 py-3"
                 >
                     <div class="min-w-0">
-                        <h2 class="text-base font-semibold">{{ title }}</h2>
-                        <p v-if="description" class="text-muted-foreground mt-0.5 text-xs">
+                        <h2 :id="titleId" class="text-base font-semibold">{{ title }}</h2>
+                        <p
+                            v-if="description"
+                            :id="descriptionId"
+                            class="text-muted-foreground mt-0.5 text-xs"
+                        >
                             {{ description }}
                         </p>
                     </div>

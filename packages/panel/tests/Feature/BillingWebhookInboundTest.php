@@ -16,6 +16,15 @@ final class BillingWebhookInboundTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (! class_exists(GenericBillingWebhookAdapter::class)) {
+            $this->markTestSkipped('Billing webhook tests require panel-billing.');
+        }
+    }
+
     public function test_generic_inbound_webhook_maps_and_persists_billing_state(): void
     {
         $tenant = Tenant::create(['name' => 'Mine', 'slug' => 'mine']);

@@ -599,16 +599,13 @@ function deletedOn(value: string): string {
                     will be removed for good. This cannot be undone.
                 </span>
             </p>
-
-            <div class="flex justify-end gap-2">
-                <Button type="button" variant="outline" size="sm" @click="confirming = null">
-                    Cancel
-                </Button>
-                <Button type="button" variant="destructive" size="sm" @click="destroyForever">
-                    Delete forever
-                </Button>
-            </div>
         </div>
+        <template #footer>
+            <Button type="button" variant="outline" @click="confirming = null">Cancel</Button>
+            <Button type="button" variant="destructive" @click="destroyForever">
+                Delete forever
+            </Button>
+        </template>
     </PkModal>
 
     <PkModal
@@ -626,10 +623,10 @@ function deletedOn(value: string): string {
             </template>
         </p>
         <template #footer>
-            <Button type="button" variant="outline" size="sm" @click="confirmingRestore = null">
+            <Button type="button" variant="outline" @click="confirmingRestore = null">
                 Cancel
             </Button>
-            <Button type="button" size="sm" @click="confirmRestore">Restore</Button>
+            <Button type="button" @click="confirmRestore">Restore</Button>
         </template>
     </PkModal>
 

@@ -10,6 +10,23 @@ import {
 import PkSlideover from './PkSlideover.vue'
 
 describe('PkSlideover', () => {
+    it('does not release another overlay scroll lock when mounted closed', () => {
+        document.body.style.overflow = 'hidden'
+
+        const wrapper = mount(PkSlideover, {
+            props: {
+                open: false,
+                title: 'Deferred panel',
+            },
+            attachTo: document.body,
+        })
+
+        expect(document.body.style.overflow).toBe('hidden')
+
+        wrapper.unmount()
+        document.body.style.overflow = ''
+    })
+
     it('keeps header and footer fixed while the body scrolls', () => {
         const wrapper = mount(PkSlideover, {
             props: {
@@ -33,6 +50,12 @@ describe('PkSlideover', () => {
         expect(panel!.textContent).toContain('Filter list')
         expect(panel!.textContent).toContain('Long filter body')
         expect(panel!.textContent).toContain('Apply')
+        expect(panel!.getAttribute('aria-labelledby')).toBe(
+            panel!.querySelector('h2')?.getAttribute('id'),
+        )
+        expect(panel!.getAttribute('aria-describedby')).toBe(
+            panel!.querySelector('p')?.getAttribute('id'),
+        )
 
         const bands = Array.from(panel!.children) as HTMLElement[]
 

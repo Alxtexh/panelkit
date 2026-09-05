@@ -1,10 +1,212 @@
 /* Shared semantic design primitives for packaged screens and host apps. */
 @layer components {
+    /*
+     * The premium baseline belongs to the kit, not to individual screens.
+     * Filament's visual quality comes from repeated small decisions - type
+     * rendering, surface depth, control rhythm, and predictable focus - being
+     * consistent everywhere. These primitives keep that consistency when a
+     * host adds a custom page or resource.
+     */
+    .pk-shell {
+        background-color: color-mix(in srgb, var(--background) 92%, var(--muted));
+        background-image: linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--background) 82%, var(--muted)),
+            color-mix(in srgb, var(--background) 96%, var(--muted)) 28rem
+        );
+        color: var(--foreground);
+        font-family: var(--pk-body-family, ui-sans-serif, system-ui, sans-serif);
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
+
     .pk-surface {
         background-color: var(--card);
-        border: 1px solid var(--border);
+        border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
         border-radius: var(--radius);
-        box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+        box-shadow:
+            0 1px 2px rgb(0 0 0 / 0.04),
+            0 10px 30px -24px rgb(0 0 0 / 0.24);
+    }
+
+    .pk-shell [data-slot='page-header'] {
+        margin-block: 0.125rem 0.25rem;
+    }
+
+    .pk-shell [data-slot='page-header'] h1 {
+        font-size: clamp(1.5rem, 1.3rem + 0.45vw, 1.875rem);
+        line-height: 1.15;
+        letter-spacing: -0.035em;
+    }
+
+    /* Give the dashboard a deliberate reading order: title first, controls
+       second, then the metric and widget surfaces. The divider is intentionally
+       restrained so it separates the page chrome without becoming another card. */
+    .pk-shell [data-slot='dashboard-header'] h1 {
+        font-size: clamp(1.5rem, 1.2rem + 0.8vw, 2rem);
+        font-weight: 650;
+        letter-spacing: -0.045em;
+    }
+
+    .pk-shell [data-slot='dashboard-page'] {
+        gap: clamp(1rem, 1.5vw, 1.5rem);
+    }
+
+    .pk-shell [data-slot='dashboard-page'] [data-slot='stat-packed'] {
+        border-color: color-mix(in srgb, var(--border) 88%, transparent);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.035), 0 16px 36px -30px rgb(0 0 0 / 0.32);
+    }
+
+    .pk-shell [data-slot='dashboard-page'] [data-slot='stat-leftover'] {
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.035), 0 16px 36px -30px rgb(0 0 0 / 0.32);
+    }
+
+    .pk-shell [data-slot='dashboard-page'] [data-slot='chart-card'] {
+        border-radius: calc(var(--radius) + 0.25rem);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.035), 0 16px 36px -30px rgb(0 0 0 / 0.32);
+    }
+
+    .pk-shell [data-slot='dashboard-page'] [data-slot='chart-card'] > div:first-child {
+        border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+        padding-bottom: 0.75rem;
+    }
+
+    /* Widget tracks must be allowed to shrink inside split layouts. Without
+       this explicit contract a long table label or chart control can widen a
+       column, push its sibling off-screen, and make the dashboard feel
+       unstable at tablet widths. */
+    .pk-shell [data-slot='dashboard-widget'],
+    .pk-shell [data-slot='dashboard-widget-columns'] > * {
+        min-width: 0;
+    }
+
+    .pk-shell [data-slot='dashboard-widget-columns'] > * {
+        align-self: stretch;
+    }
+
+    .pk-shell .pk-scroll > table > thead {
+        box-shadow: 0 1px 0 color-mix(in srgb, var(--border) 80%, transparent);
+    }
+
+    .pk-shell .pk-scroll > table > thead tr:last-child th {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.045em;
+        text-transform: uppercase;
+    }
+
+    .pk-shell .pk-scroll [data-slot='table-row'] > * {
+        height: 3.5rem;
+        transition: background-color 140ms ease, color 140ms ease;
+    }
+
+    .pk-shell .pk-scroll [data-slot='table-row']:hover > * {
+        background-color: color-mix(in srgb, var(--accent) 62%, transparent);
+    }
+
+    .pk-shell .pk-scroll [data-slot='table-row'] a {
+        font-weight: 500;
+    }
+
+    .pk-shell .pk-scroll [data-slot='table-row'] td:last-child {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .pk-shell .pk-actions {
+        backdrop-filter: blur(8px);
+        background-color: color-mix(in srgb, var(--card) 92%, transparent);
+    }
+
+    /* The content column is a workspace, not another white sheet. Keeping
+       this layer behind the existing cards creates the contrast that lets
+       tables, charts, and KPI groups read as intentional surfaces. */
+    .pk-shell [data-slot='sidebar-inset'] {
+        background-color: color-mix(in srgb, var(--background) 88%, var(--muted));
+        background-image: linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--background) 72%, var(--muted)),
+            color-mix(in srgb, var(--background) 92%, var(--muted)) 28rem
+        );
+    }
+
+    /* The reference's strongest shell decision is that navigation is a
+       surface: a quiet floating rail separated from the workspace, with the
+       utility bar using the same language. Keep this desktop-only so mobile
+       drawers remain edge-to-edge and easy to dismiss. */
+    @media (min-width: 768px) {
+        .pk-shell [data-slot='sidebar'][data-variant='inset'] [data-sidebar='sidebar'] {
+            border: 1px solid color-mix(in srgb, var(--sidebar-border) 88%, transparent);
+            border-radius: 1rem;
+            box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 18px 40px -32px rgb(0 0 0 / 0.4);
+        }
+
+        .pk-shell [data-slot='sidebar-inset'] > header {
+            margin: 0.75rem 0.75rem 0;
+            border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+            border-radius: 1rem;
+            box-shadow: 0 1px 2px rgb(0 0 0 / 0.035), 0 14px 30px -28px rgb(0 0 0 / 0.36);
+        }
+    }
+
+    /* Compact labels and roomy hit targets make a long resource tree feel
+       curated instead of crowded. The active row keeps a neutral pill like
+       the reference while its icon retains the tenant accent. */
+    .pk-shell [data-slot='sidebar-group-label'] {
+        color: color-mix(in srgb, var(--sidebar-foreground) 68%, transparent);
+        font-size: 0.625rem;
+        font-weight: 650;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+    }
+
+    .pk-shell [data-slot='sidebar-menu-button'][data-active='true'] {
+        background-color: color-mix(in srgb, var(--sidebar-accent) 88%, transparent);
+        color: var(--sidebar-foreground);
+        box-shadow: inset 2px 0 var(--primary);
+    }
+
+    .pk-shell [data-slot='sidebar-menu-button'][data-active='true'] > svg {
+        color: var(--primary);
+    }
+
+    .pk-shell [data-slot='sidebar-menu-button'],
+    .pk-shell [data-slot='sidebar-group'] > button {
+        min-height: 2.25rem;
+        border-radius: 0.625rem;
+    }
+
+    /* Dashboard cards should feel like a coherent instrument panel: a small
+       lift on hover gives the operator a clear target without turning every
+       metric into a noisy animated tile. */
+    .pk-shell [data-slot='stat-card'],
+    .pk-shell [data-slot='chart-card'] {
+        transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+        .pk-shell [data-slot='stat-card']:hover,
+        .pk-shell [data-slot='chart-card']:hover {
+            border-color: color-mix(in srgb, var(--primary) 22%, var(--border));
+            box-shadow: 0 12px 28px -24px rgb(0 0 0 / 0.5);
+            transform: translateY(-1px);
+        }
+    }
+
+    .pk-shell [data-slot='table-toolbar'] input[type='search'] {
+        background-color: color-mix(in srgb, var(--background) 94%, var(--muted));
+        border-radius: calc(var(--radius-md) + 0.125rem);
+    }
+
+    .pk-shell [data-slot='table-toolbar'] button {
+        transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease,
+            box-shadow 140ms ease;
+    }
+
+    .pk-shell [data-slot='table-toolbar'] button:focus-visible,
+    .pk-shell [data-slot='table-toolbar'] input:focus-visible {
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 18%, transparent);
     }
 
     .pk-focus-ring:focus-visible {
@@ -90,6 +292,12 @@
         letter-spacing: -0.03em;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+        .pk-shell .pk-scroll [data-slot='table-row'] > * {
+            transition: none;
+        }
+    }
+
     /* Landing families borrow the references' rhythm, not their framework. */
     .pk-product {
         --pk-landing-section-gap: clamp(4rem, 10vw, 8rem);
@@ -159,9 +367,34 @@
         .pk-marquee-track { animation: none; }
     }
 
-    /* Inertia's progress bar handles the route; this softens the old page
+    /* Inertia's progress bar handles the route; this gives it the same quiet,
+       branded treatment as the rest of the shell and softens the old page
        while the new one arrives so navigation feels continuous rather than
        like a white flash. */
+    #nprogress {
+        pointer-events: none;
+    }
+
+    #nprogress .bar {
+        background: var(--primary);
+        box-shadow: 0 0 10px color-mix(in srgb, var(--primary) 38%, transparent);
+        height: 2px;
+        inset: 0 0 auto;
+        position: fixed;
+        z-index: 9999;
+    }
+
+    #nprogress .peg {
+        box-shadow: 0 0 8px var(--primary), 0 0 4px var(--primary);
+        display: block;
+        height: 100%;
+        opacity: 0.9;
+        position: absolute;
+        right: 0;
+        transform: rotate(2deg) translate(0, -1px);
+        width: 5rem;
+    }
+
     [data-slot='app-content-column'] {
         transition: opacity 160ms ease;
     }

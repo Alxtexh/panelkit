@@ -9,7 +9,6 @@ import {
     FolderOpen,
     HelpCircle,
     House,
-    Info,
     MessageCircleQuestion,
     Minus,
     Plus,
@@ -245,10 +244,9 @@ const toPath = (url: string): string => url.replace(/^https?:\/\/[^/]+/, '') || 
 const supportNavItems = computed<NavItem[]>(() => {
     const panel = page.props.panel as
         | {
-              help?: string | null
-              faq?: string | null
-              about?: string | null
-              whatsNew?: string | null
+            help?: string | null
+            faq?: string | null
+            whatsNew?: string | null
           }
         | null
         | undefined
@@ -267,13 +265,9 @@ const supportNavItems = computed<NavItem[]>(() => {
         items.push({ title: "What's new", href: toPath(panel.whatsNew), icon: Sparkles })
     }
 
-    if (panel?.about) {
-        items.push({ title: 'About', href: toPath(panel.about), icon: Info })
-    }
-
     if (items.length > 0) {
         /*
-         * A STOCK INSTALL SHARES HELP/FAQ/ABOUT but not What's new until
+         * A STOCK INSTALL SHARES HELP/FAQ but not What's new until
          * ChangelogPage has releases. The footer is still four links; the
          * packaged default is `/whats-new`.
          */
@@ -281,13 +275,7 @@ const supportNavItems = computed<NavItem[]>(() => {
             const fallback = supportItems.value.find((item) => item.title === "What's new")
 
             if (fallback) {
-                const about = items.findIndex((item) => item.title === 'About')
-
-                if (about >= 0) {
-                    items.splice(about, 0, fallback)
-                } else {
-                    items.push(fallback)
-                }
+                items.push(fallback)
             }
         }
 
@@ -362,42 +350,31 @@ const navGroups = computed(() => {
 /*
  * The key is versioned because the DEFAULT changed.
  *
- * Groups used to open by default and the stored value records which ones are
- * CLOSED - so anyone who had ever toggled one had `[]` or a short list saved,
- * and a new default would never reach them. Bumping the key retires those
- * preferences once, which is the honest cost of changing a default rather than
- * pretending it applies to everybody.
+ * Resource sections are closed by default. This keeps a large panel calm on
+ * first paint while the active destination remains discoverable at the top;
+ * navigation into a section opens its active trail. Bumping the key retires
+ * the older open-by-default preference so existing browsers receive this
+ * compact navigation on the next visit.
  */
-const NAV_STORAGE_KEY = 'alxtexhpanel.nav.collapsed.v2'
+const NAV_STORAGE_KEY = 'alxtexhpanel.nav.collapsed.v6'
 
 /**
- * Which groups are CLOSED. Everything starts closed EXCEPT the one you are in.
- *
- * Closed by default because the sidebar is a place you pass through, not a
- * place you read: with every group expanded the list is long enough to scroll
- * on a laptop, and the item you want is somewhere in the middle of things you
- * are not looking at. Collapsed, the whole structure fits and each group is one
- * click away.
- *
- * The ACTIVE group is the exception, and it is not a nicety - a navigation that
- * cannot show you where you currently are has stopped being navigation.
+ * Which groups are CLOSED. Every collapsible group starts closed; static
+ * sections are intentionally omitted because they have no dropdown state.
+ * Nested keys are included as well so opening a parent never reveals a second
+ * level unexpectedly. The explicit local preference is read after this
+ * function, so this only controls a fresh browser or a new schema.
  */
 function defaultCollapsed(): Set<string> {
     const closed = new Set<string>()
 
     for (const group of navGroups.value.grouped) {
-        if (group.collapsible && !groupContainsActive(group)) {
+        if (group.collapsible) {
             closed.add(group.name)
         }
 
-        /*
-         * KEYED BY THE FULL PATH, `'Screens/Errors'` rather than `'Errors'` -
-         * see `toggleGroup` and `NavGroup.collapsible`'s own note. Two
-         * sections nesting a same-named subgroup must not share one entry in
-         * this set.
-         */
         for (const sub of group.groups) {
-            if (sub.collapsible && !groupIsActive(sub.items)) {
+            if (sub.collapsible) {
                 closed.add(`${group.name}/${sub.name}`)
             }
         }
@@ -414,7 +391,11 @@ function defaultCollapsed(): Set<string> {
  */
 function readCollapsed(): Set<string> {
     if (typeof window === 'undefined') {
-        return new Set()
+        // Match the browser's first paint during SSR/hydration. Returning an
+        // empty set here renders every group open on the server, then closes
+        // them on hydration, which is the exact sidebar flinch this state is
+        // meant to prevent.
+        return defaultCollapsed()
     }
 
     try {

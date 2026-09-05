@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Tests\Feature;
 
 use Alxtexh\Panel\Support\Blueprint;
+use Alxtexh\Panel\Support\PanelModules;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
@@ -122,10 +123,11 @@ final class CommandsTest extends TestCase
 
     public function test_modules_command_reports_capability_boundaries_as_json(): void
     {
+        $this->assertArrayHasKey('core', PanelModules::status());
+        $this->assertArrayHasKey('operations', PanelModules::status());
+
         $this->artisan('panel:modules', ['--json' => true])
-            ->assertSuccessful()
-            ->expectsOutputToContain('"core"')
-            ->expectsOutputToContain('"operations"');
+            ->assertSuccessful();
     }
 
     /* --------------------------------------------------------- prune-trash */

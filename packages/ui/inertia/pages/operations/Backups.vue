@@ -794,8 +794,8 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
         </ul>
 
         <template #footer>
-            <Button variant="ghost" size="sm" @click="pendingDelete = []">Cancel</Button>
-            <Button variant="destructive" size="sm" :disabled="wouldEmpty" @click="confirmDelete">
+            <Button variant="outline" @click="pendingDelete = []">Cancel</Button>
+            <Button variant="destructive" :disabled="wouldEmpty" @click="confirmDelete">
                 {{ pendingDelete.length === 1 ? 'Delete snapshot' : 'Delete snapshots' }}
             </Button>
         </template>
@@ -845,7 +845,7 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
         </div>
 
         <template #footer>
-            <Button variant="ghost" size="sm" @click="pendingRestore = null">Cancel</Button>
+            <Button variant="outline" @click="pendingRestore = null">Cancel</Button>
             <Button
                 variant="destructive"
                 size="sm"

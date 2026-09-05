@@ -11,12 +11,11 @@ use Alxtexh\Panel\Support\Sitemap;
 /**
  * The public sitemap - what it currently declares, and a button to write it.
  *
- * ABSENT UNTIL THERE IS SOMETHING TO GENERATE, the same rule `ChangelogPage`
- * and `EnvironmentPage` follow. `Sitemap::isEmpty()` is true for an
- * installation with no public landing page and nothing registered through
- * `Sitemap::add()`/`source()` - and a settings screen offering to build a
- * sitemap with zero URLs in it is a button that does nothing, reachable from
- * a menu entry that should not exist.
+ * ALWAYS ROUTED WHEN THE SITEMAP FEATURE IS INSTALLED. Public URL sources may
+ * be registered by application providers after the panel has booted, so
+ * gating the route on a boot-time `isEmpty()` check makes the page randomly
+ * 404 depending on provider order. The page renders a clear empty state until
+ * the host registers its first URL.
  *
  * SEEING AND GENERATING ARE SEPARATE GRANTS, same reasoning as every other
  * packaged page with an action: an operator confirming the sitemap looks
@@ -61,7 +60,7 @@ final class SitemapPage extends Page
 
     public static function isEnabled(): bool
     {
-        return ! Sitemap::isEmpty();
+        return true;
     }
 
     public static function component(): string

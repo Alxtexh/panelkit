@@ -41,4 +41,21 @@ describe('ChartCard', () => {
 
         expect(wrapper.find('[aria-label="Hide Sessions"]').exists()).toBe(false)
     })
+
+    it('offers a retry action only for a failed, retryable chart', async () => {
+        const wrapper = mount(ChartCard, {
+            props: { label: 'Sessions', error: true, retryable: true },
+        })
+
+        const retry = wrapper.findAll('button').find((button) => button.text() === 'Try again')
+
+        expect(retry).toBeDefined()
+
+        expect(retry!.text()).toBe('Try again')
+        expect(wrapper.get('[role="alert"]').text()).toContain('Could not load')
+
+        await retry!.trigger('click')
+
+        expect(wrapper.emitted('retry')).toHaveLength(1)
+    })
 })

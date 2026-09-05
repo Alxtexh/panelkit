@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use Alxtexh\Panel\Widgets\ChartWidget;
 use Alxtexh\Panel\Widgets\Period;
+use Alxtexh\Panel\Tests\TestCase;
+
+uses(TestCase::class);
 
 it('caches chart data per tenant and period when explicitly invalidated', function (): void {
     $calls = 0;

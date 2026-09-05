@@ -1,5 +1,6 @@
 import { DOMWrapper, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it } from 'vitest'
+import PkDropdown from '../primitives/PkDropdown.vue'
 import InlineRecordActions from './InlineRecordActions.vue'
 
 const body = () => new DOMWrapper(document.body)
@@ -9,6 +10,18 @@ afterEach(() => {
 })
 
 describe('InlineRecordActions', () => {
+    it('docks labelled action groups to the action column', () => {
+        const wrapper = mount(InlineRecordActions, {
+            props: {
+                title: 'Ada',
+                groups: [{ label: 'More', actions: [{ key: 'archive', label: 'Archive' }] }],
+            },
+        })
+
+        expect(wrapper.findComponent(PkDropdown).props('placement')).toBe('left')
+        wrapper.unmount()
+    })
+
     it('renders an unlabelled action inline, not inside a menu', () => {
         const wrapper = mount(InlineRecordActions, {
             props: {

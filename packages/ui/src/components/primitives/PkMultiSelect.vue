@@ -22,7 +22,7 @@
  * ArrowUp/Down move, and Backspace on an empty query removes the last chip -
  * the behaviour every token field has, and its absence is immediately felt.
  */
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 
 export interface MultiSelectOption {
     value: string | number
@@ -57,6 +57,7 @@ const emit = defineEmits<{
 const root = ref<HTMLElement | null>(null)
 const panel = ref<HTMLElement | null>(null)
 const searchInput = ref<HTMLInputElement | null>(null)
+const panelId = `pk-multi-select-${useId()}`
 
 const open = ref(false)
 const query = ref('')
@@ -238,7 +239,20 @@ function onDocumentPointerDown(e: PointerEvent) {
         return
     }
 
+    // Searchable controls can contain another teleported overlay (for example
+    // a custom option picker). Do not dismiss this control while interacting
+    // with that nested surface; PkDropdown follows the same overlay contract.
+    const el = target instanceof Element ? target : target.parentElement
+
+    if (el?.closest('[data-pk-overlay]')) {
+        return
+    }
+
     hide()
+}
+
+function optionId(index: number): string {
+    return `${panelId}-option-${index}`
 }
 
 function reposition() {
@@ -278,6 +292,10 @@ onBeforeUnmount(() => {
             ]"
             role="combobox"
             :aria-expanded="open"
+            :aria-controls="panelId"
+            :aria-activedescendant="
+                open && available[highlighted] ? optionId(highlighted) : undefined
+            "
             aria-haspopup="listbox"
             tabindex="0"
             @click="toggle"
@@ -344,6 +362,7 @@ onBeforeUnmount(() => {
                 <div
                     v-if="open"
                     ref="panel"
+                    :id="panelId"
                     data-pk-overlay
                     class="bg-popover fixed z-[100] overflow-hidden rounded-md border shadow-lg"
                     :style="{
@@ -368,11 +387,12 @@ onBeforeUnmount(() => {
                         <button
                             v-for="(option, i) in available"
                             :key="option.value"
+                            :id="optionId(i)"
                             type="button"
                             class="flex w-full items-center rounded-sm px-2 py-1.5 text-left text-sm transition-colors"
                             :class="i === highlighted ? 'bg-accent' : 'hover:bg-accent/60'"
                             role="option"
-                            :aria-selected="i === highlighted"
+                            aria-selected="false"
                             @mouseenter="highlighted = i"
                             @click="pick(option)"
                         >

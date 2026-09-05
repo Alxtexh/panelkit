@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/vue3'
-import { HelpCircle, House, Info, MessageCircleQuestion, Sparkles } from '@lucide/vue'
+import { HelpCircle, House, MessageCircleQuestion, Sparkles } from '@lucide/vue'
 import { computed } from 'vue'
 import type { NavItem } from '../types'
 import { resolvePanelIcon } from './panelIcons'
@@ -200,7 +200,6 @@ export function usePanelNav() {
         { title: 'Help', href: '/help', icon: HelpCircle },
         { title: 'FAQ', href: '/faq', icon: MessageCircleQuestion },
         { title: "What's new", href: '/whats-new', icon: Sparkles },
-        { title: 'About', href: '/about', icon: Info },
     ])
 
     return { nav, supportItems }

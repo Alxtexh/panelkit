@@ -9,6 +9,7 @@ use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Alxtexh\Panel\Tests\Fixtures\Resources\ArticleResource;
 use Alxtexh\Panel\Actions\BulkAction;
+use Alxtexh\Panel\Actions\BulkCheckpoint;
 use Alxtexh\Panel\Actions\BulkRunner;
 use Alxtexh\Panel\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -53,6 +54,7 @@ final class BulkActionTest extends TestCase
         ]);
 
         $this->actingAs($this->user);
+
     }
 
     /** @return list<int> */
@@ -218,6 +220,55 @@ final class BulkActionTest extends TestCase
         );
     }
 
+    public function test_a_durable_chunk_ledger_prevents_a_resumed_handler_from_running_twice(): void
+    {
+        $ids = $this->makeArticles(3);
+        $handlerCalls = 0;
+        $token = 'bulk-ledger-test';
+        $action = BulkAction::make('ledger-test', 'Ledger test')
+            ->authorize('update')
+            ->chunkSize(2)
+            ->handle(function ($records) use (&$handlerCalls): void {
+                $handlerCalls += $records->count();
+            });
+
+        $run = function () use ($action, $token, $ids): \Alxtexh\Panel\Actions\BulkResult {
+            $list = ArticleResource::definition()->toListQuery(Article::class);
+
+            return app(BulkRunner::class)->runDetailed(
+                $action,
+                $list->matching(request(), $ids),
+                Article::class,
+                $list->keyColumnName(),
+                null,
+                [],
+                null,
+                fn (int|string|null $cursor): bool => BulkCheckpoint::claim($token, $cursor),
+                static function (int|string|null $cursor, array $batch) use ($token): void {
+                    BulkCheckpoint::complete(
+                        $token,
+                        $cursor,
+                        $batch['selected'],
+                        $batch['authorized'],
+                        $batch['affected'],
+                    );
+                },
+            );
+        };
+
+        $first = $run();
+        $second = $run();
+
+        $this->assertSame(3, $first->selected);
+        $this->assertSame(3, $first->affected);
+        $this->assertSame(0, $second->selected);
+        $this->assertSame(0, $second->affected);
+        $this->assertSame(3, $handlerCalls);
+        $this->assertSame(3, BulkCheckpoint::totals($token)['affected']);
+
+        BulkCheckpoint::forget($token);
+    }
+
     public function test_a_queued_bulk_retry_with_the_same_key_dispatches_once(): void
     {
         Queue::fake();
@@ -225,6 +276,12 @@ final class BulkActionTest extends TestCase
         $ids = $this->makeArticles(2);
 
         $payload = ['action' => 'publish', 'ids' => $ids, 'idempotencyKey' => 'bulk-retry'];
+
+        if (! class_exists(RunBulkAction::class)) {
+            $this->postJson('/articles/bulk', $payload)->assertStatus(503);
+
+            return;
+        }
 
         $this->postJson('/articles/bulk', $payload)->assertOk();
         $this->postJson('/articles/bulk', $payload)->assertOk();
@@ -237,6 +294,15 @@ final class BulkActionTest extends TestCase
         Queue::fake();
         config(['panel.bulk.queue_threshold' => 1]);
         $ids = $this->makeArticles(3);
+
+        if (! class_exists(RunBulkAction::class)) {
+            $this->postJson('/articles/bulk', [
+                'action' => 'publish',
+                'ids' => [$ids[0], $ids[1]],
+            ])->assertStatus(503);
+
+            return;
+        }
 
         $this->postJson('/articles/bulk', [
             'action' => 'publish',

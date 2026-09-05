@@ -11,12 +11,12 @@ use Tests\TestCase;
  */
 final class DocsHonestyTest extends TestCase
 {
-    public function test_readme_lists_four_landing_designs(): void
+    public function test_readme_is_honest_about_landing_templates(): void
     {
         $readme = (string) file_get_contents(dirname(base_path(), 2).'/docs/README.md');
 
-        $this->assertStringContainsString('Four built-in landing designs', $readme);
-        $this->assertStringNotContainsString('Five built-in landing designs', $readme);
+        $this->assertStringContainsString('no landing templates ship', $readme);
+        $this->assertStringNotContainsString('Four built-in landing designs', $readme);
     }
 
     public function test_fields_catalogue_lists_shipped_field_types(): void

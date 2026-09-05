@@ -263,7 +263,10 @@ router.on('success', () => {
                     </template>
                 </AppSidebar>
 
-                <AppContent variant="sidebar" class="min-h-0 overflow-x-hidden overflow-y-auto">
+                <AppContent
+                    variant="sidebar"
+                    class="min-h-0 overflow-x-hidden overflow-y-auto md:m-2 md:rounded-2xl md:border md:shadow-sm"
+                >
                     <PanelImpersonationBanner />
 
                     <AppSidebarHeader :breadcrumbs="props.breadcrumbs">

@@ -15,6 +15,7 @@ import PanelLockButton from './PanelLockButton.vue'
 import NotificationBell from './PanelNotificationBell.vue'
 import PanelQuickCreate from './PanelQuickCreate.vue'
 import TopNavUser from './TopNavUser.vue'
+import AppLogo from './AppLogo.vue'
 import { openPanelInfo } from './panelInfoState'
 
 const props = withDefaults(
@@ -96,11 +97,14 @@ const trail = computed<BreadcrumbItem[]>(() =>
         which. That is the mirror, rather than a second hardcoded layout.
     -->
     <header
-        class="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-sidebar-border/70 px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 sm:px-6 md:px-4"
+        class="bg-background/88 supports-[backdrop-filter]:bg-background/72 sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-sidebar-border/70 px-4 backdrop-blur-md transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 sm:px-6 md:px-4"
         :class="mirrored ? 'flex-row-reverse' : ''"
     >
         <div class="flex min-w-0 items-center gap-2" :class="mirrored ? 'flex-row-reverse' : ''">
             <SidebarTrigger :class="mirrored ? '-mr-1' : '-ml-1'" />
+            <!-- Keep the tenant mark visible when the desktop rail is hidden;
+                 a mobile header made only of utility icons has no identity. -->
+            <AppLogo class="md:hidden" />
             <slot name="topbar">
                 <!-- Breadcrumbs are the first thing to give up on a phone; the
                      search trigger earns that space more. -->

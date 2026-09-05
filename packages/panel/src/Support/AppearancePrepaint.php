@@ -18,7 +18,7 @@ final class AppearancePrepaint
 {
     /** @var array<string, array{value: string, foreground: string}> */
     private const PRIMARY = [
-        'slate' => ['value' => 'oklch(0.32 0.02 260)', 'foreground' => 'oklch(0.98 0 0)'],
+        'slate' => ['value' => 'oklch(0.24 0.02 260)', 'foreground' => 'oklch(0.98 0 0)'],
         'emerald' => ['value' => 'oklch(0.60 0.14 163)', 'foreground' => 'oklch(0.99 0 0)'],
         'green' => ['value' => 'oklch(0.63 0.17 145)', 'foreground' => 'oklch(0.99 0 0)'],
         'lime' => ['value' => 'oklch(0.72 0.18 130)', 'foreground' => 'oklch(0.20 0 0)'],
@@ -174,6 +174,10 @@ final class AppearancePrepaint
         $tint = self::SURFACE[$surfaceKey] ?? self::SURFACE['neutral'];
         $c = $tint['chroma'];
         $h = $tint['hue'];
+        // Keep the default neutral canvas cool-grey rather than introducing a
+        // pink cast just because neutral has hue 0 and needs a tiny chroma.
+        $canvasChroma = $c > 0 ? $c : 0.006;
+        $canvasHue = $c > 0 ? $h : 250;
         $dark = ($next['theme'] ?? 'light') === 'dark';
         $filled = ($next['cardStyle'] ?? 'transparent') === 'filled';
 
@@ -188,10 +192,11 @@ final class AppearancePrepaint
                 '--input' => "oklch(0.27 {$c} {$h})",
             ]
             : [
-                '--background' => 'oklch(1 0 0)',
+                '--background' => "oklch(0.975 {$canvasChroma} {$canvasHue})",
                 '--card' => 'oklch('.($filled ? '0.985' : '1')." {$c} {$h})",
                 '--popover' => 'oklch(1 0 0)',
                 '--muted' => "oklch(0.965 {$c} {$h})",
+                '--muted-foreground' => 'oklch(0.28 0 0)',
                 '--accent' => "oklch(0.965 {$c} {$h})",
                 '--border' => "oklch(0.925 {$c} {$h})",
                 '--input' => "oklch(0.90 {$c} {$h})",

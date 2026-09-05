@@ -556,8 +556,8 @@ function save(): void {
         @close="confirmingDeleteRole = null"
     >
         <template #footer>
-            <Button variant="ghost" size="sm" @click="confirmingDeleteRole = null"> Cancel </Button>
-            <Button variant="destructive" size="sm" @click="reallyDestroyRole">
+            <Button variant="outline" @click="confirmingDeleteRole = null"> Cancel </Button>
+            <Button variant="destructive" @click="reallyDestroyRole">
                 Delete role
             </Button>
         </template>

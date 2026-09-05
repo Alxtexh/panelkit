@@ -680,7 +680,7 @@ final class ClientResource extends Resource
                 BulkAction::make('restore', 'Restore')
                     ->icon('undo')
                     ->color('info')
-                    ->authorize('restore')
+                    ->authorizeAny('restore')
                     // A soft delete is a column, so restoring many is one
                     // UPDATE per chunk like any other bulk mutation.
                     ->mutate(['deleted_at' => null]),
@@ -688,7 +688,7 @@ final class ClientResource extends Resource
                 BulkAction::make('delete', 'Delete')
                     ->icon('trash')
                     ->destructive()
-                    ->authorize('delete')
+                    ->authorizeAny('delete')
                     ->authorizeIndividualRecords()
                     // A handler rather than a mutation: deleting through the
                     // models fires the events any listener depends on, which a

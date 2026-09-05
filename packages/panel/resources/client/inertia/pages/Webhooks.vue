@@ -427,8 +427,8 @@ function statusLabel(row: DeliveryRow): string {
         >
             <p class="text-sm">Delete endpoint <strong>#{{ pendingDeleteId }}</strong>?</p>
             <template #footer>
-                <Button variant="ghost" size="sm" @click="pendingDeleteId = null">Cancel</Button>
-                <Button variant="destructive" size="sm" @click="remove">Delete endpoint</Button>
+                <Button variant="outline" @click="pendingDeleteId = null">Cancel</Button>
+                <Button variant="destructive" @click="remove">Delete endpoint</Button>
             </template>
         </PkModal>
     </div>

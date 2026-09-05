@@ -952,10 +952,9 @@ final class InstallCommand extends Command
 
         use Illuminate\Support\Facades\Route;
 
-        // The panel is mounted at `/` and does not claim its own root - see
-        // `PanelRoutes::landing()` and its own comment on why. Point yours
-        // wherever makes sense once you have one; `/login` is the panel's own
-        // sign-in and works with nothing else written here.
+        // The panel is mounted at `/` and does not claim its own root. Point
+        // the host application's public site wherever makes sense; `/login`
+        // is the panel's own sign-in and works with nothing else written here.
         Route::redirect('/', '/login');
 
         PHP;

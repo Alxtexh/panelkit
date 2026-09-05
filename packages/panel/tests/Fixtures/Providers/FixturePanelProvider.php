@@ -101,5 +101,6 @@ final class FixturePanelProvider extends ServiceProvider
                     'Alxtexh\\Panel\\Tests\\Fixtures\\Pages',
                 ),
         );
+
     }
 }

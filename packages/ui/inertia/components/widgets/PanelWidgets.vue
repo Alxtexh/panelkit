@@ -28,7 +28,7 @@
  * renders an em dash for every card - the numbers arrive correctly and are
  * thrown away. That bug has been paid for twice in this codebase already.
  */
-import { Deferred, usePage } from '@inertiajs/vue3'
+import { Deferred, router, usePage } from '@inertiajs/vue3'
 import { useMediaQuery } from '@vueuse/core'
 import { computed } from 'vue'
 import { ChartCard, PkBoundary, TrendBadge, packWidgetColumns } from '@alxtexh-enterprise/panel'
@@ -64,6 +64,10 @@ function stat(key: string): StatValue | undefined {
 
 function series(key: string): Series {
     return (bag.value[`${props.prefix}_chart_${key}`] as Series | undefined) ?? emptySeries()
+}
+
+function retry(dataKey: string) {
+    router.reload({ only: [dataKey], preserveState: true, preserveScroll: true })
 }
 
 /**
@@ -161,6 +165,8 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
                             :description="band.item.description"
                             :error="series(band.item.key).error"
                             :body-height="bodyHeight(band.item)"
+                            retryable
+                            @retry="retry(`${prefix}_chart_${band.item.key}`)"
                         >
                             <template v-if="series(band.item.key).trend" #trend>
                                 <TrendBadge
@@ -200,6 +206,8 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
                                     :description="chart.description"
                                     :error="series(chart.key).error"
                                     :body-height="bodyHeight(chart)"
+                                    retryable
+                                    @retry="retry(`${prefix}_chart_${chart.key}`)"
                                 >
                                     <template v-if="series(chart.key).trend" #trend>
                                         <TrendBadge

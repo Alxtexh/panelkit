@@ -17,7 +17,7 @@ defineProps<{
 </script>
 
 <template>
-    <header data-slot="page-header" class="pk-section-heading flex flex-wrap items-start justify-between gap-3">
+    <header data-slot="page-header" class="pk-section-heading flex flex-wrap items-start justify-between gap-3 pb-0.5">
         <div class="min-w-0 space-y-1">
             <div class="flex flex-wrap items-center gap-2.5">
                 <h1 class="text-2xl font-semibold tracking-tight">{{ title }}</h1>

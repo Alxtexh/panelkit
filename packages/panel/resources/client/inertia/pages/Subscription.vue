@@ -259,10 +259,10 @@ const confirmPrice = computed(() => {
             </p>
 
             <template #footer>
-                <PkButton variant="ghost" size="sm" :disabled="processing" @click="closeConfirm">
+                <PkButton variant="outline" :disabled="processing" @click="closeConfirm">
                     Cancel
                 </PkButton>
-                <PkButton size="sm" :disabled="processing" @click="confirmChoice">
+                <PkButton :disabled="processing" @click="confirmChoice">
                     {{ processing ? 'Redirecting…' : 'Continue to payment' }}
                 </PkButton>
             </template>

@@ -14,6 +14,10 @@ vi.mock('@inertiajs/vue3', () => ({
 }))
 
 vi.mock('@alxtexh-enterprise/panel', () => ({
+    PkModal: {
+        props: ['open', 'title', 'description'],
+        template: '<div v-if="open"><slot /><slot name="footer" /></div>',
+    },
     PkSlideover: {
         props: ['open', 'side', 'title', 'width'],
         template: '<div v-if="open"><slot /><slot name="footer" /></div>',

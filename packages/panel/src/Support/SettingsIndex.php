@@ -211,8 +211,7 @@ final class SettingsIndex
              * `Tenants::available()` is false for `PANEL_TENANCY_MODE=none` -
              * the default every fresh install starts on. `Route::has()` above
              * cannot catch this: the route stays registered on purpose (see
-             * `PanelRoutes::landing()`'s neighbour comment on
-             * `settings/workspaces`) so a direct link degrades to "not
+             * the `settings/workspaces` route) so a direct link degrades to "not
              * available here" instead of 404 - which means every single-tenant
              * install listed a settings screen that could never do anything,
              * found on an actual fresh install where nothing else pointed at

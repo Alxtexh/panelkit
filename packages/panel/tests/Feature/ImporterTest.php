@@ -35,6 +35,15 @@ use InvalidArgumentException;
  */
 final class ImporterTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (! class_exists(Importer::class)) {
+            $this->markTestSkipped('Importer tests require panel-operations.');
+        }
+    }
+
     private function form(): Form
     {
         return Form::make()->schema([

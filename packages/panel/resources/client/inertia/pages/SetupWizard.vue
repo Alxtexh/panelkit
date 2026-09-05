@@ -11,7 +11,7 @@
 import { Head, Link, router } from '@inertiajs/vue3'
 import { markRaw, reactive, ref } from 'vue'
 import { PkButton as Button, PkSetupWizardCompletion, RecordForm } from '@alxtexh-enterprise/panel'
-import type { SchemaNode as SchemaNodeType } from '@alxtexh-enterprise/panel'
+import type { SchemaNodeShape as SchemaNodeType } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 

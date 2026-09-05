@@ -658,6 +658,9 @@ final class OperationsController
         return Inertia::render('operations/Monitoring', [
             ...(new PlatformReport)->all(),
             'health' => (new HealthReport)->all(),
+            'routes' => [
+                'metrics' => $this->at('operations/monitoring/metrics'),
+            ],
             /*
              * Roadmap 5.3: yesterday, visible. One compact row per scheduler
              * tick; empty until `panel:monitor-sample` has run, and the page

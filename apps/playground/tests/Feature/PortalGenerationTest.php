@@ -441,25 +441,14 @@ final class PortalGenerationTest extends TestCase
             ->assertRedirect('/platform/tenants');
     }
 
-    /**
-     * THE PORTAL MOUNTED AT THE ROOT DOES NOT CLAIM `/`.
-     *
-     * That portal IS the application, and `/` already belongs to whatever the
-     * application put there - here, the packaged landing page, which is a
-     * SEPARATE registration from the panel's own home. A `panel.home` route at
-     * the root would race it on declaration order.
-     *
-     * The name changed from `home` to `panel.landing` when the landing page
-     * moved into the package; what is asserted is unchanged - something answers
-     * `/`, and it is not the panel's resource directory.
-     */
-    public function test_the_root_portal_does_not_take_over_the_applications_landing_page(): void
+    /** The package never claims the host application's public root. */
+    public function test_the_root_portal_does_not_register_a_package_landing_page(): void
     {
         $names = collect(Route::getRoutes())
             ->filter(fn ($route): bool => $route->uri() === '/')
             ->map(fn ($route): string => (string) $route->getName());
 
-        $this->assertContains('panel.landing', $names->all());
+        $this->assertNotContains('panel.landing', $names->all());
         $this->assertNotContains('panel.home', $names->all());
     }
 

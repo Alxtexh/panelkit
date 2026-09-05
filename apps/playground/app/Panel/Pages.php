@@ -85,16 +85,6 @@ final class Pages
             ['title' => 'Billing', 'href' => '/billing-settings', 'icon' => 'sliders', 'group' => 'Configuration'],
 
             /*
-             * THE PUBLIC PAGE, LISTED WITH THE OTHER THINGS AN ORGANISATION
-             * SETS ONCE. It sits in Configuration rather than under Apps
-             * because editing the front door is a preference the business
-             * holds, not a screen anybody works in daily - and because putting
-             * it beside Billing is the fastest way for whoever owns "what the
-             * company says about itself" to find it.
-             */
-            ['title' => 'Landing page', 'href' => '/landing-page', 'icon' => 'home', 'group' => 'Configuration'],
-
-            /*
              * IN "APPS" RATHER THAN A SETTINGS GROUP, because designing an
              * invoice is a thing an operator DOES rather than a preference they
              * set. It sits beside Mail and Chat for the same reason those do:

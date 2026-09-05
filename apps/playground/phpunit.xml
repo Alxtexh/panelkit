@@ -11,6 +11,24 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <!--
+            THE ORDINARY FEATURE GATE MUST BE DETERMINISTIC.
+
+            Performance tests intentionally create large fixtures and print
+            benchmark measurements. Including them in the application feature
+            gate made `make test-playground-feature` look hung and let a
+            benchmark budget decide whether ordinary authorization and CRUD
+            tests ran. Keep the complete Feature suite available, while giving
+            CI a fast application suite and a separate explicit performance
+            suite with its own bound.
+        -->
+        <testsuite name="FeatureFast">
+            <directory>tests/Feature</directory>
+            <exclude>tests/Feature/Performance</exclude>
+        </testsuite>
+        <testsuite name="Performance">
+            <directory>tests/Feature/Performance</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>

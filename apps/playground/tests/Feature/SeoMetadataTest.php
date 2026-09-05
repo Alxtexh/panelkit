@@ -276,12 +276,8 @@ final class SeoMetadataTest extends TestCase
 
         $locs = array_column(Sitemap::urls(), 'loc');
 
-        /*
-         * ASSERTED BY CONTAINMENT, NOT BY WHOLE-ARRAY EQUALITY. This application
-         * routes a landing page, so `Sitemap` legitimately adds it to every list -
-         * and an exact-match assertion here was testing the demo's own config
-         * rather than the canonical substitution it was written for.
-         */
+        /* Assert by containment because applications may register additional
+         * public URLs through the sitemap extension point. */
         $this->assertContains('https://example.test/plans/fibre-20', $locs);
         $this->assertNotContains(url('/plans/47?ref=email'), $locs);
     }

@@ -18,18 +18,12 @@ use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\LockController;
 use App\Http\Controllers\MailController;
-use App\Http\Controllers\LandingTemplateController;
 use App\Http\Controllers\SavedViewController;
 use App\Support\Guide;
 use App\Support\HelpArticles;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-
-Route::get('/landing-template', LandingTemplateController::class)->name('landing-template');
-Route::get('/landing-template/{path?}', LandingTemplateController::class)
-    ->where('path', '.*')->name('landing-template.app');
-Route::get('/api/landing-template', LandingTemplateController::class)->name('landing-template.data');
 
 /*
  | Resource segments come from the registry rather than a literal list, so a
@@ -48,18 +42,9 @@ Route::get('/api/landing-template', LandingTemplateController::class)->name('lan
  */
 $panelResources = array_keys(app(PanelManager::class)->resourcesFor('admin'));
 
-/*
- | THE PUBLIC FACE IS THE PACKAGE'S NOW.
- |
- | `/` and `/preview/{design}` were declared here, pointing at a controller in
- | this application, backed by three designs in `App\Support` and edited by a
- | resource in `App\Panel\Singulars` - so `composer require alxtexh-enterprise/panel`
- | gave you the section library and nothing that composed a page with it.
- |
- | All of it moved. `PanelRoutes::landing()` registers both routes when
- | `panel.landing.route` is on, which this application's published config turns
- | on precisely because it exists to show the panel off.
- */
+/* Public marketing pages belong to the host application; PanelKit does not
+ | claim `/` or ship a landing template. */
+Route::redirect('/', '/dashboard');
 
 /*
 | PASSWORDLESS AND OTP AUTH.

@@ -360,8 +360,8 @@ function remove() {
         >
             <p class="text-sm">Move file <strong>#{{ pendingDeleteId }}</strong> to Trash?</p>
             <template #footer>
-                <Button variant="ghost" size="sm" @click="pendingDeleteId = null">Cancel</Button>
-                <Button variant="destructive" size="sm" @click="remove">Move to Trash</Button>
+                <Button variant="outline" @click="pendingDeleteId = null">Cancel</Button>
+                <Button variant="destructive" @click="remove">Move to Trash</Button>
             </template>
         </PkModal>
     </div>

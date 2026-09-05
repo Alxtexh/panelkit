@@ -7,7 +7,7 @@
 # empty gutters. See docs/14-design-layout.md (PAGE_SHELL / FORM_MEASURE).
 #
 # Scoped to packages/ui/inertia layouts + pages (source of truth; client mirror
-# is kept in sync by make check-client). Auth, onboarding, landing, print, and a
+# is kept in sync by make check-client). Auth, onboarding, print, and a
 # few intentional reading/gate pages are allow-listed.
 #
 # Usage:
@@ -43,7 +43,6 @@ is_allowlisted() {
     local rel="$1"
     case "$rel" in
         pages/auth/*|pages/panel/auth/*) return 0 ;;
-        pages/landing/*) return 0 ;;
         pages/Onboarding.vue) return 0 ;;
         pages/BillingSuspended.vue) return 0 ;;
         pages/documents/DocumentPrint.vue) return 0 ;;

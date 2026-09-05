@@ -124,6 +124,12 @@ final class BulkController extends Controller
         $queued = $all || count($ids) > $this->queueThreshold($action);
 
         if ($queued) {
+            if (! class_exists(RunBulkAction::class)) {
+                return response()->json([
+                    'message' => 'Queued bulk actions require the panel-operations package.',
+                ], 503);
+            }
+
             $token = JobStatus::startFor(
                 $this->actorId(),
                 "bulk:{$resource}:{$action->key}",
@@ -137,6 +143,7 @@ final class BulkController extends Controller
                         $token,
                         $data,
                         $all ? [] : $ids,
+                        app(PanelManager::class)->currentPanel()?->getPath() ?? '',
                     );
                 },
                 $this->fingerprint([
@@ -159,7 +166,7 @@ final class BulkController extends Controller
 
         $list = $definition->toListQuery($class::model());
 
-        $affected = $runner->run(
+        $result = $runner->runDetailed(
             $action,
             $list->matching($request, $ids),
             $class::model(),
@@ -167,11 +174,14 @@ final class BulkController extends Controller
             null,
             $data,
             $action->authorizesIndividualRecords()
-                ? static fn ($record): bool => $class::can($action->getAbility(), $record)
+                ? static fn ($record): bool => $class::can($action->getRecordAbility(), $record)
                 : null,
         );
 
-        return response()->json(['status' => JobStatus::DONE, 'affected' => $affected]);
+        return response()->json([
+            'status' => JobStatus::DONE,
+            ...$result->toArray(),
+        ]);
     }
 
     /**
@@ -263,6 +273,9 @@ final class BulkController extends Controller
             'error' => $state['error'],
             'downloadable' => $state['file'] !== null,
             'download' => $state['file'] === null ? null : $this->downloadPath($resource, $token),
+            'selected' => $state['selected'] ?? null,
+            'authorized' => $state['authorized'] ?? null,
+            'skipped' => $state['skipped'] ?? 0,
             'importable' => $state['importable'] ?? $state['total'],
             'failed' => $state['failed'] ?? 0,
             'failures' => $state['failures'] ?? [],

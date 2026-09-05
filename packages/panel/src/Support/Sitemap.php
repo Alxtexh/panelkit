@@ -9,7 +9,6 @@ use DateTimeInterface;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use Alxtexh\Panel\Landing\LandingController;
 
 /**
  * A sitemap.xml for the ONE part of an admin panel that is public: whatever
@@ -28,9 +27,8 @@ use Alxtexh\Panel\Landing\LandingController;
  *
  * So there is no crawler, no model integration, and no per-resource sitemap
  * columns to declare. There is a REGISTRY an application adds its own public
- * URLs to, and the one thing Alxtexhpanel can already prove is public without
- * being told - the landing page, gated the same way `LandingPageResource`
- * gates its own "View the page" link - is in it automatically.
+     * URLs to. Public pages belong to the host application, so this package
+     * never invents a marketing URL or assumes that `/` is public.
  *
  * GOOGLE'S PING ENDPOINT IS DELIBERATELY ABSENT. Every competing tool still
  * calls it, and it does nothing: Google deprecated it in June 2023 and it has
@@ -81,8 +79,7 @@ final class Sitemap
     private const CHANGEFREQS = ['always', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'never'];
 
     /**
-     * Register one URL directly - the common case, and how the landing page
-     * would register itself if it were not already covered below.
+     * Register one public URL directly - the common case for a host app.
      */
     public static function add(
         string $loc,
@@ -128,19 +125,12 @@ final class Sitemap
             }
         }
 
-        $landing = LandingController::publicUrl();
-
-        if ($landing !== null) {
-            $raw[] = ['loc' => $landing, 'priority' => 1.0];
-        }
-
         /*
          * DE-DUPLICATED BY `loc`, LAST REGISTRATION WINS. Two sources naming
          * the same URL is not a conflict worth throwing over - a plugin and
          * the application both declaring the front page, say - and "last
-         * wins" means the application's own registration (evaluated after
-         * the built-in landing entry above) can override the default without
-         * needing to know it exists.
+         * wins" means the application's later registration can override the
+         * earlier value without needing to know where it came from.
          */
         $normalised = [];
 
@@ -164,9 +154,8 @@ final class Sitemap
              * fetches, and which wins is a matter of crawl order.
              *
              * DROPPED HERE, IN NORMALISATION, rather than at each registration
-             * site. Entries arrive from `add()`, from every `source()` resolver
-             * and from the built-in landing entry; a filter at any one of those
-             * is a filter the other two skip.
+             * site. Entries arrive from `add()` and every `source()` resolver;
+             * normalising here keeps the rule consistent for both.
              *
              * `enforce_noindex` CAN TURN THIS OFF for an installation whose
              * front end already reconciles the two - but it defaults to on,
@@ -192,18 +181,8 @@ final class Sitemap
             /*
              * A PATH WITH NO SCHEME IS MADE ABSOLUTE, NOT REJECTED.
              *
-             * `LandingController::publicUrl()` returns `/` for the ordinary
-             * case - this package routing its own landing page - and `/` is
-             * exactly right as an href, which is the only thing that method
-             * existed to produce before this class started calling it. It is
-             * not a valid `<loc>`: the protocol requires the full URL,
-             * "including the protocol", and a bare path in a live sitemap
-             * would be a validator error nobody asking for "the landing page"
-             * would expect to cause.
-             *
-             * The same courtesy is extended to every registered entry, not
-             * only the built-in one - `Sitemap::add('/blog/hello-world')` is
-             * the form anybody will actually type, and requiring the full
+             * `Sitemap::add('/blog/hello-world')` is the form callers will
+             * actually type, and requiring the full
              * `config('app.url').'/blog/hello-world'` from every caller would
              * be asking each of them to get this exact fix right themselves.
              */
@@ -424,10 +403,8 @@ final class Sitemap
      *
      * ONLY THIS APPLICATION'S OWN HOST IS SUBMITTED. IndexNow requires every
      * URL in one call to share the host the key file is served from; a
-     * `panel.landing.url` pointing at a different domain would make the
-     * whole request invalid rather than merely inaccurate, so it is filtered
-     * out here instead of failing the notification for every URL that IS
-     * this host's.
+     * A URL pointing at a different domain would make the whole request
+     * invalid rather than merely inaccurate, so it is filtered out here.
      *
      * @param  list<array{loc: string, lastmod: ?DateTimeInterface, changefreq: ?string, priority: ?float}>  $urls
      * @return string one of: 'skipped', 'empty', 'notified', 'failed'

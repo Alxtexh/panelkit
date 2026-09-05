@@ -231,7 +231,7 @@ final class PackagedScreensTest extends TestCase
             $this->assertContains('ResourceIndex', $result['written']);
             $this->assertFileExists($resources.'/js/pages/ResourceIndex.vue');
             $this->assertFileExists($resources.'/js/pages/errors/Error.vue');
-            $this->assertFileExists($resources.'/js/pages/landing/Composed.vue');
+            $this->assertFileDoesNotExist($resources.'/js/pages/landing/Composed.vue');
         } finally {
             app()->setBasePath($original);
             exec('rm -rf '.escapeshellarg($base));

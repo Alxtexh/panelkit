@@ -217,7 +217,7 @@ final class AppearanceTest extends TestCase
         $response->assertSee('window.__panelAppearance = null', false);
         $response->assertSee('window.__panelAppearanceDefaultVars', false);
         $response->assertSee('"theme":"light"', false);
-        $response->assertSee('oklch(0.32 0.02 260)', false);
+        $response->assertSee('oklch(0.24 0.02 260)', false);
     }
 
     /**

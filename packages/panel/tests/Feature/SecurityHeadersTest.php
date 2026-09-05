@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tests\Feature;
 
+use Alxtexh\Panel\Imports\Importer;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Alxtexh\Panel\Tests\TestCase;
@@ -54,6 +55,10 @@ final class SecurityHeadersTest extends TestCase
 
     public function test_an_oversized_panel_payload_is_rejected_before_controller_work(): void
     {
+        if (! class_exists(Importer::class)) {
+            $this->markTestSkipped('Import payload tests require panel-operations.');
+        }
+
         config(['panel.security.max_payload_kilobytes' => 1]);
 
         $tenant = Tenant::create(['name' => 'Mine', 'slug' => 'mine']);

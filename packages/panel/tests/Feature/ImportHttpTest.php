@@ -8,6 +8,7 @@ use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Alxtexh\Panel\Tests\TestCase;
+use Alxtexh\Panel\Imports\Importer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Schema;
@@ -24,6 +25,10 @@ final class ImportHttpTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        if (! class_exists(Importer::class)) {
+            $this->markTestSkipped('HTTP import tests require panel-operations.');
+        }
 
         $tenant = Tenant::create(['name' => 'Mine', 'slug' => 'mine']);
 

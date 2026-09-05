@@ -1,6 +1,7 @@
 import { DOMWrapper, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ICON_PATHS } from '../primitives/icons'
+import PkDropdown from '../primitives/PkDropdown.vue'
 import RecordActions from './RecordActions.vue'
 
 function openMenu(wrapper: ReturnType<typeof mount>) {
@@ -52,6 +53,20 @@ describe('RecordActions icons', () => {
         expect(paths).toContain(ICON_PATHS['log-in'])
         expect(paths).toContain(ICON_PATHS.trash)
         expect(paths.every((d) => d !== ICON_PATHS.dot)).toBe(true)
+    })
+})
+
+describe('RecordActions positioning', () => {
+    it('docks the row menu to the action column instead of flipping vertically', () => {
+        const wrapper = mount(RecordActions, {
+            props: {
+                title: 'Ada',
+                groups: [{ actions: [{ key: 'delete', label: 'Delete' }] }],
+            },
+        })
+
+        expect(wrapper.findComponent(PkDropdown).props('placement')).toBe('left')
+        wrapper.unmount()
     })
 })
 

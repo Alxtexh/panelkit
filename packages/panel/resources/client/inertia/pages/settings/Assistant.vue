@@ -161,8 +161,8 @@ function confirmRemove() {
         >
             <p class="text-sm">Remove the saved provider credentials from this tenant?</p>
             <template #footer>
-                <Button variant="ghost" size="sm" @click="confirmingRemove = false">Cancel</Button>
-                <Button variant="destructive" size="sm" :disabled="removing.processing" @click="confirmRemove">
+                <Button variant="outline" @click="confirmingRemove = false">Cancel</Button>
+                <Button variant="destructive" :disabled="removing.processing" @click="confirmRemove">
                     Remove key
                 </Button>
             </template>

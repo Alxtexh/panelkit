@@ -22,6 +22,8 @@ type __VLS_Props = {
      * instead of the stacked one-field-per-line layout. No collapse
      * affordance renders in this mode, whatever `collapsible` says. */
     table?: boolean;
+    /** Relationship mode preserves the server-issued child id on submit. */
+    relationship?: string | null;
     disabled?: boolean;
     /** Validation errors for the whole form, keyed by dotted path. */
     errors?: Record<string, string>;
@@ -52,5 +54,6 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     addable: boolean;
     deletable: boolean;
     cloneable: boolean;
+    relationship: string | null;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

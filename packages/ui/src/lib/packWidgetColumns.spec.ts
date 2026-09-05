@@ -42,7 +42,7 @@ describe('packWidgetColumns', () => {
 
         expect(packWidgetColumns([wide, narrow], 2)).toEqual([
             { type: 'wide', item: wide },
-            { type: 'columns', columns: [[narrow], []] },
+            { type: 'columns', columns: [[narrow]] },
         ])
     })
 

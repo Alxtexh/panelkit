@@ -240,7 +240,7 @@ defineExpose({ openContextMenu })
 
 <template>
     <div class="flex items-center justify-end">
-        <PkDropdown v-if="!isEmpty" ref="menu">
+        <PkDropdown v-if="!isEmpty" ref="menu" placement="left">
             <template #trigger>
                 <!--
                     A 32px TARGET WITH A VISIBLE RESTING STATE.

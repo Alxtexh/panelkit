@@ -35,7 +35,7 @@ withDefaults(
 
 <template>
     <div
-        class="pk-surface flex min-h-0 w-full min-w-0 shrink grow-0 flex-col overflow-hidden rounded-xl"
+        class="pk-surface flex min-h-0 w-full min-w-0 shrink grow-0 flex-col overflow-hidden rounded-xl shadow-[0_1px_2px_rgb(0_0_0/0.04),0_14px_32px_-24px_rgb(0_0_0/0.28)]"
     >
         <div v-if="$slots.tabs" class="shrink-0 border-b px-3 py-2.5 sm:px-4">
             <slot name="tabs" />

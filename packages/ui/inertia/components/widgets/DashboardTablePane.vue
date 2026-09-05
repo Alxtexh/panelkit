@@ -6,7 +6,7 @@
  * own columns and a limited ListQuery: no pager, no selection. Echo replaces
  * poll when `table.live` is set and `window.Echo` exists.
  */
-import { Deferred, Link, usePage } from '@inertiajs/vue3'
+import { Deferred, Link, router, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { DataTable, PkBadge, PkBoundary, useSchemaColumns } from '@alxtexh-enterprise/panel'
 import type { SchemaColumn } from '@alxtexh-enterprise/panel'
@@ -41,6 +41,10 @@ const page = usePage()
 const resolved = computed(
     () => (page.props as Record<string, unknown>)[props.dataKey] as TableWidgetValue | undefined,
 )
+
+function retry() {
+    router.reload({ only: [props.dataKey], preserveState: true, preserveScroll: true })
+}
 
 const schemaColumns = computed<SchemaColumn[]>(() => resolved.value?.columns ?? [])
 const { columns, byKey, badgeVariant } = useSchemaColumns(schemaColumns)
@@ -93,7 +97,10 @@ useWidgetPoll(
     <PkBoundary :label="table.label">
         <Deferred :data="dataKey">
             <template #fallback>
-                <div class="@container/table pk-surface rounded-lg" aria-busy="true">
+                <div
+                    class="@container/table pk-surface min-w-0 rounded-lg"
+                    aria-busy="true"
+                >
                     <div class="border-b px-4 py-3">
                         <h2 class="pk-section-heading">{{ table.label }}</h2>
                     </div>
@@ -109,7 +116,10 @@ useWidgetPoll(
             </template>
 
             <template #default>
-                <div class="@container/table pk-surface rounded-lg" :aria-busy="resolved ? 'false' : 'true'">
+                <div
+                    class="@container/table pk-surface min-w-0 rounded-lg"
+                    :aria-busy="resolved ? 'false' : 'true'"
+                >
                     <div class="flex items-center justify-between gap-3 border-b px-4 py-3">
                         <div class="min-w-0">
                             <h2 class="pk-section-heading">{{ table.label }}</h2>
@@ -128,9 +138,20 @@ useWidgetPoll(
                             View all
                         </Link>
                     </div>
-                    <p v-if="resolved?.error" class="text-destructive p-4 text-sm">
-                        This list could not be loaded.
-                    </p>
+                    <div
+                        v-if="resolved?.error"
+                        class="flex items-center justify-between gap-3 p-4 text-sm"
+                        role="alert"
+                    >
+                        <span class="text-destructive">This list could not be loaded.</span>
+                        <button
+                            type="button"
+                            class="text-foreground hover:bg-accent shrink-0 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors"
+                            @click="retry"
+                        >
+                            Try again
+                        </button>
+                    </div>
                     <DataTable
                         v-else
                         :columns="columns"

@@ -1,1 +1,0 @@
-import{A as e,B as t,Lt as n,R as r,et as i}from"./api-docs-D-YQgOc6.js";import{t as a}from"./BillingSuspended-DuZ5ZB87.js";var o=r({inheritAttrs:!1,__name:`BillingSuspended`,setup(r){return(r,o)=>(i(),e(a,n(t(r.$attrs)),null,16))}});export{o as default};

@@ -24,13 +24,8 @@ use Tests\TestCase;
  * needs, and the tests below are as much a record of that scope as of the
  * code.
  *
- * A REAL BUG SHIPPED IN THE FIRST DRAFT AND WAS CAUGHT BY RUNNING IT, not by
- * reading it: `LandingController::publicUrl()` correctly returns `/` for the
- * ordinary case of this package routing its own landing page, and `/` is a
- * perfectly good href and a completely invalid `<loc>` - the protocol
- * requires the full URL. `test_a_relative_registration_is_made_absolute`
- * pins the fix so the same mistake cannot silently ship as a sitemap
- * containing a single unusable entry.
+ * Relative registrations are made absolute before writing, so the protocol
+ * cannot silently receive an unusable `<loc>`.
  */
 final class SitemapTest extends TestCase
 {
@@ -59,8 +54,6 @@ final class SitemapTest extends TestCase
     {
         Sitemap::forget();
         config([
-            'panel.landing.route' => false,
-            'panel.landing.url' => null,
             'panel.sitemap.robots_txt' => true,
             'panel.sitemap.indexnow.key' => null,
         ]);
@@ -95,72 +88,24 @@ final class SitemapTest extends TestCase
 
     /* ------------------------------------------------------- registration */
 
-    public function test_it_is_empty_with_nothing_registered_and_no_public_landing_page(): void
+    public function test_it_is_empty_with_nothing_registered(): void
     {
-        config(['panel.landing.route' => false]);
-
         $this->assertTrue(Sitemap::isEmpty());
         $this->assertSame([], Sitemap::urls());
     }
 
-    /**
-     * THE BUG THIS FILE WAS WRITTEN TO PIN.
-     *
-     * `LandingController::publicUrl()` returns `/` for this package's own
-     * routed landing page - correct for an href, and not a valid `<loc>`. A
-     * sitemap containing a bare `/` would be a validator error on the one
-     * entry that ships with no configuration at all.
-     */
-    public function test_the_landing_page_registers_as_an_absolute_url_not_a_bare_path(): void
-    {
-        config(['panel.landing.route' => true]);
-
-        $urls = Sitemap::urls();
-
-        $this->assertCount(1, $urls);
-        // `url('/')` rather than a literal - `config('app.url')` set inside a
-        // test does not retroactively move the URL generator's cached root,
-        // so the true expectation is whatever THIS environment resolves to.
-        $this->assertSame(url('/'), $urls[0]['loc']);
-        $this->assertStringStartsWith('http', $urls[0]['loc'], 'The registered landing URL is not absolute.');
-        $this->assertSame(1.0, $urls[0]['priority']);
-    }
-
-    public function test_the_landing_page_is_absent_when_not_routed(): void
-    {
-        config(['panel.landing.route' => false]);
-
-        $this->assertSame([], Sitemap::urls());
-    }
-
-    public function test_panel_landing_url_overrides_the_default_route(): void
-    {
-        config(['panel.landing.route' => true, 'panel.landing.url' => 'https://marketing.example.test']);
-
-        $urls = Sitemap::urls();
-
-        $this->assertCount(1, $urls);
-        $this->assertSame('https://marketing.example.test', $urls[0]['loc']);
-    }
-
     public function test_add_registers_one_url_directly(): void
     {
-        config(['panel.landing.route' => false]);
-
         Sitemap::add('https://example.test/pricing');
 
         $this->assertSame(['https://example.test/pricing'], array_column(Sitemap::urls(), 'loc'));
     }
 
     /**
-     * A RELATIVE PATH GIVEN TO `add()` IS ALSO MADE ABSOLUTE - the same
-     * courtesy the built-in landing entry gets, because `Sitemap::add('/blog/hello')`
-     * is the form anybody will actually type.
+     * A relative path given to `add()` is made absolute before writing.
      */
     public function test_a_relative_registration_is_made_absolute(): void
     {
-        config(['panel.landing.route' => false]);
-
         Sitemap::add('/blog/hello-world');
 
         $this->assertSame(url('/blog/hello-world'), Sitemap::urls()[0]['loc']);
@@ -390,16 +335,14 @@ final class SitemapTest extends TestCase
 
     /* -------------------------------------------------------------- page */
 
-    public function test_the_page_is_absent_when_nothing_is_public(): void
+    public function test_the_page_is_stable_when_nothing_is_public(): void
     {
-        config(['panel.landing.route' => false]);
-
-        $this->assertFalse(SitemapPage::isEnabled());
+        $this->assertTrue(SitemapPage::isEnabled());
     }
 
-    public function test_the_page_appears_once_the_landing_page_is_routed(): void
+    public function test_the_page_appears_once_a_public_url_is_registered(): void
     {
-        config(['panel.landing.route' => true]);
+        Sitemap::add('/');
 
         $this->assertTrue(SitemapPage::isEnabled());
     }
@@ -413,7 +356,7 @@ final class SitemapTest extends TestCase
     /** Viewing the screen shows what is declared, without requiring the file to exist. */
     public function test_the_page_renders_with_the_declared_urls(): void
     {
-        config(['panel.landing.route' => true]);
+        Sitemap::add('/');
 
         $props = $this->actingAs($this->operatorWith(['view_sitemap']))
             ->get('/sitemap')
@@ -429,7 +372,7 @@ final class SitemapTest extends TestCase
     /** Viewing it is refused without the ability - the mechanism, not a controller guard. */
     public function test_viewing_the_page_is_refused_without_the_ability(): void
     {
-        config(['panel.landing.route' => true]);
+        Sitemap::add('/');
 
         $this->actingAs($this->operator())
             ->get('/sitemap')
@@ -443,7 +386,7 @@ final class SitemapTest extends TestCase
      */
     public function test_generating_writes_the_file_through_the_real_endpoint(): void
     {
-        config(['panel.landing.route' => true]);
+        Sitemap::add('/');
 
         $this->actingAs($this->operatorWith(['view_sitemap', 'manage_sitemap']))
             ->post('/sitemap/generate')
@@ -462,7 +405,7 @@ final class SitemapTest extends TestCase
      */
     public function test_generating_is_refused_to_an_operator_who_can_only_view(): void
     {
-        config(['panel.landing.route' => true]);
+        Sitemap::add('/');
 
         $this->actingAs($this->operatorWith(['view_sitemap']))
             ->post('/sitemap/generate')
@@ -474,8 +417,6 @@ final class SitemapTest extends TestCase
     /** The action sits on the page's own address, exactly as `OrganisationPage::update()` does. */
     public function test_the_generate_route_is_a_post_to_the_pages_own_address(): void
     {
-        config(['panel.landing.route' => true]);
-
         $this->assertSame(['generate' => 'post'], SitemapPage::actionMethods());
         $this->assertSame(['generate' => 'generate'], SitemapPage::actionUris());
     }

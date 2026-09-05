@@ -147,6 +147,8 @@ export { default as TablePagination } from './components/DataTable/TablePaginati
 export { default as TableShell } from './components/DataTable/TableShell.vue';
 export { default as TableTabs } from './components/DataTable/TableTabs.vue';
 export { default as TableToolbar } from './components/DataTable/TableToolbar.vue';
+export { default as SavedViews } from './components/DataTable/SavedViews.vue';
+export type { SavedTableView } from './components/DataTable/SavedViews.vue';
 export { default as PkPasskeyRegister } from './components/Auth/PkPasskeyRegister.vue';
 export { default as PkModal } from './components/Overlay/PkModal.vue';
 export { default as PkSkeleton } from './components/primitives/PkSkeleton.vue';
@@ -218,6 +220,7 @@ export { default as PkSection } from './components/Landing/PkSection.vue';
 export { default as PkSectionHeading } from './components/Landing/PkSectionHeading.vue';
 export { default as PkHero } from './components/Landing/PkHero.vue';
 export { default as PkLogoCloud } from './components/Landing/PkLogoCloud.vue';
+export { default as PkMarquee } from './components/Landing/PkMarquee.vue';
 export { default as PkFeatureGrid } from './components/Landing/PkFeatureGrid.vue';
 export { default as PkSteps } from './components/Landing/PkSteps.vue';
 export { default as PkStats } from './components/Landing/PkStats.vue';

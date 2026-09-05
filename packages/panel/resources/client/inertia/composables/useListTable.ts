@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/vue3'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 /**
  * The Inertia adapter.
@@ -57,6 +57,7 @@ export function useListTable(url: string, props: ListPageProps, options: ListTab
     const showSpinner = ref(false)
 
     let spinnerTimer: ReturnType<typeof setTimeout> | undefined
+    let requestSequence = 0
 
     /**
      * Cursors for the pages already visited, oldest first.
@@ -217,8 +218,16 @@ export function useListTable(url: string, props: ListPageProps, options: ListTab
     }
 
     function request(params: Record<string, string>) {
+        const sequence = ++requestSequence
+
         loading.value = true
-        spinnerTimer = setTimeout(() => (showSpinner.value = true), 300)
+        const timer = setTimeout(() => {
+            if (sequence === requestSequence) {
+                showSpinner.value = true
+            }
+        }, 300)
+
+        spinnerTimer = timer
 
         router.get(url, params, {
             only: [
@@ -240,12 +249,32 @@ export function useListTable(url: string, props: ListPageProps, options: ListTab
             preserveScroll: true,
             replace: true,
             onFinish: () => {
-                clearTimeout(spinnerTimer)
+                // Inertia calls completion handlers for cancelled requests as
+                // well. An older response must never hide the loading state of
+                // the newer request that replaced it.
+                if (sequence !== requestSequence) {
+                    return
+                }
+
+                clearTimeout(timer)
+                spinnerTimer = undefined
                 loading.value = false
                 showSpinner.value = false
             },
         })
     }
+
+    onBeforeUnmount(() => {
+        requestSequence++
+
+        if (spinnerTimer) {
+            clearTimeout(spinnerTimer)
+            spinnerTimer = undefined
+        }
+
+        loading.value = false
+        showSpinner.value = false
+    })
 
     function nextPage() {
         if (!props.nextCursor || loading.value) {

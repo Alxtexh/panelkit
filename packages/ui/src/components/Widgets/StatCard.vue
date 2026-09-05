@@ -34,6 +34,8 @@ withDefaults(
         sparkline?: { label: string; value: number }[] | null
         loading?: boolean
         error?: boolean
+        /** Offer an in-place retry action when the value failed. */
+        retryable?: boolean
         /** True when a DECREASE is the good outcome. */
         inverted?: boolean
     }>(),
@@ -43,16 +45,25 @@ withDefaults(
         sparkline: null,
         loading: false,
         error: false,
+        retryable: false,
         inverted: false,
     },
 )
+
+defineEmits<{
+    (e: 'retry'): void
+}>()
 
 const format = (v: unknown) =>
     typeof v === 'number' ? new Intl.NumberFormat().format(v) : String(v ?? '-')
 </script>
 
 <template>
-    <div class="bg-card flex flex-col overflow-hidden rounded-lg border">
+    <div
+        class="bg-card flex flex-col overflow-hidden rounded-lg border"
+        data-slot="stat-card"
+        :aria-busy="loading ? 'true' : undefined"
+    >
         <div class="flex flex-1 flex-col gap-1 p-4">
             <p class="text-muted-foreground relative text-xs font-medium">
                 {{ label }}
@@ -62,13 +73,21 @@ const format = (v: unknown) =>
                  is what keeps the card from jumping when the value lands. -->
             <PkSkeleton v-if="loading" variant="number" class="my-1" />
 
-            <span
+            <div
                 v-else-if="error"
-                class="text-destructive relative flex h-8 items-center text-sm"
+                class="text-destructive relative flex h-8 items-center gap-3 text-sm"
                 role="alert"
             >
-                Could not load
-            </span>
+                <span>Could not load</span>
+                <button
+                    v-if="retryable"
+                    type="button"
+                    class="text-foreground hover:bg-accent rounded-md border px-2 py-1 text-xs font-medium transition-colors"
+                    @click="$emit('retry')"
+                >
+                    Retry
+                </button>
+            </div>
 
             <span v-else class="relative flex h-8 items-center text-2xl font-semibold tabular-nums">
                 {{ format(value) }}

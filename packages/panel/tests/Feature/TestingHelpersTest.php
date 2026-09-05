@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Tests\Feature;
 
 use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Billing\GenericBillingWebhookAdapter;
+use Alxtexh\Panel\Imports\Importer;
 use Alxtexh\Panel\Testing\InteractsWithPanels;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tag;
@@ -131,6 +133,10 @@ final class TestingHelpersTest extends TestCase
 
     public function test_importable_404_vs_csv_and_failures_download(): void
     {
+        if (! class_exists(Importer::class)) {
+            $this->markTestSkipped('Import helper tests require panel-operations.');
+        }
+
         $this->assertNotImportable($this->user, 'posts');
 
         $ok = $this->assertPanelImports(
@@ -181,6 +187,10 @@ final class TestingHelpersTest extends TestCase
 
     public function test_billing_webhook_helper_accepts_a_generic_payload(): void
     {
+        if (! class_exists(GenericBillingWebhookAdapter::class)) {
+            $this->markTestSkipped('Billing webhook helper tests require panel-billing.');
+        }
+
         app(PanelManager::class)->panel('admin')
             ->billingWebhookVerifier(static fn (): bool => true);
 

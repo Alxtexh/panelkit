@@ -5,6 +5,52 @@ admin-platform expectations. It deliberately preserves PanelKit's strongest
 choices: transport independence, schema/data separation, tenant-safe scoped
 bindings, keyset pagination, deferred props, and queued large operations.
 
+## Unified execution board — 2026-09-05
+
+This is the single source of truth for the modernization work. The tracks are
+planned together because they share the same contracts: one design-token layer
+feeds the shell, overlays, widgets and forms; one action lifecycle feeds inline
+actions, bulk actions and trash; and one release gate checks the package, its
+published mirror, a real consumer and a real browser. A change is not complete
+until its source, consumer mirror and relevant browser journey agree.
+
+| Track | Scope | Status | Proof gate |
+|---|---|---:|---|
+| Visual system | Tailwind tokens, 14px body baseline, density/radius, widget hierarchy, combined stat strips, responsive packing | DONE | UI suite, CSS parity, browser shell screenshots |
+| Navigation | Closed-by-default groups, remembered state, active states, collapsed-rail flyouts, mobile bottom navigation, command palette | DONE | `PanelShellRenderTest`, navigation coverage |
+| Overlays | Fixed/teleported menus with flip and viewport clamping, nested-overlay safety, modal/slideover focus return, focus trap, Escape, scroll lock, semantic ARIA, usable footer targets | DONE | overlay unit tests and destructive browser journey |
+| Records and tables | Search/filter/sort/pagination state, stale-request guards, toolbar cleanup, action loading, delete confirmation, trash restore | DONE | UI suite, feature tests, destructive browser journey |
+| Dashboard | Deferred-query grouping, retries and partial failures, widget loading/error states, persisted layout feedback and responsive minimums | DONE | dashboard component/feature tests and browser accessibility |
+| Operations | Queue thresholds, checkpoints, cancellation, idempotency, unified job status, upload limits/scanning, safe private URLs | DONE | package and playground feature gates |
+| Security and accessibility | Panel guard isolation, tenant boundaries, headers/CSP, payload limits, auth throttling, absolute session lifetime, contrast/ARIA sweep | DONE | security suite and 7-screen axe sweep |
+| Distribution | Client mirror sync, consumer install/build, typecheck, CSS/page-shell parity, browser runner URL isolation | DONE | `make check-client check-css-parity check-page-shell`, build and Dusk |
+| Release tooling | Repair the bounded Playground feature-suite hang and promote a working PHP static-analysis invocation into the release gate | OPEN | timed full feature suite and PHPStan/Psalm gate |
+
+### Current acceptance record
+
+- 101 UI test files / 950 tests pass.
+- Overlay, multiselect, request-race and accessibility-focused tests pass.
+- Shared modal/slideover ownership keeps page scroll locked until the final
+  overlay closes, and restores focus only to a still-valid owner.
+- Browser accessibility sweep: 7 tests pass.
+- Browser destructive-action journey: 21 assertions pass, including menu
+  viewport geometry and modal button sizing.
+- Browser shell journey: 6 tests / 13 assertions pass.
+- Isolated performance suite: 22 tests / 84 assertions pass in about 6 seconds.
+- Package build, published client mirror, typecheck, CSS parity and page-shell
+  checks pass.
+- Chromium contrast sweep passes after darkening the shared muted-copy and
+  default action tokens; the change is mirrored into the shipped kit stylesheet
+  and pre-paint variables.
+
+The two items marked OPEN are release-tooling improvements, not a reason to
+weaken the application gates. The static analyser now runs and reports 622
+existing findings instead of silently exiting; those findings need an owned
+pay-down pass before that gate can be promoted. The broad serial feature suite
+also remains over its 180-second bound even after benchmarks were separated,
+so the focused release gate and the benchmark gate remain the reliable checks
+until that suite is parallelised or split further.
+
 ## Completed in this pass
 
 - Removed invalid testimonial figure markup.
@@ -74,10 +120,10 @@ Priority: immediate. These are release blockers for a framework.
 - [x] Add a clean distribution-install job that uses the Composer archive and
   the mirrored client rather than the local path repository.
 - Make `SetupWizard.vue` and all package sources pass formatting checks.
-- Add PHPStan/Psalm checks and a public-API compatibility check. The existing
-  Larastan installation currently exits 1 without diagnostics even for a
-  single file, so it is not promoted into the release gate until that tool
-  invocation is repaired.
+- Add PHPStan/Psalm checks and a public-API compatibility check. PHPStan now
+  runs with diagnostics after stale baseline entries were made non-fatal; the
+  remaining 622 findings are tracked debt and are not yet promoted as a clean
+  release gate.
 - [x] Add a dependency-free public API manifest check for the package's core
   extension surfaces; static-analysis gating remains separate until PHPStan's
   silent failure is repaired.

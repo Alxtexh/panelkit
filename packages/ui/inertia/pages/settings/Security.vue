@@ -467,8 +467,8 @@ defineOptions({
             </template>
         </p>
         <template #footer>
-            <Button variant="ghost" size="sm" @click="pendingSecurityAction = null">Cancel</Button>
-            <Button variant="destructive" size="sm" @click="confirmSecurityAction">
+            <Button variant="outline" @click="pendingSecurityAction = null">Cancel</Button>
+            <Button variant="destructive" @click="confirmSecurityAction">
                 Confirm
             </Button>
         </template>

@@ -398,29 +398,6 @@ final class Panel
     private const AUTH_FAMILIES = ['centered', 'muted', 'split', 'showcase', 'card'];
 
     /**
-     * Public landing designs (composition + chrome), parallel to auth families.
-     *
-     * @var list<string>
-     */
-    private const LANDING_DESIGNS = [];
-
-    /**
-     * Host-facing aliases that resolve to a shipped landing design.
-     *
-     * @var array<string, string>
-     */
-    private const LANDING_ALIASES = [];
-
-    /**
-     * Whether this panel enabled the public landing route via `landing()`.
-     * Null means "leave config alone".
-     */
-    private ?bool $landingRoute = null;
-
-    /** Landing design set via `landing('editorial')`, when any. */
-    private ?string $landingDesign = null;
-
-    /**
      * shadcn-vue block ids and short aliases that resolve to a PanelKit family.
      * Picking a login block name selects the matching signup + OTP family too.
      *
@@ -1584,66 +1561,6 @@ final class Panel
     public static function authFamilies(): array
     {
         return self::AUTH_FAMILIES;
-    }
-
-    /**
-     * Enable the public landing route and optionally pick a shipped design.
-     *
-     * ```php
-     * Panel::make('admin')->landing(true);           // route on, keep config design
-     * Panel::make('admin')->landing('editorial');    // route on + design
-     * Panel::make('admin')->landing('composed');     // alias → aurora
-     * Panel::make('admin')->landing(false);          // do not claim /
-     * ```
-     *
-     * Designs are pre-shipped kit offerings (not optional plugins), the same
-     * posture as auth families. Default config still ships a real landing
-     * (`aurora`) when the route is on.
-     */
-    public function landing(bool|string $design = true): self
-    {
-        if ($design === false) {
-            $this->landingRoute = false;
-            $this->landingDesign = null;
-            config(['panel.landing.route' => false]);
-
-            return $this;
-        }
-
-        $this->landingRoute = true;
-        config(['panel.landing.route' => true]);
-
-        if (is_string($design)) {
-            $resolved = self::LANDING_ALIASES[$design] ?? $design;
-            $this->landingDesign = in_array($resolved, self::LANDING_DESIGNS, true)
-                ? $resolved
-                : null;
-            config(['panel.landing.design' => $this->landingDesign]);
-        }
-
-        return $this;
-    }
-
-    public function getLandingDesign(): ?string
-    {
-        return $this->landingDesign;
-    }
-
-    public function hasLandingRoute(): ?bool
-    {
-        return $this->landingRoute;
-    }
-
-    /** @return list<string> */
-    public static function landings(): array
-    {
-        return self::LANDING_DESIGNS;
-    }
-
-    /** @return list<string> */
-    public static function landingDesigns(): array
-    {
-        return self::LANDING_DESIGNS;
     }
 
     /**

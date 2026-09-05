@@ -36,6 +36,26 @@ export function usePanelIdleLock() {
     let lastActivity = Date.now()
     let interval: ReturnType<typeof setInterval> | null = null
     let locking = false
+    let redirectingToLock = false
+    let removeHttpExceptionListener: (() => void) | null = null
+
+    /**
+     * A background partial reload receives 423 JSON while the panel is locked.
+     * That is correct for the transport, but Inertia cannot render JSON as a
+     * page and otherwise opens its "invalid response" dialog. Intercept the
+     * exception event and perform one normal navigation to the lock screen.
+     */
+    function onHttpException(event: Event): void {
+        const response = (event as CustomEvent<{ response?: { status?: number } }>).detail?.response
+
+        if (response?.status !== 423 || !config.value?.lockUrl || isAuthPage() || redirectingToLock) {
+            return
+        }
+
+        event.preventDefault()
+        redirectingToLock = true
+        window.location.assign(config.value.lockUrl)
+    }
 
     function isAuthPage(): boolean {
         const component = String(page.component ?? '')
@@ -141,6 +161,7 @@ export function usePanelIdleLock() {
 
         document.addEventListener('scroll', onActivity, { passive: true, capture: true })
         document.addEventListener('visibilitychange', onVisibility)
+        removeHttpExceptionListener = router.on('httpException', onHttpException)
         interval = setInterval(tick, 1000)
     }
 
@@ -151,6 +172,8 @@ export function usePanelIdleLock() {
 
         document.removeEventListener('scroll', onActivity, { capture: true })
         document.removeEventListener('visibilitychange', onVisibility)
+        removeHttpExceptionListener?.()
+        removeHttpExceptionListener = null
 
         if (interval !== null) {
             clearInterval(interval)

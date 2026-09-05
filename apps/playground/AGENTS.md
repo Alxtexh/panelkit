@@ -900,7 +900,7 @@ _How to use them: name them in `form()`._
 _How to use them: name them in `table()`._
 **Table filters** (10): `BooleanFilter` `DateRangeFilter` `Filter` `HasOptions` `Indicator` `MultiSelectFilter` `NumberRangeFilter` `QueryBuilderFilter` `SelectFilter` `TrashedFilter`
 _How to use them: name them in `table()`._
-**Actions** (11): `Action` `ActionGroup` `ActionStep` `BulkAction` `BulkRunner` `ExportedFile` `ImpersonateAction` `JobStatus` `ModalFooterAction` `RecordAction` `ReplicateAction`
+**Actions** (13): `Action` `ActionGroup` `ActionStep` `BulkAction` `BulkCheckpoint` `BulkResult` `BulkRunner` `ExportedFile` `ImpersonateAction` `JobStatus` `ModalFooterAction` `RecordAction` `ReplicateAction`
 _How to use them: name them in `table()` or the resource's actions._
 **Schema (form layout)** (14): `Callout` `Card` `Column` `Columns` `Component` `Fieldset` `Flex` `Grid` `Renderable` `Section` `Step` `Tab` `Tabs` `Wizard`
 _How to use them: wrap fields with them inside `form()`._

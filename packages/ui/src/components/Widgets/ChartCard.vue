@@ -35,6 +35,8 @@ const props = withDefaults(
         period?: string
         loading?: boolean
         error?: boolean
+        /** Offer an in-place retry action when the series failed. */
+        retryable?: boolean
         bodyHeight?: number
         /** Size the body to its content once loaded. */
         fitBody?: boolean
@@ -51,6 +53,7 @@ const props = withDefaults(
         periods: null,
         loading: false,
         error: false,
+        retryable: false,
         bodyHeight: 220,
         fitBody: false,
         collapsible: true,
@@ -63,6 +66,7 @@ const props = withDefaults(
 defineEmits<{
     (e: 'update:period', value: string): void
     (e: 'hide'): void
+    (e: 'retry'): void
 }>()
 
 const slots = useSlots()
@@ -205,11 +209,19 @@ const bodyStyle = computed(() => {
 
             <p
                 v-else-if="error"
-                class="text-destructive flex items-center justify-center text-sm"
+                class="text-destructive flex flex-col items-center justify-center gap-3 text-sm"
                 :style="{ height: `${bodyHeight}px` }"
                 role="alert"
             >
                 Could not load
+                <button
+                    v-if="retryable"
+                    type="button"
+                    class="text-foreground hover:bg-accent rounded-md border px-3 py-1.5 text-xs font-medium transition-colors"
+                    @click="$emit('retry')"
+                >
+                    Try again
+                </button>
             </p>
 
             <slot v-else />

@@ -925,10 +925,9 @@ function confirmPending() {
             @close="pendingConfirmation = null"
         >
             <template #footer>
-                <Button variant="ghost" size="sm" @click="pendingConfirmation = null">Cancel</Button>
+                <Button variant="outline" @click="pendingConfirmation = null">Cancel</Button>
                 <Button
                     variant="destructive"
-                    size="sm"
                     @click="confirmPending"
                 >
                     Confirm

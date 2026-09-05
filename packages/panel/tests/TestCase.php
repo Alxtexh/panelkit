@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Tests;
 
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\PanelServiceProvider;
+use Alxtexh\Panel\Http\PanelRoutes;
 use Alxtexh\Panel\Resources\ResourceConfigurator;
 use Alxtexh\Panel\Tests\Fixtures\Providers\FixturePanelProvider;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
@@ -115,6 +116,11 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Testbench reports the application as booted before the provider
+        // booted callback is replayed. Register after every fixture provider,
+        // including per-test host providers, has declared its routes.
+        PanelRoutes::registerAll();
 
         Inertia::setRootView('app');
 

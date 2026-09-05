@@ -134,6 +134,7 @@ final class JobStatus
             'failure' => null,
             'file' => null,
             'fingerprint' => $fingerprint,
+            'cursor' => null,
             'startedAt' => now()->toIso8601String(),
             'finishedAt' => null,
         ]);
@@ -181,6 +182,21 @@ final class JobStatus
 
         $state['checkpoint'] = array_values(array_slice(array_unique($processed, SORT_REGULAR), -100_000));
         self::put($token, $state);
+    }
+
+    /** Persist the last committed cursor for a resumable keyset scan. */
+    public static function cursor(string $token, int|string|null $cursor): void
+    {
+        $state = self::raw($token);
+
+        if ($state === null) {
+            return;
+        }
+
+        self::put($token, [
+            ...$state,
+            'cursor' => $cursor === null ? null : (string) $cursor,
+        ]);
     }
 
     /** @param array<string, mixed> $extra */

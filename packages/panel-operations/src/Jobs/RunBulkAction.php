@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Alxtexh\Panel\Actions\BulkRunner;
+use Alxtexh\Panel\Actions\BulkCheckpoint;
 use Alxtexh\Panel\Actions\JobStatus;
 use RuntimeException;
 use Throwable;
@@ -42,7 +43,11 @@ final class RunBulkAction implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    public int $tries = 1;
+    /** Retry transient worker/database failures without repeating committed chunks. */
+    public int $tries = 3;
+
+    /** Give a busy database time to recover before retrying the next chunk. */
+    public array|int $backoff = [30, 120];
 
     /**
      * ITS OWN BUDGET, rather than whatever the worker was launched with.
@@ -50,9 +55,8 @@ final class RunBulkAction implements ShouldQueue
      * Without this the job inherits the `queue:work` default of 60 seconds -
      * a number that lives in a deploy script or a supervisor config this
      * package cannot see. A bulk action over a few thousand records crosses
-     * it, and with `$tries = 1` the kill is final: the mutation is applied to
-     * the records processed so far, to none of the rest, and nothing anywhere
-     * says which. Its siblings already declare theirs; this one was missed.
+     * it, so the job retries transient failures and resumes from its durable
+     * chunk ledger instead of leaving a silent partial write.
      */
     public int $timeout = 900;
 
@@ -94,11 +98,24 @@ final class RunBulkAction implements ShouldQueue
          * @var list<int|string>
          */
         private readonly array $ids = [],
+
+        /** The mounted panel path, retained for links in durable notifications. */
+        private readonly string $panelPath = '',
     ) {}
 
     public function handle(BulkRunner $runner): void
     {
         try {
+            $initialState = JobStatus::get($this->token, $this->userId);
+
+            // Queue delivery is at-least-once. A worker can finish the
+            // mutation and lose its acknowledgement, so a redelivered job
+            // must not start the completed operation again.
+            if ($initialState !== null
+                && in_array($initialState['status'] ?? null, [JobStatus::DONE, JobStatus::CANCELED], true)) {
+                return;
+            }
+
             $class = $this->actAs($this->userId, $this->resource);
 
             $definition = $class::definition();
@@ -116,42 +133,59 @@ final class RunBulkAction implements ShouldQueue
             $list = $definition->toListQuery($class::model());
             $request = Request::create('/', 'GET', $this->query);
 
-            $affected = $runner->run(
+            $state = JobStatus::get($this->token, $this->userId) ?? [];
+            $startAfter = isset($state['cursor']) && $state['cursor'] !== null
+                ? (string) $state['cursor']
+                : null;
+
+            $runner->runDetailed(
                 $action,
                 $list->matching($request, $this->ids === [] ? null : $this->ids),
                 $class::model(),
                 $list->keyColumnName(),
-                function (int $done): bool {
-                    JobStatus::progress($this->token, $done);
+                function (int $done, int|string|null $cursor): bool {
+                    $totals = BulkCheckpoint::totals($this->token);
+                    JobStatus::progress($this->token, $totals['affected'] ?: $done);
+                    JobStatus::cursor($this->token, $cursor);
 
                     return ! JobStatus::isCanceled($this->token);
                 },
                 $this->data,
                 $action->authorizesIndividualRecords()
-                    ? static fn (Model $record): bool => $class::can($action->getAbility(), $record)
+                    ? static fn (Model $record): bool => $class::can($action->getRecordAbility(), $record)
                     : null,
+                fn (int|string|null $cursor): bool => BulkCheckpoint::claim($this->token, $cursor),
+                function (int|string|null $cursor, array $batch): void {
+                    BulkCheckpoint::complete(
+                        $this->token,
+                        $cursor,
+                        (int) $batch['selected'],
+                        (int) $batch['authorized'],
+                        (int) $batch['affected'],
+                    );
+                },
+                $startAfter,
             );
 
             if (JobStatus::isCanceled($this->token)) {
                 return;
             }
 
-            JobStatus::finish($this->token, ['done' => $affected]);
+            $totals = BulkCheckpoint::totals($this->token);
+
+            JobStatus::finish($this->token, $totals + ['done' => $totals['affected']]);
+            BulkCheckpoint::forget($this->token);
 
             $this->notifyActor(
                 'Bulk action finished',
-                number_format($affected).' records updated by "'.$this->actionKey.'".',
-                "/{$this->resource}",
+                number_format($totals['affected']).' records updated by "'.$this->actionKey.'".'
+                    .($totals['skipped'] > 0 ? ' '.number_format($totals['skipped']).' skipped by policy.' : ''),
+                $this->resourcePath(),
             );
         } catch (Throwable $e) {
-            // Recorded for the operator watching the progress bar, then
-            // rethrown so it reaches failed_jobs and the logs like any other
-            // job failure. Swallowing it would leave the UI saying "failed"
-            // with nothing anywhere explaining why.
-            JobStatus::fail($this->token, $e->getMessage());
-
-            $this->notifyActor('Bulk action failed', $e->getMessage(), "/{$this->resource}", 'danger');
-
+            // Let the queue retry transient failures. The final `failed()` hook
+            // records the terminal state; marking it failed here would make a
+            // still-retryable operation look permanently dead in the UI.
             throw $e;
         }
     }
@@ -159,5 +193,11 @@ final class RunBulkAction implements ShouldQueue
     public function failed(Throwable $e): void
     {
         JobStatus::fail($this->token, $e->getMessage());
+        $this->notifyActor('Bulk action failed', $e->getMessage(), $this->resourcePath(), 'danger');
+    }
+
+    private function resourcePath(): string
+    {
+        return '/'.trim($this->panelPath.'/'.$this->resource, '/');
     }
 }

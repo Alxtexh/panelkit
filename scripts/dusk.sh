@@ -129,8 +129,10 @@ SERVER_PID=$!
 # Wait for it to answer rather than sleeping a guessed number of seconds - a
 # fixed sleep is either slower than it needs to be or occasionally too short,
 # and the too-short case looks like a broken application.
+READY=false
 for _ in $(seq 1 40); do
     if curl -fsS -o /dev/null -m 2 "http://127.0.0.1:${PORT}/up" 2>/dev/null; then
+        READY=true
         break
     fi
     if ! kill -0 "$SERVER_PID" 2>/dev/null; then
@@ -141,5 +143,18 @@ for _ in $(seq 1 40); do
     sleep 0.5
 done
 
+if [[ "$READY" != true ]]; then
+    echo "The test server did not become healthy. Its log:" >&2
+    tail -20 /tmp/alxtexhpanel-dusk-server.log >&2
+    exit 1
+fi
+
 echo "==> Running browser tests"
-php artisan dusk "$@"
+# Keep the browser's base URL in lockstep with the server. `.env.dusk.local`
+# carries the safe default port, but a caller may choose another one when that
+# port is occupied. Previously only `artisan serve` received DUSK_PORT, so the
+# browser still visited the old port and reported ERR_CONNECTION_REFUSED even
+# though the new server was healthy.
+DUSK_BASE_URL="http://127.0.0.1:${PORT}" \
+APP_URL="http://127.0.0.1:${PORT}" \
+    php artisan dusk "$@"

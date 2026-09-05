@@ -485,14 +485,20 @@ final class ChartWidget
                 'error' => false,
             ];
         } catch (Throwable $e) {
-            Log::error('Panel chart failed to resolve.', [
-                'component' => 'ChartWidget',
-                'operation' => 'resolve',
-                'widget' => $this->key,
-                'period' => $period->value,
-                'tenant' => $tenantKey,
-                'exception' => $e->getMessage(),
-            ]);
+            // Widget resolution is also usable in schema/unit contexts where
+            // Laravel's logging binding has not been booted yet. A rendering
+            // failure should still become the typed empty payload, never a
+            // second exception while trying to report the first one.
+            if (function_exists('app') && app()->bound('log')) {
+                Log::error('Panel chart failed to resolve.', [
+                    'component' => 'ChartWidget',
+                    'operation' => 'resolve',
+                    'widget' => $this->key,
+                    'period' => $period->value,
+                    'tenant' => $tenantKey,
+                    'exception' => $e->getMessage(),
+                ]);
+            }
 
             return $empty;
         }

@@ -1,0 +1,1 @@
+import{A as e,B as t,Lt as n,R as r,et as i}from"./api-docs-D-YQgOc6.js";import{t as a}from"./TicketAnalysis-DwLc4YgT.js";var o=r({inheritAttrs:!1,__name:`TicketAnalysis`,setup(r){return(r,o)=>(i(),e(a,n(t(r.$attrs)),null,16))}});export{o as default};

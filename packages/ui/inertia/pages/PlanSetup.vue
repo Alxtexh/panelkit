@@ -104,8 +104,8 @@ function destroy() {
                 Delete plan <strong>#{{ pendingDestroy }}</strong>?
             </p>
             <template #footer>
-                <Button variant="ghost" size="sm" @click="pendingDestroy = null">Cancel</Button>
-                <Button variant="destructive" size="sm" @click="destroy">Delete plan</Button>
+                <Button variant="outline" @click="pendingDestroy = null">Cancel</Button>
+                <Button variant="destructive" @click="destroy">Delete plan</Button>
             </template>
         </PkModal>
     </div>

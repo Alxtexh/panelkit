@@ -77,6 +77,27 @@ abstract class DuskTestCase extends BaseTestCase
     }
 
     /**
+     * Prefer the wrapper's runtime URL over cached Laravel configuration.
+     *
+     * `scripts/dusk.sh` starts an isolated server on `DUSK_PORT` and passes
+     * its URL as `DUSK_BASE_URL` to the Dusk process. Dusk's stock implementation
+     * reads only `config('app.url')`, however, and a cached config can retain
+     * the normal development port. The browser then reports
+     * `ERR_CONNECTION_REFUSED` even though the throwaway server is healthy.
+     * Reading the process environment first keeps the browser and server on
+     * the same port while preserving the normal configured URL elsewhere.
+     */
+    protected function baseUrl(): string
+    {
+        $runtimeUrl = $_ENV['DUSK_BASE_URL']
+            ?? $_SERVER['DUSK_BASE_URL']
+            ?? getenv('DUSK_BASE_URL')
+            ?: ($_ENV['APP_URL'] ?? $_SERVER['APP_URL'] ?? getenv('APP_URL') ?: null);
+
+        return rtrim((string) ($runtimeUrl ?: config('app.url')), '/');
+    }
+
+    /**
      * Skip the whole class when there is no browser to drive.
      *
      * A SKIP, NOT A FAILURE. A developer without a browser installed has not
@@ -238,7 +259,32 @@ abstract class DuskTestCase extends BaseTestCase
                                 // difference between a message that names a
                                 // selector and one that says what to fix.
                                 nodes: v.nodes.map(function (n) {
-                                    return { target: n.target.join(' '), summary: n.failureSummary };
+                                    var target = n.target.join(' ');
+                                    var element = null;
+
+                                    try {
+                                        element = document.querySelector(n.target[0]);
+                                    } catch (ignore) {
+                                        // Some axe targets use a shadow-root path.
+                                    }
+
+                                    var style = element ? window.getComputedStyle(element) : null;
+
+                                    return {
+                                        target: target,
+                                        summary: n.failureSummary,
+                                        computed: style ? {
+                                            color: style.color,
+                                            backgroundColor: style.backgroundColor,
+                                            fontSize: style.fontSize,
+                                            fontWeight: style.fontWeight,
+                                            opacity: style.opacity,
+                                            parentOpacity: element.parentElement
+                                                ? window.getComputedStyle(element.parentElement).opacity
+                                                : null,
+                                            className: element.className,
+                                        } : null,
+                                    };
                                 }),
                             };
                         }));
@@ -255,7 +301,11 @@ abstract class DuskTestCase extends BaseTestCase
                 $v['id'],
                 $v['help'],
                 collect($v['nodes'])
-                    ->map(fn (array $n) => '  '.$n['target']."\n    ".str_replace("\n", "\n    ", (string) $n['summary']))
+                    ->map(fn (array $n) => '  '.$n['target']
+                        ."\n    ".str_replace("\n", "\n    ", (string) $n['summary'])
+                        .(isset($n['computed']) && is_array($n['computed'])
+                            ? "\n    Computed: ".json_encode($n['computed'], JSON_UNESCAPED_SLASHES)
+                            : ''))
                     ->implode("\n"),
             ))
             ->implode("\n");

@@ -29,7 +29,7 @@ final class AppearancePrepaintTest extends TestCase
 
         $this->assertFalse($payload['dark']);
         $this->assertSame('light', $payload['theme']);
-        $this->assertSame('oklch(0.32 0.02 260)', $payload['vars']['--primary']);
+        $this->assertSame('oklch(0.24 0.02 260)', $payload['vars']['--primary']);
         $this->assertSame('16px', $payload['vars']['--pk-font-size']);
     }
 

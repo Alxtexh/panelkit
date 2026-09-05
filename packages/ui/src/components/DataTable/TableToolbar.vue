@@ -20,7 +20,7 @@
  *
  * Emits only. Never fetches (spec §4 rule 2).
  */
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { FOCUS_RING } from '../../lib/focusRing'
 import PkDropdown from '../primitives/PkDropdown.vue'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
@@ -114,6 +114,10 @@ watch(local, (value) => {
             emit('update:search', value)
         }
     }, 250)
+})
+
+onBeforeUnmount(() => {
+    clearTimeout(timer)
 })
 
 /* ------------------------------------------------------------------ filters */
@@ -355,7 +359,7 @@ function clearEverythingMobile() {
         `sm`, where it becomes a fixed width - on a phone a right-aligned
         stub of a search field would be worse than a full-width one.
     -->
-    <div class="flex flex-col gap-2">
+    <div data-slot="table-toolbar" class="flex flex-col gap-2">
         <!-- Mobile: search plus a bottom drawer for filters, columns, and grouping. -->
         <div class="flex items-center gap-2 md:hidden">
             <div class="relative min-w-0 flex-1">

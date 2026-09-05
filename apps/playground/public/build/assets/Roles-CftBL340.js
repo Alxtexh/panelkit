@@ -1,0 +1,1 @@
+import{A as e,B as t,Lt as n,R as r,et as i}from"./api-docs-D-YQgOc6.js";import{j as a}from"./inertia-DHYtgWFA.js";import{t as o}from"./app-CaR49oXv.js";var s=r({inheritAttrs:!1,layout:o,__name:`Roles`,setup(r){return(r,o)=>(i(),e(a,n(t(r.$attrs)),null,16))}});export{s as default};

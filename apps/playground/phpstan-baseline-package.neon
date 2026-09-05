@@ -1081,42 +1081,6 @@ parameters:
 			path: ../../packages/panel/src/Knowledge/ProviderEmbedder.php
 
 		-
-			message: '#^Method PanelKit\\Panel\\Landing\\LandingPageResource\:\:ability\(\) never returns null so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: ../../packages/panel/src/Landing/LandingPageResource.php
-
-		-
-			message: '#^Method PanelKit\\Panel\\Landing\\LandingPresets\:\:aurora\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: ../../packages/panel/src/Landing/LandingPresets.php
-
-		-
-			message: '#^Method PanelKit\\Panel\\Landing\\LandingPresets\:\:console\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: ../../packages/panel/src/Landing/LandingPresets.php
-
-		-
-			message: '#^Method PanelKit\\Panel\\Landing\\LandingPresets\:\:editorial\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: ../../packages/panel/src/Landing/LandingPresets.php
-
-		-
-			message: '#^Method PanelKit\\Panel\\Landing\\LandingPresets\:\:featureGrid\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: ../../packages/panel/src/Landing/LandingPresets.php
-
-		-
-			message: '#^Method PanelKit\\Panel\\Landing\\LandingPresets\:\:get\(\) should return list\<array\{type\: string, data\: array\<string, mixed\>\}\> but returns array\.$#'
-			identifier: return.type
-			count: 1
-			path: ../../packages/panel/src/Landing/LandingPresets.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1

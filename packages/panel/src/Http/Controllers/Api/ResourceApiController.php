@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers\Api;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
 use Alxtexh\Panel\Api\ApiToken;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Support\Abilities;
 use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\Transaction;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -83,12 +84,18 @@ final class ResourceApiController extends Controller
 
         $form = $class::formDefinition();
 
+        // The API is another front door, not another lifecycle. Hosts use
+        // these hooks to normalize, audit, and maintain related state, so an
+        // integration must not silently bypass the hooks the panel form runs.
+        $class::beforeValidate($request);
+
         /*
          * THE SAME RULES THE FORM ENFORCES. Not "similar rules" - the same
          * declaration, so an API that accepted something the screen refuses
          * cannot exist.
          */
         $validated = $request->validate($form->rules());
+        $class::afterValidate($validated);
 
         $model = $class::model();
         $record = new $model;
@@ -103,7 +110,12 @@ final class ResourceApiController extends Controller
         // another organisation.
         $this->applyTenant($record);
 
-        $record->save();
+        $class::beforeCreate($record, $validated);
+
+        Transaction::run(static function () use ($class, $record, $validated): void {
+            $record->save();
+            $class::afterCreate($record, $validated);
+        });
 
         return response()->json(['data' => $this->present($class, $record->fresh())], 201);
     }
@@ -118,6 +130,8 @@ final class ResourceApiController extends Controller
 
         $form = $class::formDefinition();
 
+        $class::beforeValidate($request);
+
         /*
          * ONLY THE ATTRIBUTES SENT ARE VALIDATED AND WRITTEN. A PUT that
          * demanded every field would make changing one thing a read-modify-write
@@ -127,9 +141,15 @@ final class ResourceApiController extends Controller
         $rules = array_intersect_key($form->rules(), $request->all());
 
         $validated = $request->validate($rules);
+        $class::afterValidate($validated);
 
         $record->forceFill($form->sanitize($validated));
-        $record->save();
+        $class::beforeUpdate($record, $validated);
+
+        Transaction::run(static function () use ($class, $record, $validated): void {
+            $record->save();
+            $class::afterUpdate($record, $validated);
+        });
 
         return response()->json(['data' => $this->present($class, $record->fresh())]);
     }
@@ -142,7 +162,12 @@ final class ResourceApiController extends Controller
 
         $this->authorizeAbility($request, 'delete', $resource, $record);
 
-        $record->delete();
+        $class::beforeDelete($record);
+
+        Transaction::run(static function () use ($class, $record): void {
+            $record->delete();
+            $class::afterDelete($record);
+        });
 
         return response()->json(null, 204);
     }

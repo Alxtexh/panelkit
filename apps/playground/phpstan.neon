@@ -34,6 +34,11 @@ includes:
     - phpstan-baseline-package.neon
 
 parameters:
+    # Deleted/relocated files must not make the analyser exit before it can
+    # report current findings. Baselines are periodically regenerated from the
+    # active source tree; unmatched historical entries are debt, not a reason
+    # to make the static-analysis command silently return status 1.
+    reportUnmatchedIgnoredErrors: false
     paths:
         - app/
         - bootstrap/app.php

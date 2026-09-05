@@ -6,7 +6,7 @@
  * Poll when Echo is absent: works everywhere, pauses while the tab is hidden.
  * Never both. Redis is not the UI transport.
  */
-import { Deferred } from '@inertiajs/vue3'
+import { Deferred, router } from '@inertiajs/vue3'
 import { PkBoundary, StatCard } from '@alxtexh-enterprise/panel'
 import { useWidgetPoll } from '../../composables/useWidgetPoll'
 import type { StatDefinition, StatValue } from './types'
@@ -18,6 +18,10 @@ const props = defineProps<{
 }>()
 
 const dataKey = `${props.prefix}_stat_${props.widget.key}`
+
+function retry() {
+    router.reload({ only: [dataKey], preserveState: true, preserveScroll: true })
+}
 
 useWidgetPoll(
     () => [dataKey],
@@ -41,6 +45,8 @@ useWidgetPoll(
                     :trend="value?.trend"
                     :sparkline="value?.sparkline"
                     :error="value?.error"
+                    retryable
+                    @retry="retry"
                 />
             </template>
         </Deferred>

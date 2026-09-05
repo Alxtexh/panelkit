@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { onBeforeUnmount, ref } from 'vue'
 
 /**
  * Runs a bulk action or an export, and follows it if it was queued.
@@ -17,7 +17,7 @@ import { ref } from 'vue'
  */
 
 export interface JobProgress {
-    status: 'pending' | 'running' | 'done' | 'failed'
+    status: 'pending' | 'running' | 'done' | 'failed' | 'canceled'
     done: number
     total: number | null
     error: string | null
@@ -31,6 +31,9 @@ export interface JobProgress {
      * serve. The prefix is a server-side fact; only the server should say it.
      */
     download: string | null
+    selected?: number
+    authorized?: number
+    skipped?: number
 }
 
 export interface BulkTarget {
@@ -75,7 +78,8 @@ async function post(url: string, body: Record<string, unknown>) {
     return payload
 }
 
-export function useBulkJob(resourceKey: string) {
+/** The index URL is already resolved by the server for the active panel. */
+export function useBulkJob(resourceKey: string, indexUrl = `/${resourceKey}`) {
     const busy = ref(false)
     const progress = ref<JobProgress | null>(null)
     const error = ref<string | null>(null)
@@ -112,7 +116,7 @@ export function useBulkJob(resourceKey: string) {
 
         timer = setTimeout(async () => {
             try {
-                const response = await fetch(`/${resourceKey}/jobs/${token}`, {
+                const response = await fetch(`${indexUrl}/jobs/${token}`, {
                     headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     credentials: 'same-origin',
                 })
@@ -129,7 +133,7 @@ export function useBulkJob(resourceKey: string) {
 
                     if (state.downloadable) {
                         downloadUrl.value =
-                            state.download ?? `/${resourceKey}/jobs/${token}/download`
+                            state.download ?? `${indexUrl}/jobs/${token}/download`
                     } else {
                         // A mutation changed rows; the table must catch up.
                         // Partial reload, so the schema does not travel again.
@@ -142,6 +146,13 @@ export function useBulkJob(resourceKey: string) {
                 if (state.status === 'failed') {
                     busy.value = false
                     error.value = state.error ?? 'That job failed.'
+
+                    return
+                }
+
+                if (state.status === 'canceled') {
+                    busy.value = false
+                    error.value = state.error ?? 'That job was canceled.'
 
                     return
                 }
@@ -166,7 +177,7 @@ export function useBulkJob(resourceKey: string) {
         downloadUrl.value = null
 
         try {
-            const result = await post(`/${resourceKey}/bulk${currentQuery()}`, {
+            const result = await post(`${indexUrl}/bulk${currentQuery()}`, {
                 action,
                 all: target.all ?? false,
                 ids: target.all ? [] : (target.ids ?? []),
@@ -182,6 +193,9 @@ export function useBulkJob(resourceKey: string) {
                     error: null,
                     downloadable: false,
                     download: null,
+                    selected: result.selected,
+                    authorized: result.authorized,
+                    skipped: result.skipped,
                 }
                 router.reload({ only: ['records', 'total', 'tabCounts'] })
 
@@ -202,7 +216,7 @@ export function useBulkJob(resourceKey: string) {
         downloadUrl.value = null
 
         try {
-            const result = await post(`/${resourceKey}/export${currentQuery()}`, {
+            const result = await post(`${indexUrl}/export${currentQuery()}`, {
                 all: target.all ?? false,
                 ids: target.all ? [] : (target.ids ?? []),
             })
@@ -221,6 +235,10 @@ export function useBulkJob(resourceKey: string) {
         downloadUrl.value = null
         busy.value = false
     }
+
+    // A page visit can unmount the table while its job is still being polled.
+    // Stop the timer so the old page cannot keep issuing requests.
+    onBeforeUnmount(stop)
 
     return { busy, progress, error, downloadUrl, run, exportView, dismiss }
 }

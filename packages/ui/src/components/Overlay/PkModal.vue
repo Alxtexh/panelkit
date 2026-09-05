@@ -15,8 +15,9 @@
  * HEADER AND FOOTER STAY PUT. Long action / bulk wizards scroll the body only,
  * so Cancel and the primary action never leave the viewport while the form grows.
  */
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
 import { MODAL_WIDTH, OVERLAY_FORM_MEASURE } from '../../lib/pageShell'
+import { acquireScrollLock, releaseScrollLock } from '../../lib/scrollLock'
 import type { ModalSize } from '../../lib/pageShell'
 
 const props = withDefaults(
@@ -41,7 +42,11 @@ const props = withDefaults(
 const emit = defineEmits<{ (e: 'close'): void }>()
 
 const panel = ref<HTMLElement | null>(null)
+const titleId = `pk-modal-title-${useId()}`
+const descriptionId = `pk-modal-description-${useId()}`
+const scrollLockOwner = Symbol('pk-modal')
 let restoreFocusTo: HTMLElement | null = null
+let ownsScrollLock = false
 /**
  * Tracks whether a press STARTED on the backdrop.
  *
@@ -106,21 +111,35 @@ watch(
     (open) => {
         if (open) {
             restoreFocusTo = document.activeElement as HTMLElement | null
+            acquireScrollLock(scrollLockOwner)
+            ownsScrollLock = true
             document.addEventListener('keydown', onKeydown)
             nextTick(() =>
                 panel.value?.querySelector<HTMLElement>('input, select, textarea, button')?.focus(),
             )
-        } else {
+        } else if (ownsScrollLock) {
+            const wasLastOverlay = releaseScrollLock(scrollLockOwner)
+            ownsScrollLock = false
             document.removeEventListener('keydown', onKeydown)
             // Returning focus to the trigger is what makes a modal usable by
             // keyboard at all; without it focus falls back to <body>.
-            restoreFocusTo?.focus()
+            if (wasLastOverlay) {
+                restoreFocusTo?.focus()
+            }
             restoreFocusTo = null
         }
     },
+    { immediate: true },
 )
 
-onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
+onBeforeUnmount(() => {
+    document.removeEventListener('keydown', onKeydown)
+
+    if (ownsScrollLock) {
+        releaseScrollLock(scrollLockOwner)
+        ownsScrollLock = false
+    }
+})
 </script>
 
 <template>
@@ -139,22 +158,30 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
             >
                 <div
                     ref="panel"
+                    data-pk-overlay
                     role="dialog"
                     aria-modal="true"
                     :aria-busy="busy ? 'true' : undefined"
-                    :aria-label="title"
+                    :aria-labelledby="titleId"
+                    :aria-describedby="description ? descriptionId : undefined"
                     :class="panelClass"
                 >
-                    <div class="bg-popover sticky top-0 z-10 shrink-0 border-b px-5 py-4">
-                        <h2 class="text-base font-semibold">{{ title }}</h2>
-                        <p v-if="description" class="text-muted-foreground mt-0.5 text-sm">
+                    <div class="bg-popover sticky top-0 z-10 shrink-0 border-b px-6 py-5">
+                        <h2 :id="titleId" class="text-lg font-semibold tracking-tight">
+                            {{ title }}
+                        </h2>
+                        <p
+                            v-if="description"
+                            :id="descriptionId"
+                            class="text-muted-foreground mt-1 text-sm leading-5"
+                        >
                             {{ description }}
                         </p>
                     </div>
 
                     <div
                         :class="[
-                            'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4',
+                            'min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5',
                             OVERLAY_FORM_MEASURE,
                         ]"
                     >
@@ -163,7 +190,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 
                     <div
                         v-if="$slots.footer"
-                        class="bg-muted/30 sticky bottom-0 z-10 flex shrink-0 items-center justify-end gap-2 border-t px-5 py-3"
+                        data-slot="modal-footer"
+                        class="bg-muted/30 sticky bottom-0 z-10 flex shrink-0 flex-wrap items-center justify-end gap-3 border-t px-6 py-4 [&>[data-slot='button']]:min-h-10 [&>[data-slot='button']]:min-w-20 [&>[data-slot='button']]:px-4 [&>[data-slot='button'][data-variant='destructive']]:min-w-24"
                     >
                         <slot name="footer" />
                     </div>

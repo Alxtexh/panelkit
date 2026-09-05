@@ -116,7 +116,7 @@
 </script>
 <style>
     html {
-        background-color: oklch(1 0 0);
+        background-color: oklch(0.975 0.008 250);
     }
 
     html.dark {

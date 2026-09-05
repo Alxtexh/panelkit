@@ -112,7 +112,9 @@ export const PRIMARY_COLORS: Record<string, { label: string; value: string; fore
     {
         slate: {
             label: 'Slate',
-            value: 'oklch(0.32 0.02 260)',
+            // Keep the default action surface dark enough for white 14px text
+            // in Chromium's contrast calculation, including antialiased glyphs.
+            value: 'oklch(0.24 0.02 260)',
             foreground: 'oklch(0.98 0 0)',
         },
         emerald: {
@@ -384,6 +386,11 @@ export function appearanceVars(next: Appearance): Record<string, string> {
     const tint = SURFACE_TINTS[next.surface] ?? SURFACE_TINTS.neutral
     const c = tint.chroma
     const h = tint.hue
+    // Neutral must remain neutral. A minimum chroma at hue 0 makes the whole
+    // light workspace visibly pink; use a cool-grey fallback only to keep the
+    // canvas distinct from white cards.
+    const canvasChroma = c > 0 ? c : 0.006
+    const canvasHue = c > 0 ? h : 250
     const dark = isDark(next)
 
     const surfaces = dark
@@ -392,15 +399,17 @@ export function appearanceVars(next: Appearance): Record<string, string> {
               '--card': `oklch(${next.cardStyle === 'filled' ? 0.19 : 0.15} ${c} ${h})`,
               '--popover': `oklch(0.18 ${c} ${h})`,
               '--muted': `oklch(0.24 ${c} ${h})`,
+              '--muted-foreground': 'oklch(0.78 0 0)',
               '--accent': `oklch(0.24 ${c} ${h})`,
               '--border': `oklch(0.27 ${c} ${h})`,
               '--input': `oklch(0.27 ${c} ${h})`,
           }
         : {
-              '--background': 'oklch(1 0 0)',
+              '--background': `oklch(0.975 ${canvasChroma} ${canvasHue})`,
               '--card': `oklch(${next.cardStyle === 'filled' ? 0.985 : 1} ${c} ${h})`,
               '--popover': 'oklch(1 0 0)',
               '--muted': `oklch(0.965 ${c} ${h})`,
+              '--muted-foreground': 'oklch(0.28 0 0)',
               '--accent': `oklch(0.965 ${c} ${h})`,
               '--border': `oklch(0.925 ${c} ${h})`,
               '--input': `oklch(0.90 ${c} ${h})`,

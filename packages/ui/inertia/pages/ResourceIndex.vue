@@ -159,6 +159,7 @@ interface ResourceSchema {
         bulkActions: {
             key: string
             label: string
+            ability: string
             icon: string | null
             destructive: boolean
             confirmation: string | null
@@ -214,6 +215,11 @@ const props = defineProps<
             create: boolean
             update: boolean
             delete: boolean
+            deleteAny?: boolean
+            restore?: boolean
+            restoreAny?: boolean
+            forceDelete?: boolean
+            forceDeleteAny?: boolean
             import: boolean
             excelImport?: boolean
         }
@@ -495,6 +501,7 @@ const badgeKeys = computed(() =>
  * ------------------------------------------------------------------------- */
 
 const confirmingDelete = ref<Record<string, any> | null>(null)
+const deleting = ref(false)
 
 const crudModal = ref<{
     mode: 'create' | 'edit' | 'view'
@@ -626,7 +633,7 @@ async function editCell(row: Record<string, any>, column: string, value: unknown
  * parameters that drew the table.
  * ------------------------------------------------------------------------- */
 
-const job = useBulkJob(props.schema.key)
+const job = useBulkJob(props.schema.key, props.schema.routes.index)
 
 /**
  * Hide actions the operator cannot perform.
@@ -637,7 +644,7 @@ const job = useBulkJob(props.schema.key)
  */
 const allowedBulkActions = computed(() =>
     props.schema.table.bulkActions.filter((action) =>
-        action.destructive ? props.can.delete !== false : props.can.update !== false,
+        (props.can as Record<string, boolean | undefined>)[action.ability] !== false,
     ),
 )
 
@@ -1228,7 +1235,14 @@ async function runBulk(action: string, data?: Record<string, unknown>) {
 
     // A queued run reports when it lands, not now.
     if (job.progress.value?.status === 'done') {
-        toast.success(`${job.progress.value.done.toLocaleString()} records updated`)
+        const done = job.progress.value.done.toLocaleString()
+        const skipped = job.progress.value.skipped ?? 0
+
+        toast.success(
+            skipped > 0
+                ? `${done} records updated; ${skipped.toLocaleString()} skipped by policy`
+                : `${done} records updated`,
+        )
         t.clearSelection()
     }
 }
@@ -1309,9 +1323,11 @@ watch(
 function destroy() {
     const row = confirmingDelete.value
 
-    if (!row) {
+    if (!row || deleting.value) {
         return
     }
+
+    deleting.value = true
 
     router.delete(`${props.schema.routes.index}/${row.id}`, {
         preserveScroll: true,
@@ -1321,6 +1337,9 @@ function destroy() {
             router.reload({ only: ['records', 'total', 'tabCounts'] })
         },
         onError: () => toast.error(`Could not delete this ${props.schema.label.toLowerCase()}`),
+        onFinish: () => {
+            deleting.value = false
+        },
     })
 }
 /* ---------------------------------------------------------------------------
@@ -1891,6 +1910,7 @@ function badgeLabel(key: string, value: unknown): string {
             :open="!!confirmingDelete"
             :title="`Delete ${schema.label}?`"
             description="This cannot be undone."
+            :busy="deleting"
             @close="confirmingDelete = null"
         >
             <p class="text-sm">
@@ -1899,8 +1919,10 @@ function badgeLabel(key: string, value: unknown): string {
             </p>
 
             <template #footer>
-                <Button variant="ghost" size="sm" @click="confirmingDelete = null">Cancel</Button>
-                <Button variant="destructive" size="sm" @click="destroy">Delete</Button>
+                <Button variant="outline" @click="confirmingDelete = null">Cancel</Button>
+                <Button variant="destructive" :disabled="deleting" @click="destroy">
+                    {{ deleting ? 'Deleting…' : 'Delete' }}
+                </Button>
             </template>
         </PkModal>
 
@@ -1908,11 +1930,18 @@ function badgeLabel(key: string, value: unknown): string {
             :open="pendingActionConfirmation !== null"
             :title="pendingActionConfirmation?.action.label ?? 'Confirm action'"
             :description="pendingActionConfirmation?.action.confirmation ?? undefined"
+            :busy="runningAction !== null"
             @close="pendingActionConfirmation = null"
         >
             <template #footer>
-                <Button variant="ghost" size="sm" @click="pendingActionConfirmation = null">Cancel</Button>
-                <Button variant="destructive" size="sm" @click="confirmRecordAction">Confirm</Button>
+                <Button variant="outline" @click="pendingActionConfirmation = null">Cancel</Button>
+                <Button
+                    variant="destructive"
+                    :disabled="runningAction !== null"
+                    @click="confirmRecordAction"
+                >
+                    {{ runningAction !== null ? 'Working…' : 'Confirm' }}
+                </Button>
             </template>
         </PkModal>
 
@@ -1967,15 +1996,14 @@ function badgeLabel(key: string, value: unknown): string {
                 </div>
 
                 <Button
-                    variant="ghost"
-                    size="sm"
+                    variant="outline"
                     :disabled="actionForm?.processing"
                     @click="actionForm = null"
                 >
                     {{ actionForm?.action.cancelLabel ?? 'Cancel' }}
                 </Button>
 
-                <Button size="sm" :disabled="actionForm?.processing" @click="submitActionForm">
+                <Button :disabled="actionForm?.processing" @click="submitActionForm">
                     {{
                         actionForm?.processing
                             ? 'Working…'
@@ -2028,15 +2056,14 @@ function badgeLabel(key: string, value: unknown): string {
                 </div>
 
                 <Button
-                    variant="ghost"
-                    size="sm"
+                    variant="outline"
                     :disabled="actionForm?.processing"
                     @click="actionForm = null"
                 >
                     {{ actionForm?.action.cancelLabel ?? 'Cancel' }}
                 </Button>
 
-                <Button size="sm" :disabled="actionForm?.processing" @click="submitActionForm">
+                <Button :disabled="actionForm?.processing" @click="submitActionForm">
                     {{
                         actionForm?.processing
                             ? 'Working…'

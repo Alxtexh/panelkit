@@ -160,6 +160,7 @@ const props = defineProps<{
         created_at: string
     }[]
     thresholds: Record<string, number>
+    routes?: { metrics?: string }
 }>()
 
 /** The four metrics sampled into history, named once. */
@@ -253,7 +254,7 @@ async function refresh() {
     refreshing.value = true
 
     try {
-        const response = await fetch('/operations/monitoring/metrics', {
+        const response = await fetch(props.routes?.metrics ?? '/operations/monitoring/metrics', {
             headers: {
                 Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',

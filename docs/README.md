@@ -25,7 +25,7 @@ These pages are the catalogue: what ships, and how to switch each part on.
 | [15. Filament gaps](15-filament-gaps.md) | Honest gaps + agent Day-0; doctor host checks; no plugin track |
 | [16. Workflows](16-workflows.md) | Resource states, transitions, view and index actions |
 | [17. Comments](17-comments.md) | Opt-in record threads, @mentions, bell notifications |
-| [18. Public landing](18-landing.md) | Four built-in landing designs, Panel::landing(), demos |
+| [18. Public landing](18-landing.md) | Host-owned public pages; no landing templates ship |
 | [Starter recipe](recipes/01-invoices.md) | Copyable Invoices resource after install. Not Nairobi Fibre |
 | [Tests](tests.md) | `InteractsWithPanels`: isolation, form-state, attach, import, toasts, billing |
 

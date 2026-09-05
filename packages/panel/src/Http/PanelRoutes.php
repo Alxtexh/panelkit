@@ -12,7 +12,6 @@ use Alxtexh\Panel\Http\Controllers\ImportController;
 use Alxtexh\Panel\Http\Controllers\RecordController;
 use Alxtexh\Panel\Http\Controllers\ResourceController;
 use Alxtexh\Panel\Http\Controllers\UploadController;
-use Alxtexh\Panel\Landing;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -62,7 +61,6 @@ final class PanelRoutes
         // Once for the installation, not once per portal - the path is fixed by
         // the spec and a second registration would collide.
         self::wellKnown();
-        self::landing();
 
         $sharedGroups = [];
 
@@ -171,48 +169,6 @@ final class PanelRoutes
         Route::get('.well-known/passkey-endpoints', static fn () => response()->json(
             Passkeys::available() ? Passkeys::endpoints() : []
         ))->name('panel.well-known.passkeys');
-    }
-
-    /**
-     * The public front page, and its previews.
-     *
-     * OUTSIDE EVERY PANEL, because it is what an unauthenticated visitor sees
-     * before any panel is involved - and OFF unless asked for, because `/` is
-     * the URL an application is most likely to have its own plans for.
-     *
-     * DECLARED LAST-ISH ON PURPOSE. This runs from the provider's `boot`, which
-     * is after `routes/web.php`, so an application that declares its own `/`
-     * keeps it: the first matching route wins and theirs is registered first.
-     * Turning the flag on in an application that already answers `/` is
-     * therefore a no-op rather than a hijack, which is the safe direction for
-     * this to fail in.
-     */
-    public static function landing(): void
-    {
-        if (! Landing\LandingController::registers()) {
-            return;
-        }
-
-        Route::get('/', Landing\LandingController::class)
-            ->middleware('web')
-            ->name('panel.landing');
-
-        if (config('panel.landing.previews', false) === true) {
-            $designs = implode('|', [
-                ...Landing\LandingPresets::names(),
-                'composed',
-            ]);
-
-            Route::get('preview/{design}', Landing\LandingController::class)
-                ->middleware('web')
-                ->where('design', $designs)
-                ->name('panel.landing.preview');
-
-            Route::get('landing/{design}', Landing\LandingController::class)
-                ->middleware('web')
-                ->where('design', $designs)
-                ->name('panel.landing.variant');
-        }
     }
 
     /**
@@ -1288,19 +1244,18 @@ final class PanelRoutes
             ->name('pick.choose');
 
         if (class_exists(ImportController::class)
-            && class_exists(BulkController::class)
-            && class_exists('Alxtexh\\Panel\\Imports\\Importer')
-            && class_exists('Alxtexh\\Panel\\Jobs\\ExportRecords')) {
-        Route::post('{resource}/import/inspect', [ImportController::class, 'inspect'])
-            ->whereIn('resource', $keys)->name('import.inspect');
+            && class_exists('Alxtexh\\Panel\\Imports\\Importer')) {
+            Route::post('{resource}/import/inspect', [ImportController::class, 'inspect'])
+                ->whereIn('resource', $keys)->name('import.inspect');
 
-        Route::post('{resource}/import', [ImportController::class, 'store'])
-            ->whereIn('resource', $keys)->name('import');
+            Route::post('{resource}/import', [ImportController::class, 'store'])
+                ->whereIn('resource', $keys)->name('import');
 
-        Route::get('{resource}/import/failures/{token}', [ImportController::class, 'failures'])
-            ->whereIn('resource', $keys)
-            ->where('token', '[0-9a-fA-F-]{36}')
-            ->name('import.failures');
+            Route::get('{resource}/import/failures/{token}', [ImportController::class, 'failures'])
+                ->whereIn('resource', $keys)
+                ->where('token', '[0-9a-fA-F-]{36}')
+                ->name('import.failures');
+        }
 
         Route::get('{resource}/create', [ResourceController::class, 'create'])
             ->whereIn('resource', $keys)->name('create');
@@ -1343,9 +1298,15 @@ final class PanelRoutes
         Route::post('{resource}/bulk', [BulkController::class, 'run'])
             ->whereIn('resource', $keys)->name('bulk');
 
-        Route::post('{resource}/export', [BulkController::class, 'export'])
-            ->whereIn('resource', $keys)->name('export');
+        if (class_exists('Alxtexh\\Panel\\Jobs\\ExportRecords')) {
+            Route::post('{resource}/export', [BulkController::class, 'export'])
+                ->whereIn('resource', $keys)->name('export');
+        }
 
+        // Status, cancellation and ownership checks are core capabilities. The
+        // optional operations package only supplies the workers that create
+        // queued jobs, so these endpoints remain routable for existing tokens
+        // and return the normal owner-scoped 404s in a core-only install.
         Route::get('{resource}/jobs/{token}', [BulkController::class, 'status'])
             ->whereIn('resource', $keys)
             ->where('token', '[0-9a-fA-F-]{36}')
@@ -1361,10 +1322,12 @@ final class PanelRoutes
             ->where('token', '[0-9a-fA-F-]{36}')
             ->name('job.download');
 
-        Route::post('{resource}/imports/{token}/retry', [ImportController::class, 'retry'])
-            ->whereIn('resource', $keys)
-            ->where('token', '[0-9a-fA-F-]{36}')
-            ->name('import.retry');
+        if (class_exists(ImportController::class)
+            && class_exists('Alxtexh\\Panel\\Imports\\Importer')) {
+            Route::post('{resource}/imports/{token}/retry', [ImportController::class, 'retry'])
+                ->whereIn('resource', $keys)
+                ->where('token', '[0-9a-fA-F-]{36}')
+                ->name('import.retry');
         }
 
         /*

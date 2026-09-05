@@ -40,6 +40,7 @@ defineOptions({ inheritAttrs: false })
 import { Deferred, Head, Link, router, useForm, usePage } from '@inertiajs/vue3'
 import { Plus, ShieldAlert, Trash2, TriangleAlert } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
+import { toast } from 'vue-sonner'
 import type { RecordActionGroup, RecordActionItem } from '@alxtexh-enterprise/panel'
 import {
     BulkActions,
@@ -97,6 +98,8 @@ const shell = usePage()
 const base = computed(() => (shell.props.panel as { path?: string } | undefined)?.path ?? '')
 
 const at = (path: string) => `${base.value === '/' ? '' : base.value}${path}`
+const userBase = computed(() => props.users?.schema?.routes?.index ?? at('/users'))
+const rolesBase = computed(() => at('/settings/roles'))
 
 const TABS = computed(() => [
     { id: 'users', label: 'Users', href: at('/user-management/users') },
@@ -257,7 +260,7 @@ function reallyDeleteUser(): void {
         return
     }
 
-    router.delete(`/users/${user.id}`, { preserveScroll: true })
+    router.delete(`${userBase.value}/${user.id}`, { preserveScroll: true })
 }
 
 const busyAction = ref<string | null>(null)
@@ -307,7 +310,7 @@ async function searchActionOptions(
 ): Promise<{ value: any; label: string }[]> {
     const query = new URLSearchParams({ field, q: term })
 
-    const res = await fetch(`/users/field-options?${query}`, {
+    const res = await fetch(`${userBase.value}/field-options?${query}`, {
         headers: { Accept: 'application/json' },
     })
 
@@ -329,7 +332,7 @@ async function submitActionForm() {
     open.errors = {}
 
     try {
-        const response = await fetch(`/users/${open.row.id}/action`, {
+        const response = await fetch(`${userBase.value}/${open.row.id}/action`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -357,8 +360,7 @@ async function submitActionForm() {
         if (!response.ok) {
             const body = await response.json().catch(() => null)
 
-            window.alert(body?.message ?? 'That action could not be completed.')
-
+            toast.error(body?.message ?? 'That action could not be completed.')
             return
         }
 
@@ -367,7 +369,7 @@ async function submitActionForm() {
         actionForm.value = null
 
         // Same full visit `runRecordAction` uses below - see its own note.
-        router.visit(body?.redirect ?? '/dashboard')
+        router.visit(body?.redirect ?? at('/dashboard'))
     } finally {
         if (actionForm.value) {
             actionForm.value.processing = false
@@ -426,7 +428,7 @@ function runRecordAction(row: Record<string, any>, action: RecordActionItem) {
      * `fetch` rather than `router.post` because an action returns JSON, not an
      * Inertia page; the list is reloaded separately once it succeeds.
      */
-    fetch(`/users/${row.id}/action`, {
+    fetch(`${userBase.value}/${row.id}/action`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -441,8 +443,7 @@ function runRecordAction(row: Record<string, any>, action: RecordActionItem) {
             if (!response.ok) {
                 const body = await response.json().catch(() => null)
 
-                window.alert(body?.message ?? 'That action could not be completed.')
-
+                toast.error(body?.message ?? 'That action could not be completed.')
                 return
             }
 
@@ -459,7 +460,7 @@ function runRecordAction(row: Record<string, any>, action: RecordActionItem) {
              */
             const body = await response.json().catch(() => null)
 
-            router.visit(body?.redirect ?? '/dashboard')
+            router.visit(body?.redirect ?? at('/dashboard'))
         })
         .finally(() => (busyAction.value = null))
 }
@@ -470,7 +471,7 @@ function runBulk(key: string) {
     bulkBusy.value = true
 
     router.post(
-        '/users/bulk',
+        `${userBase.value}/bulk`,
         { action: key, ids: [...selectedUsers.value] },
         {
             preserveScroll: true,
@@ -621,12 +622,12 @@ function reallyDestroyRole(): void {
         return
     }
 
-    router.delete(`/settings/roles/${role.id}`, { preserveScroll: true })
+    router.delete(`${rolesBase.value}/${role.id}`, { preserveScroll: true })
 }
 
 function save(): void {
     if (selected.value) {
-        form.put(`/settings/roles/${selected.value.id}`, {
+        form.put(`${rolesBase.value}/${selected.value.id}`, {
             preserveScroll: true,
         })
     }
@@ -664,7 +665,7 @@ function save(): void {
         <!-- USERS -->
         <div v-if="tab === 'users'" class="flex flex-col gap-3">
             <div class="flex items-center justify-end">
-                <Link href="/users/create">
+                <Link :href="`${userBase}/create`">
                     <Button size="sm">New user</Button>
                 </Link>
             </div>
@@ -923,8 +924,8 @@ function save(): void {
         @close="confirmingDeleteRole = null"
     >
         <template #footer>
-            <Button variant="ghost" size="sm" @click="confirmingDeleteRole = null"> Cancel </Button>
-            <Button variant="destructive" size="sm" @click="reallyDestroyRole">
+            <Button variant="outline" @click="confirmingDeleteRole = null"> Cancel </Button>
+            <Button variant="destructive" @click="reallyDestroyRole">
                 Delete role
             </Button>
         </template>
@@ -937,8 +938,8 @@ function save(): void {
         @close="confirmingDeleteUser = null"
     >
         <template #footer>
-            <Button variant="ghost" size="sm" @click="confirmingDeleteUser = null"> Cancel </Button>
-            <Button variant="destructive" size="sm" @click="reallyDeleteUser"> Delete </Button>
+            <Button variant="outline" @click="confirmingDeleteUser = null"> Cancel </Button>
+            <Button variant="destructive" @click="reallyDeleteUser"> Delete </Button>
         </template>
     </PkModal>
 
@@ -949,8 +950,8 @@ function save(): void {
         @close="pendingAction = null"
     >
         <template #footer>
-            <Button variant="ghost" size="sm" @click="pendingAction = null">Cancel</Button>
-            <Button size="sm" @click="confirmPendingAction">
+            <Button variant="outline" @click="pendingAction = null">Cancel</Button>
+            <Button @click="confirmPendingAction">
                 {{ pendingAction?.action.label }}
             </Button>
         </template>

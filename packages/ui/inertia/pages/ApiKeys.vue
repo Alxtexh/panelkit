@@ -244,8 +244,8 @@ function formatWhen(value?: string | null): string {
         >
             <p class="text-sm">Revoke key <strong>#{{ pendingRevoke }}</strong>?</p>
             <template #footer>
-                <Button variant="ghost" size="sm" @click="pendingRevoke = null">Cancel</Button>
-                <Button variant="destructive" size="sm" @click="revoke">Revoke key</Button>
+                <Button variant="outline" @click="pendingRevoke = null">Cancel</Button>
+                <Button variant="destructive" @click="revoke">Revoke key</Button>
             </template>
         </PkModal>
     </div>

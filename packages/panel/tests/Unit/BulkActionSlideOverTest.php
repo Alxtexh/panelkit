@@ -35,4 +35,15 @@ final class BulkActionSlideOverTest extends TestCase
         $this->assertTrue($payload['authorizeIndividualRecords']);
         $this->assertNotEmpty($payload['confirmation']);
     }
+
+    public function test_collection_and_record_abilities_are_distinct_when_requested(): void
+    {
+        $action = BulkAction::make('delete', 'Delete')
+            ->authorizeAny('delete')
+            ->authorizeIndividualRecords();
+
+        $this->assertSame('deleteAny', $action->getAbility());
+        $this->assertSame('delete', $action->getRecordAbility());
+        $this->assertSame('deleteAny', $action->toArray()['ability']);
+    }
 }

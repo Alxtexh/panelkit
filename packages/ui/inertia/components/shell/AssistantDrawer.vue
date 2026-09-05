@@ -41,6 +41,7 @@ import {
     X,
 } from '@lucide/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 import { PkSkeleton } from '@alxtexh-enterprise/panel'
 import { PkButton as Button } from '@alxtexh-enterprise/panel'
 
@@ -65,6 +66,10 @@ const draft = ref('')
 const streaming = ref(false)
 const past = ref<PastConversation[]>([])
 const loadingHistory = ref(false)
+
+const page = usePage()
+const panelBase = computed(() => (page.props.panel as { path?: string } | undefined)?.path ?? '')
+const at = (path: string) => `${panelBase.value === '/' ? '' : panelBase.value}${path}`
 
 /**
  * Carried, not remembered server-side.
@@ -124,7 +129,7 @@ async function loadHistory() {
     loadingHistory.value = true
 
     try {
-        const response = await fetch('/apps/assistant/conversations', {
+        const response = await fetch(at('/apps/assistant/conversations'), {
             headers: {
                 Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -151,7 +156,7 @@ async function openConversation(id: string) {
     loadingHistory.value = true
 
     try {
-        const response = await fetch(`/apps/assistant/conversations/${id}`, {
+        const response = await fetch(at(`/apps/assistant/conversations/${id}`), {
             headers: {
                 Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -232,7 +237,7 @@ async function send() {
     await scrollDown()
 
     try {
-        const response = await fetch('/apps/assistant/stream', {
+        const response = await fetch(at('/apps/assistant/stream'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

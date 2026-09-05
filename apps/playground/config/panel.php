@@ -47,30 +47,12 @@ return [
         // Gates the billing preferences singular (roadmap 4.3): whoever holds
         // it decides what every invoice says about money.
         'manage_billing' => 'Set the currency, tax rate and due window invoices use',
-        /*
-         * ITS OWN ABILITY, because this one is PUBLISHING. Everything else in
-         * the panel changes what operators see; the landing page is what the
-         * world sees, and "may edit the marketing site" is a decision an
-         * organisation should be able to grant to a person it would not trust
-         * with roles or billing.
-         */
-        'manage_landing_page' => 'Edit the public landing page',
         // Part G.4: with the dedicated screen removed, defining a custom
         // field is one dialog on the record forms, gated by one grant.
         'manage_custom_fields' => 'Add custom fields to records from their forms',
         'support.update' => 'Edit Help, FAQ, What\'s new and About',
     ],
 
-    /*
-    |---------------------------------------------------------------------------
-    | Landing design
-    |---------------------------------------------------------------------------
-    |
-    | Which of the shipped public landing pages this installation shows at `/`
-    | - `aurora` (modern SaaS), `editorial` (quiet and typographic),
-    | `console` (developer tool, shows real code) or `studio` (brand-first
-    | workshop, precise and warm). Part G.9.
-    */
     /*
      | THE THREE TABLES THIS APPLICATION'S OWN MIGRATION gave a `custom` column
      | to - see `reserve_custom_field_storage`. The package no longer assumes
@@ -106,25 +88,6 @@ return [
         'static_groups' => ['Subscribers', 'Organisation'],
     ],
 
-    'landing' => [
-        /*
-         | THE REFERENCE APP SERVES THE PACKAGED PAGE AT `/`, and is one of the
-         | few installations that should: it exists to show the panel off, so
-         | the previews switcher is on too. A product with its own marketing
-         | site leaves `route` false and keeps the editor.
-         */
-        'route' => false,
-        'design' => env('PANEL_LANDING', 'aurora'),
-        'brand' => 'Alxtexhpanel',
-        'tagline' => 'Built with Laravel, Inertia and Vue.',
-        'footer_links' => [
-            ['label' => 'Help', 'href' => '/help'],
-            ['label' => 'About', 'href' => '/about'],
-            ['label' => 'FAQ', 'href' => '/faq'],
-        ],
-        'previews' => false,
-    ],
-
     /*
     |---------------------------------------------------------------------------
     | Singular resources
@@ -134,12 +97,7 @@ return [
     | inside its panel with PUT /{key}/current as its save, and renders through
     | the same form page every resource edit screen uses.
     */
-    /*
-     | THE LANDING EDITOR IS NOT LISTED HERE ANY MORE. It moved into the package
-     | and registers itself the way the packaged pages do - a screen a consumer
-     | would have to know existed before they could add it to this list is a
-     | screen that does not ship. See `panel.landing.editor`.
-     */
+    /* Public marketing pages are owned by this application, not PanelKit. */
     'singulars' => [
         BillingSettingsResource::class,
     ],

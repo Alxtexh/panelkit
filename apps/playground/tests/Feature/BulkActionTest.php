@@ -204,6 +204,36 @@ final class BulkActionTest extends TestCase
         $this->assertSame(JobStatus::DONE, JobStatus::get($token, $this->userA->id)['status']);
     }
 
+    public function test_a_redelivered_completed_bulk_job_is_a_noop(): void
+    {
+        $ids = $this->seedClients($this->tenantA, 3, 'active');
+        $token = JobStatus::token();
+        JobStatus::start($token, $this->userA->id, 'bulk:suspend');
+
+        $job = new RunBulkAction('clients', 'suspend', ['status' => 'active'], $this->userA->id, $token);
+        $job->handle(app(BulkRunner::class));
+
+        $updatedAt = Client::withoutGlobalScopes()
+            ->whereIn('id', $ids)
+            ->pluck('updated_at', 'id')
+            ->map(static fn ($value): string => (string) $value)
+            ->all();
+
+        // Queue delivery is at-least-once; the second delivery must not touch
+        // the records again after the first delivery finalized the token.
+        $job->handle(app(BulkRunner::class));
+
+        $this->assertSame(
+            $updatedAt,
+            Client::withoutGlobalScopes()
+                ->whereIn('id', $ids)
+                ->pluck('updated_at', 'id')
+                ->map(static fn ($value): string => (string) $value)
+                ->all(),
+        );
+        $this->assertSame(JobStatus::DONE, JobStatus::get($token, $this->userA->id)['status']);
+    }
+
     /* ------------------------------------------------------------- chunking */
 
     /**

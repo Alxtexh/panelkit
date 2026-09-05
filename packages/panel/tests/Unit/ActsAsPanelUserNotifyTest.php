@@ -28,6 +28,15 @@ final class ActsAsPanelUserNotifyTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (! trait_exists(ActsAsPanelUser::class)) {
+            $this->markTestSkipped('Queued notification tests require panel-operations.');
+        }
+    }
+
     public function test_notify_actor_writes_a_database_notification(): void
     {
         $tenant = Tenant::create(['name' => 'Mine', 'slug' => 'mine']);

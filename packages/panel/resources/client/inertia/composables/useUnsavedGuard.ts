@@ -29,6 +29,7 @@ import type { Ref } from 'vue'
 export function useUnsavedGuard(
     dirty: Ref<boolean>,
     message = 'You have unsaved changes. Leave this page and lose them?',
+    confirmLeave: ((message: string) => boolean) | null = null,
 ): void {
     const stop = router.on('before', (event) => {
         if (!dirty.value) {
@@ -46,8 +47,16 @@ export function useUnsavedGuard(
             return
         }
 
-        if (!window.confirm(message)) {
-            event.preventDefault()
+        /*
+         * Native dialogs are unavailable in embedded browsers and cannot be
+         * styled or tested. A caller that owns a modal may provide the small
+         * synchronous decision callback; otherwise fail closed and keep the
+         * user on the form instead of silently discarding their work.
+         */
+        event.preventDefault()
+
+        if (confirmLeave?.(message) === true) {
+            router.visit(event.detail.visit.url)
         }
     })
 

@@ -950,21 +950,6 @@ final class PanelManager
     {
         $out = [];
 
-        /*
-         * THE PACKAGE'S OWN FIRST, because config cannot name it for you.
-         *
-         * The landing editor lived in the reference application, so every other
-         * installation had `PkLandingSections`, a component that draws landing
-         * sections, and nothing that composed one. It registers here the way
-         * `ChangelogPage` and `EnvironmentPage` do - a screen a consumer would
-         * have to know existed before they could add it to a list is a screen
-         * that does not ship.
-         */
-        if (config('panel.landing.editor', true) !== false
-            && Landing\LandingPageResource::panel() === $panelId) {
-            $out[Landing\LandingPageResource::key()] = Landing\LandingPageResource::class;
-        }
-
         foreach ((array) config('panel.singulars', []) as $class) {
             if ($class::panel() === $panelId) {
                 $out[$class::key()] = $class;

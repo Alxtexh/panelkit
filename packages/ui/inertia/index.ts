@@ -37,9 +37,6 @@ export { default as ResourceAttach } from './pages/ResourceAttach.vue'
 export { default as ResourcePicker } from './pages/ResourcePicker.vue'
 export { default as Trash } from './pages/Trash.vue'
 export { default as PanelHome } from './pages/PanelHome.vue'
-export { default as LandingPage } from './pages/landing/Composed.vue'
-export { default as LandingNav } from './pages/landing/LandingNav.vue'
-export { default as LandingFooter } from './pages/landing/LandingFooter.vue'
 export { default as PanelDashboard } from './pages/PanelDashboard.vue'
 export { default as PanelPage } from './pages/PanelPage.vue'
 export { default as Changelog } from './pages/Changelog.vue'
@@ -232,7 +229,6 @@ export const PANEL_PAGES = {
     DevicePreview: () => import('./pages/DevicePreview.vue'),
     Mail: () => import('./pages/Mail.vue'),
     Chat: () => import('./pages/Chat.vue'),
-    'landing/Composed': () => import('./pages/landing/Composed.vue'),
     PanelDashboard: () => import('./pages/PanelDashboard.vue'),
     PanelPage: () => import('./pages/PanelPage.vue'),
     Onboarding: () => import('./pages/Onboarding.vue'),

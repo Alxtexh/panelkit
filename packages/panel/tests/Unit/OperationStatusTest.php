@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 use Alxtexh\Panel\Support\OperationStatus;
+use Alxtexh\Panel\Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(TestCase::class, RefreshDatabase::class);
 
 it('records a normalized installation-wide operation envelope', function (): void {
     $status = app(OperationStatus::class);

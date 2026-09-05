@@ -30,6 +30,15 @@ use RuntimeException;
  */
 final class CsvReaderTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (! class_exists(CsvReader::class)) {
+            $this->markTestSkipped('CSV import tests require panel-operations.');
+        }
+    }
+
     private string $path;
 
     protected function tearDown(): void

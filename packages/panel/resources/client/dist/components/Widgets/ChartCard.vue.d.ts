@@ -33,6 +33,8 @@ type __VLS_Props = {
     period?: string;
     loading?: boolean;
     error?: boolean;
+    /** Offer an in-place retry action when the series failed. */
+    retryable?: boolean;
     bodyHeight?: number;
     /** Size the body to its content once loaded. */
     fitBody?: boolean;
@@ -55,9 +57,11 @@ type __VLS_Slots = {} & {
     default?: (props: typeof __VLS_10) => any;
 };
 declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
+    retry: () => any;
     "update:period": (value: string) => any;
     hide: () => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
+    onRetry?: (() => any) | undefined;
     "onUpdate:period"?: ((value: string) => any) | undefined;
     onHide?: (() => any) | undefined;
 }>, {
@@ -70,6 +74,7 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_Props, {}, {}
         value: string;
         label: string;
     }[] | null;
+    retryable: boolean;
     bodyHeight: number;
     fitBody: boolean;
     defaultCollapsed: boolean;

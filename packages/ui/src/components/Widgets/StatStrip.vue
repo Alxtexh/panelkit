@@ -263,12 +263,16 @@ function display(value: string | number): string {
         in the card colour, and the 1px gaps between them are what shows through.
         Leftover cards skip that container so empty tracks stay transparent.
     -->
-    <div class="flex flex-col gap-3">
+    <div
+        class="flex flex-col gap-3"
+        data-slot="stat-strip"
+        :aria-busy="loading ? 'true' : undefined"
+    >
         <div
             v-for="row in stripRows"
             :key="row.key"
             class="relative shrink-0"
-            :class="row.joined ? 'bg-border overflow-hidden rounded-xl border' : ''"
+            :class="row.joined ? 'bg-border overflow-hidden rounded-xl border shadow-sm' : ''"
             :data-slot="row.joined ? 'stat-packed' : 'stat-leftover'"
         >
             <!--
@@ -319,7 +323,7 @@ function display(value: string | number): string {
                 <div
                     v-for="segment in row.segments"
                     :key="segment.key"
-                    class="bg-card flex flex-col gap-2 p-4"
+                    class="bg-card flex min-w-0 flex-col gap-2 p-4 sm:p-5"
                     :class="row.joined ? '' : 'overflow-hidden rounded-xl border'"
                 >
                     <p

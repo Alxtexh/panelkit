@@ -963,8 +963,8 @@ onBeforeUnmount(() => {
         >
             <p class="text-sm">Continue to the next page without saving this form?</p>
             <template #footer>
-                <Button variant="ghost" size="sm" @click="pendingNavigation = null">Stay</Button>
-                <Button variant="destructive" size="sm" @click="leaveWithoutSaving">Leave page</Button>
+                <Button variant="outline" @click="pendingNavigation = null">Stay</Button>
+                <Button variant="destructive" @click="leaveWithoutSaving">Leave page</Button>
             </template>
         </PkModal>
 

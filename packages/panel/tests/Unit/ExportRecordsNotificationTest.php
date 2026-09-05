@@ -19,6 +19,15 @@ final class ExportRecordsNotificationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (! class_exists(ExportRecords::class)) {
+            $this->markTestSkipped('Export notification tests require panel-operations.');
+        }
+    }
+
     public function test_a_single_row_export_says_row_not_rows(): void
     {
         $tenant = Tenant::create(['name' => 'Mine', 'slug' => 'mine']);
