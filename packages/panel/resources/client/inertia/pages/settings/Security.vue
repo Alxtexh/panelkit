@@ -20,12 +20,13 @@
  * packaged screen has no such file to import, and the panel may be mounted at
  * any prefix. `panel.path` is shared by SharePanelProps on every request.
  */
-import { Form, Head, router, usePage } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { Form, Head, router, useForm, usePage } from '@inertiajs/vue3'
+import { computed, ref } from 'vue'
 import {
     PkButton as Button,
     PkFieldLabel as Label,
     PkHeading as Heading,
+    PkModal,
     PkPasswordInput as PasswordInput,
 } from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
@@ -99,8 +100,47 @@ const otherDevices = computed(() => (props.devices ?? []).filter((d) => !d.curre
 
 const canListOtherDevices = computed(() => props.canListOtherDevices === true)
 
+type PendingSecurityAction =
+    | { kind: 'disconnect'; id: number }
+    | { kind: 'device'; id: string }
+    | { kind: 'others' }
+    | { kind: 'email-two-factor' }
+
+const pendingSecurityAction = ref<PendingSecurityAction | null>(null)
+const emailTwoFactorForm = useForm({})
+
+const securityActionTitle = computed(() => {
+    switch (pendingSecurityAction.value?.kind) {
+        case 'disconnect':
+            return 'Disconnect account?'
+        case 'device':
+            return 'Sign out this device?'
+        case 'others':
+            return 'Sign out other devices?'
+        case 'email-two-factor':
+            return 'Disable email codes?'
+        default:
+            return 'Confirm security change'
+    }
+})
+
+const securityActionDescription = computed(() => {
+    switch (pendingSecurityAction.value?.kind) {
+        case 'disconnect':
+            return 'This removes the connected sign-in provider from your account.'
+        case 'device':
+            return 'That browser session will be invalidated immediately.'
+        case 'others':
+            return 'Every other browser session will be invalidated immediately.'
+        case 'email-two-factor':
+            return 'Your account will no longer receive email codes as a second factor.'
+        default:
+            return undefined
+    }
+})
+
 function disconnect(id: number) {
-    router.delete(at(`/connected-accounts/${id}`), { preserveScroll: true })
+    pendingSecurityAction.value = { kind: 'disconnect', id }
 }
 
 /**
@@ -111,11 +151,35 @@ function disconnect(id: number) {
  * session at all.
  */
 function signOut(id: string) {
-    router.delete(at(`/security/devices/${id}`), { preserveScroll: true })
+    pendingSecurityAction.value = { kind: 'device', id }
 }
 
 function signOutOthers() {
-    router.delete(at('/security/devices'), { preserveScroll: true })
+    pendingSecurityAction.value = { kind: 'others' }
+}
+
+function disableEmailTwoFactor() {
+    pendingSecurityAction.value = { kind: 'email-two-factor' }
+}
+
+function confirmSecurityAction() {
+    const action = pendingSecurityAction.value
+
+    if (!action) {
+        return
+    }
+
+    pendingSecurityAction.value = null
+
+    if (action.kind === 'disconnect') {
+        router.delete(at(`/connected-accounts/${action.id}`), { preserveScroll: true })
+    } else if (action.kind === 'device') {
+        router.delete(at(`/security/devices/${action.id}`), { preserveScroll: true })
+    } else if (action.kind === 'others') {
+        router.delete(at('/security/devices'), { preserveScroll: true })
+    } else {
+        emailTwoFactorForm.delete(at('/security/email-two-factor'), { preserveScroll: true })
+    }
 }
 
 defineOptions({
@@ -227,17 +291,16 @@ defineOptions({
             <Button type="submit" :disabled="processing">Enable email codes</Button>
         </Form>
 
-        <Form
-            v-else
-            :action="at('/security/email-two-factor')"
-            method="delete"
-            :options="{ preserveScroll: true }"
-            #default="{ processing }"
-        >
-            <Button variant="destructive" type="submit" :disabled="processing">
+        <div v-else>
+            <Button
+                variant="destructive"
+                type="button"
+                :disabled="emailTwoFactorForm.processing"
+                @click="disableEmailTwoFactor"
+            >
                 Disable email codes
             </Button>
-        </Form>
+        </div>
     </div>
 
     <div v-if="canManagePasskeys" :class="wrapClass">
@@ -385,4 +448,29 @@ defineOptions({
             Sign out every other device
         </Button>
     </div>
+
+    <PkModal
+        :open="pendingSecurityAction !== null"
+        :title="securityActionTitle"
+        :description="securityActionDescription"
+        @close="pendingSecurityAction = null"
+    >
+        <p class="text-sm">
+            <template v-if="pendingSecurityAction?.kind === 'disconnect'">
+                This provider will no longer be available as a sign-in method.
+            </template>
+            <template v-else-if="pendingSecurityAction?.kind === 'email-two-factor'">
+                Continue only if you have another reliable second factor or recovery method.
+            </template>
+            <template v-else>
+                Continue with this security change?
+            </template>
+        </p>
+        <template #footer>
+            <Button variant="ghost" size="sm" @click="pendingSecurityAction = null">Cancel</Button>
+            <Button variant="destructive" size="sm" @click="confirmSecurityAction">
+                Confirm
+            </Button>
+        </template>
+    </PkModal>
 </template>

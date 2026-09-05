@@ -7,6 +7,9 @@ namespace Alxtexh\Panel\Tests\Feature;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
+use Alxtexh\Panel\Tests\Fixtures\Resources\ArticleResource;
+use Alxtexh\Panel\Actions\BulkAction;
+use Alxtexh\Panel\Actions\BulkRunner;
 use Alxtexh\Panel\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -76,6 +79,29 @@ final class BulkActionTest extends TestCase
             ->assertSuccessful();
 
         $this->assertSame(3, Article::query()->where('status', 'published')->count());
+    }
+
+    public function test_bulk_runner_can_skip_records_refused_by_individual_authorization(): void
+    {
+        $ids = $this->makeArticles(3);
+        $action = BulkAction::make('publish', 'Publish')
+            ->authorizeIndividualRecords()
+            ->mutate(['status' => 'published']);
+        $list = ArticleResource::definition()->toListQuery(Article::class);
+
+        $affected = app(BulkRunner::class)->run(
+            $action,
+            $list->matching(request()),
+            Article::class,
+            $list->keyColumnName(),
+            null,
+            [],
+            static fn (Article $article): bool => $article->getKey() !== $ids[1],
+        );
+
+        $this->assertSame(2, $affected);
+        $this->assertSame('draft', Article::withoutGlobalScopes()->find($ids[1])->status);
+        $this->assertSame(2, Article::query()->where('status', 'published')->count());
     }
 
     /**

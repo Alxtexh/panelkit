@@ -8,6 +8,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Alxtexh\Panel\Actions\BulkRunner;
@@ -126,6 +127,9 @@ final class RunBulkAction implements ShouldQueue
                     return ! JobStatus::isCanceled($this->token);
                 },
                 $this->data,
+                $action->authorizesIndividualRecords()
+                    ? static fn (Model $record): bool => $class::can($action->getAbility(), $record)
+                    : null,
             );
 
             if (JobStatus::isCanceled($this->token)) {

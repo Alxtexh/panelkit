@@ -26,7 +26,7 @@
  */
 import { usePage } from '@inertiajs/vue3'
 import { computed, onUnmounted, ref } from 'vue'
-import { PkSlideover } from '@alxtexh-enterprise/panel'
+import { PkModal, PkSlideover } from '@alxtexh-enterprise/panel'
 import {
     followNotificationAction,
     linkedNotificationActions,
@@ -87,6 +87,7 @@ const notifications = ref<Note[]>([])
 const hasMore = ref(false)
 const loadingMore = ref(false)
 const notificationsPage = ref(1)
+const confirmingClearAll = ref(false)
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 /**
@@ -291,9 +292,11 @@ async function clearAll(): Promise<void> {
         return
     }
 
-    if (!window.confirm('Delete every notification? This cannot be undone.')) {
-        return
-    }
+    confirmingClearAll.value = true
+}
+
+async function executeClearAll(): Promise<void> {
+    confirmingClearAll.value = false
 
     notifications.value = []
     unread.value = 0
@@ -605,4 +608,31 @@ function runNoteAction(note: Note, action: NotificationAction, event: Event): vo
             </div>
         </template>
     </PkSlideover>
+
+    <PkModal
+        :open="confirmingClearAll"
+        title="Clear all notifications?"
+        description="This removes every notification from your inbox and cannot be undone."
+        @close="confirmingClearAll = false"
+    >
+        <p class="text-sm">
+            Clear <strong>{{ notifications.length }}</strong> notification(s) from your inbox?
+        </p>
+        <template #footer>
+            <button
+                type="button"
+                class="hover:bg-accent rounded-md px-3 py-1.5 text-sm"
+                @click="confirmingClearAll = false"
+            >
+                Cancel
+            </button>
+            <button
+                type="button"
+                class="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md px-3 py-1.5 text-sm"
+                @click="executeClearAll"
+            >
+                Clear all
+            </button>
+        </template>
+    </PkModal>
 </template>

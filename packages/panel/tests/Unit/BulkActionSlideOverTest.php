@@ -24,4 +24,15 @@ final class BulkActionSlideOverTest extends TestCase
 
         $this->assertArrayNotHasKey('slideOver', $payload);
     }
+
+    public function test_individual_authorization_is_explicitly_serialized(): void
+    {
+        $payload = BulkAction::make('delete', 'Delete')
+            ->destructive()
+            ->authorizeIndividualRecords()
+            ->toArray();
+
+        $this->assertTrue($payload['authorizeIndividualRecords']);
+        $this->assertNotEmpty($payload['confirmation']);
+    }
 }

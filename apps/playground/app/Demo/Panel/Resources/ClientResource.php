@@ -689,6 +689,7 @@ final class ClientResource extends Resource
                     ->icon('trash')
                     ->destructive()
                     ->authorize('delete')
+                    ->authorizeIndividualRecords()
                     // A handler rather than a mutation: deleting through the
                     // models fires the events any listener depends on, which a
                     // bare DELETE would skip silently.

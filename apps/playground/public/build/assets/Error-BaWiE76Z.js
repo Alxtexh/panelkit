@@ -1,0 +1,1 @@
+import{A as e,Pt as t,R as n,et as r}from"./api-docs-D-YQgOc6.js";import{p as i}from"./inertia-AhJrXLi6.js";var a=n({__name:`Error`,props:{status:{}},setup(n){return(a,o)=>(r(),e(t(i),{status:n.status,"home-href":`/dashboard`,"login-href":`/login`,"home-label":`Back to dashboard`},null,8,[`status`]))}});export{a as default};

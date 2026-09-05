@@ -10,6 +10,7 @@ import {
     PAGE_SHELL_STACK,
     PkButton as Button,
     PkEmptyState,
+    PkModal,
     PkPageHeader,
     TableShell,
 } from '@alxtexh-enterprise/panel'
@@ -60,6 +61,7 @@ const props = withDefaults(
 
 const showCreate = ref(false)
 const editingId = ref<number | null>(null)
+const pendingDeleteId = ref<number | null>(null)
 
 const form = useForm<{
     id: number | null
@@ -128,8 +130,20 @@ function submitSave() {
     })
 }
 
-function remove(id: number) {
-    router.post(props.deleteHref ?? '/apps/webhooks/delete', { id }, { preserveScroll: true })
+function requestRemove(id: number) {
+    pendingDeleteId.value = id
+}
+
+function remove() {
+    if (pendingDeleteId.value === null) {
+        return
+    }
+
+    router.post(
+        props.deleteHref ?? '/apps/webhooks/delete',
+        { id: pendingDeleteId.value },
+        { preserveScroll: true, onFinish: () => (pendingDeleteId.value = null) },
+    )
 }
 
 function selectEndpoint(id: number) {
@@ -326,7 +340,7 @@ function statusLabel(row: DeliveryRow): string {
                         <Button type="button" variant="ghost" size="sm" @click="openEdit(row)">
                             Edit
                         </Button>
-                        <Button type="button" variant="ghost" size="sm" @click="remove(row.id)">
+                        <Button type="button" variant="ghost" size="sm" @click="requestRemove(row.id)">
                             Delete
                         </Button>
                     </div>
@@ -404,5 +418,18 @@ function statusLabel(row: DeliveryRow): string {
                 </div>
             </TableShell>
         </section>
+
+        <PkModal
+            :open="pendingDeleteId !== null"
+            title="Delete webhook endpoint?"
+            description="Future deliveries will stop for this endpoint."
+            @close="pendingDeleteId = null"
+        >
+            <p class="text-sm">Delete endpoint <strong>#{{ pendingDeleteId }}</strong>?</p>
+            <template #footer>
+                <Button variant="ghost" size="sm" @click="pendingDeleteId = null">Cancel</Button>
+                <Button variant="destructive" size="sm" @click="remove">Delete endpoint</Button>
+            </template>
+        </PkModal>
     </div>
 </template>

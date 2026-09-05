@@ -8,6 +8,7 @@ import {
     PAGE_SHELL_STACK,
     PkButton as Button,
     PkEmptyState,
+    PkModal,
     PkPageHeader,
     TableShell,
 } from '@alxtexh-enterprise/panel'
@@ -43,6 +44,7 @@ const props = withDefaults(
 )
 
 const showCreate = ref(false)
+const pendingRevoke = ref<number | string | null>(null)
 
 const form = useForm<{ name: string; abilities: string[] }>({
     name: '',
@@ -73,8 +75,20 @@ function submitCreate() {
     })
 }
 
-function revoke(id: number | string) {
-    router.post(props.destroyHref ?? '/apps/api-keys/destroy', { id }, { preserveScroll: true })
+function requestRevoke(id: number | string) {
+    pendingRevoke.value = id
+}
+
+function revoke() {
+    if (pendingRevoke.value === null) {
+        return
+    }
+
+    router.post(
+        props.destroyHref ?? '/apps/api-keys/destroy',
+        { id: pendingRevoke.value },
+        { preserveScroll: true, onFinish: () => (pendingRevoke.value = null) },
+    )
 }
 
 function formatWhen(value?: string | null): string {
@@ -212,7 +226,7 @@ function formatWhen(value?: string | null): string {
                                 {{ formatWhen(row.expires_at) }}
                             </td>
                             <td class="px-3 py-2 text-right">
-                                <Button type="button" variant="ghost" @click="revoke(row.id)">
+                                <Button type="button" variant="ghost" @click="requestRevoke(row.id)">
                                     Revoke
                                 </Button>
                             </td>
@@ -221,5 +235,18 @@ function formatWhen(value?: string | null): string {
                 </table>
             </div>
         </TableShell>
+
+        <PkModal
+            :open="pendingRevoke !== null"
+            title="Revoke API key?"
+            description="Applications using this key will lose access immediately."
+            @close="pendingRevoke = null"
+        >
+            <p class="text-sm">Revoke key <strong>#{{ pendingRevoke }}</strong>?</p>
+            <template #footer>
+                <Button variant="ghost" size="sm" @click="pendingRevoke = null">Cancel</Button>
+                <Button variant="destructive" size="sm" @click="revoke">Revoke key</Button>
+            </template>
+        </PkModal>
     </div>
 </template>

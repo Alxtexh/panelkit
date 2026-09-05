@@ -45,6 +45,18 @@ final class BulkAction
 
     private string $ability = 'update';
 
+    /**
+     * Whether the action must authorize each selected record individually.
+     *
+     * Collection authorization answers "may this actor run this action at
+     * all?". This second check answers "may they run it on this row?" and is
+     * important for mixed selections where policy decisions depend on record
+     * state or ownership. It mirrors Filament's explicit
+     * `authorizeIndividualRecords()` opt-in without imposing N policy calls on
+     * the fast path for uniform, tenant-scoped mutations.
+     */
+    private bool $authorizeIndividualRecords = false;
+
     /** @var array<string, mixed> */
     private array $mutate = [];
 
@@ -132,6 +144,18 @@ final class BulkAction
         $this->ability = $ability;
 
         return $this;
+    }
+
+    public function authorizeIndividualRecords(bool $authorize = true): self
+    {
+        $this->authorizeIndividualRecords = $authorize;
+
+        return $this;
+    }
+
+    public function authorizesIndividualRecords(): bool
+    {
+        return $this->authorizeIndividualRecords;
     }
 
     /**
@@ -300,6 +324,7 @@ final class BulkAction
             'icon' => $this->icon,
             'destructive' => $this->destructive,
             'color' => $this->color,
+            'authorizeIndividualRecords' => $this->authorizeIndividualRecords,
             // A destructive action always confirms, even if the definition
             // forgot to say so.
             'confirmation' => $this->confirmation

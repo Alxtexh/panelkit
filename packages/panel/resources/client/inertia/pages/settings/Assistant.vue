@@ -17,11 +17,13 @@
  * blank on an unrelated visit changes nothing because blank never submits.
  */
 import { Head, useForm } from '@inertiajs/vue3'
+import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 import {
     Label,
     PkButton as Button,
     PkHeading as Heading,
+    PkModal,
     ShadcnInput as Input,
 } from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
@@ -55,11 +57,17 @@ function submit() {
 }
 
 const removing = useForm({})
+const confirmingRemove = ref(false)
 
 function remove() {
+    confirmingRemove.value = true
+}
+
+function confirmRemove() {
     removing.delete(props.routes.destroy, {
         preserveScroll: true,
         onSuccess: () => toast.success('Assistant credentials removed'),
+        onFinish: () => (confirmingRemove.value = false),
     })
 }
 </script>
@@ -144,5 +152,20 @@ function remove() {
                 </Button>
             </div>
         </form>
+
+        <PkModal
+            :open="confirmingRemove"
+            title="Remove assistant key?"
+            description="The assistant will fall back to the deployment key, if one is configured."
+            @close="confirmingRemove = false"
+        >
+            <p class="text-sm">Remove the saved provider credentials from this tenant?</p>
+            <template #footer>
+                <Button variant="ghost" size="sm" @click="confirmingRemove = false">Cancel</Button>
+                <Button variant="destructive" size="sm" :disabled="removing.processing" @click="confirmRemove">
+                    Remove key
+                </Button>
+            </template>
+        </PkModal>
     </div>
 </template>

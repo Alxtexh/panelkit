@@ -10,6 +10,7 @@ import {
     PAGE_SHELL_STACK,
     PkButton as Button,
     PkEmptyState,
+    PkModal,
     PkPageHeader,
     TableShell,
 } from '@alxtexh-enterprise/panel'
@@ -53,6 +54,7 @@ const page = usePage()
 const showUpload = ref(false)
 const movingId = ref<number | null>(null)
 const moveFolder = ref('')
+const pendingDeleteId = ref<number | null>(null)
 
 const uploadForm = useForm<{ file: File | null; folder: string }>({
     file: null,
@@ -131,8 +133,20 @@ function confirmMove() {
     )
 }
 
-function remove(id: number) {
-    router.post(props.deleteHref ?? '/files/media-library/delete', { id }, { preserveScroll: true })
+function requestRemove(id: number) {
+    pendingDeleteId.value = id
+}
+
+function remove() {
+    if (pendingDeleteId.value === null) {
+        return
+    }
+
+    router.post(
+        props.deleteHref ?? '/files/media-library/delete',
+        { id: pendingDeleteId.value },
+        { preserveScroll: true, onFinish: () => (pendingDeleteId.value = null) },
+    )
 }
 </script>
 
@@ -305,7 +319,7 @@ function remove(id: number) {
                                         type="button"
                                         size="sm"
                                         variant="ghost"
-                                        @click="remove(row.id)"
+                                        @click="requestRemove(row.id)"
                                     >
                                         Delete
                                     </Button>
@@ -337,5 +351,18 @@ function remove(id: number) {
                 <Button type="button" variant="ghost" @click="movingId = null">Cancel</Button>
             </div>
         </div>
+
+        <PkModal
+            :open="pendingDeleteId !== null"
+            title="Delete file?"
+            description="The file will be moved to Trash and can be restored according to your retention policy."
+            @close="pendingDeleteId = null"
+        >
+            <p class="text-sm">Move file <strong>#{{ pendingDeleteId }}</strong> to Trash?</p>
+            <template #footer>
+                <Button variant="ghost" size="sm" @click="pendingDeleteId = null">Cancel</Button>
+                <Button variant="destructive" size="sm" @click="remove">Move to Trash</Button>
+            </template>
+        </PkModal>
     </div>
 </template>

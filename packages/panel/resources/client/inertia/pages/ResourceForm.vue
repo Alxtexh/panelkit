@@ -25,7 +25,7 @@ defineOptions({ inheritAttrs: false })
 import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
-import { PkButton as Button } from '@alxtexh-enterprise/panel'
+import { PkButton as Button, PkModal } from '@alxtexh-enterprise/panel'
 import {
     CreateOptionError,
     FORM_MEASURE,
@@ -63,7 +63,13 @@ const props = defineProps<{
          * is typed where it is USED: `RecordForm` declares `FormField[]`, and
          * the template casts to it below.
          */
-        form: { columns: number; nodes?: any[]; fields?: Record<string, any>[] }
+        form: {
+            columns: number
+            nodes?: any[]
+            fields?: Record<string, any>[]
+            autosave?: boolean
+            autosaveMilliseconds?: number | null
+        }
     }
     record: { id: number | string; label: string } | null
     values: Record<string, any>
@@ -102,6 +108,184 @@ const form = useForm<Record<string, any>>({ ...withDownloadUrls(props.values) })
 const liveOptions = ref({ ...props.formOptions })
 
 const formSchema = ref(props.schema.form)
+const draftStatus = ref<'idle' | 'saved' | 'restored'>('idle')
+let draftTimer: ReturnType<typeof setTimeout> | undefined
+let draftController: AbortController | undefined
+
+function draftStorageKey(): string {
+    return `panel:draft:${window.location.pathname}`
+}
+
+function draftKey(): string {
+    return `${window.location.pathname}:draft`.slice(0, 80)
+}
+
+function draftUrl(): string {
+    return props.record?.id
+        ? `${props.schema.routes.index}/${props.record.id}/draft`
+        : `${props.schema.routes.index}/draft`
+}
+
+function draftEnabled(): boolean {
+    return formSchema.value.autosave === true && typeof window !== 'undefined'
+}
+
+function clearDraft(): void {
+    if (!draftEnabled()) {
+        return
+    }
+
+    try {
+        window.localStorage.removeItem(draftStorageKey())
+    } catch {
+        // Storage may be disabled by browser policy; the form remains usable.
+    }
+}
+
+function saveDraft(): void {
+    if (!draftEnabled()) {
+        return
+    }
+
+    try {
+        window.localStorage.setItem(
+            draftStorageKey(),
+            JSON.stringify({
+                version: form.data()._updated_at ?? null,
+                values: payload(),
+                savedAt: new Date().toISOString(),
+            }),
+        )
+        draftStatus.value = 'saved'
+        void syncServerDraft()
+    } catch {
+        // Quota/security errors must never interrupt editing.
+    }
+}
+
+async function syncServerDraft(): Promise<void> {
+    if (!draftEnabled()) {
+        return
+    }
+
+    draftController?.abort()
+    draftController = new AbortController()
+
+    try {
+        await fetch(draftUrl(), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-XSRF-TOKEN': csrf(),
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                draftKey: draftKey(),
+                version: form.data()._updated_at ?? null,
+                values: payload(),
+            }),
+            signal: draftController.signal,
+        })
+    } catch (error) {
+        if (!isAbort(error)) {
+            // Local storage remains the offline fallback.
+        }
+    }
+}
+
+async function restoreServerDraft(): Promise<boolean> {
+    if (!draftEnabled()) {
+        return false
+    }
+
+    try {
+        const res = await fetch(`${draftUrl()}?draftKey=${encodeURIComponent(draftKey())}`, {
+            headers: { Accept: 'application/json' },
+            credentials: 'same-origin',
+        })
+
+        if (!res.ok) {
+            return false
+        }
+
+        const body = await res.json()
+        const draft = body?.draft
+
+        if (!draft || body.stale || !draft.values || typeof draft.values !== 'object') {
+            return false
+        }
+
+        for (const [key, value] of Object.entries(draft.values)) {
+            ;(form as any)[key] = value
+        }
+        draftStatus.value = 'restored'
+
+        return true
+    } catch {
+        return false
+    }
+}
+
+async function forgetServerDraft(): Promise<void> {
+    if (!draftEnabled()) {
+        return
+    }
+
+    try {
+        await fetch(draftUrl(), {
+            method: 'DELETE',
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-XSRF-TOKEN': csrf(),
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ draftKey: draftKey() }),
+        })
+    } catch {
+        // A successful record save is not made unsuccessful by draft cleanup.
+    }
+}
+
+function scheduleDraft(): void {
+    if (!draftEnabled()) {
+        return
+    }
+
+    clearTimeout(draftTimer)
+    draftTimer = setTimeout(saveDraft, formSchema.value.autosaveMilliseconds ?? 1000)
+}
+
+function restoreDraft(): void {
+    if (!draftEnabled()) {
+        return
+    }
+
+    try {
+        const raw = window.localStorage.getItem(draftStorageKey())
+        const draft = raw ? JSON.parse(raw) : null
+        const currentVersion = form.data()._updated_at ?? null
+
+        if (
+            !draft ||
+            typeof draft !== 'object' ||
+            draft.version !== currentVersion ||
+            !draft.values ||
+            typeof draft.values !== 'object'
+        ) {
+            return
+        }
+
+        for (const [key, value] of Object.entries(draft.values)) {
+            ;(form as any)[key] = value
+        }
+        draftStatus.value = 'restored'
+    } catch {
+        // Corrupt or unavailable drafts are discarded by omission.
+    }
+}
 
 watch(
     () => props.formOptions,
@@ -243,6 +427,8 @@ function submit(andNew = false) {
     saving = true
 
     const onSuccess = () => {
+        clearDraft()
+        void forgetServerDraft()
         toast.success(`${props.schema.label} ${isEdit.value ? 'updated' : 'created'}`)
 
         if (andNew && !isEdit.value) {
@@ -477,7 +663,13 @@ async function onFieldChange(key: string, value: any): Promise<void> {
         return
     }
 
-    const res = await fetch(`${props.schema.routes.index}/form-state`, {
+    liveController?.abort()
+    liveController = new AbortController()
+
+    let res: Response
+
+    try {
+        res = await fetch(`${props.schema.routes.index}/form-state`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -486,8 +678,16 @@ async function onFieldChange(key: string, value: any): Promise<void> {
             'X-XSRF-TOKEN': csrf(),
         },
         credentials: 'same-origin',
-        body: JSON.stringify({ field: key, values: form.data() }),
-    })
+            body: JSON.stringify({ field: key, values: form.data() }),
+            signal: liveController.signal,
+        })
+    } catch (error) {
+        if (!isAbort(error)) {
+            throw error
+        }
+
+        return
+    }
 
     if (!res.ok) {
         return
@@ -544,6 +744,12 @@ function applyFormPatch(payload: any): void {
  * Same transport as live() form-state. No Livewire.
  */
 let validateTimer: ReturnType<typeof setTimeout> | undefined
+let liveController: AbortController | undefined
+let validationController: AbortController | undefined
+
+function isAbort(error: unknown): boolean {
+    return error instanceof DOMException && error.name === 'AbortError'
+}
 
 function validateUrl(): string | null {
     if (props.record?.id && props.schema.routes.update) {
@@ -567,7 +773,13 @@ async function validateField(key: string): Promise<void> {
         return
     }
 
-    const res = await fetch(url, {
+    validationController?.abort()
+    validationController = new AbortController()
+
+    let res: Response
+
+    try {
+        res = await fetch(url, {
         method: props.record?.id ? 'PUT' : 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -578,8 +790,16 @@ async function validateField(key: string): Promise<void> {
             'X-XSRF-TOKEN': csrf(),
         },
         credentials: 'same-origin',
-        body: JSON.stringify({ field: key, ...form.data() }),
-    })
+            body: JSON.stringify({ field: key, ...form.data() }),
+            signal: validationController.signal,
+        })
+    } catch (error) {
+        if (!isAbort(error)) {
+            throw error
+        }
+
+        return
+    }
 
     if (res.status === 204 || res.headers.get('Precognition-Success') === 'true') {
         form.clearErrors(key)
@@ -620,10 +840,22 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     }
 }
 
+watch(
+    formValues,
+    () => scheduleDraft(),
+    { deep: true },
+)
+
 let removeNavigationGuard: (() => void) | undefined
+const pendingNavigation = ref<any | null>(null)
 
 onMounted(() => {
     window.addEventListener('beforeunload', onBeforeUnload)
+    void restoreServerDraft().then((restored) => {
+        if (!restored) {
+            restoreDraft()
+        }
+    })
 
     const params = new URLSearchParams(window.location.search)
 
@@ -641,16 +873,38 @@ onMounted(() => {
             return
         }
 
-        if (!window.confirm('You have unsaved changes. Leave without saving?')) {
-            event.preventDefault()
-        }
+        event.preventDefault()
+        pendingNavigation.value = event.detail.visit
     })
 })
+
+function leaveWithoutSaving(): void {
+    const visit = pendingNavigation.value
+
+    pendingNavigation.value = null
+    cancelling = true
+
+    if (visit) {
+        router.visit(visit.url, {
+            ...visit,
+            onFinish: () => {
+                cancelling = false
+            },
+        })
+    } else {
+        cancelling = false
+    }
+}
 
 onBeforeUnmount(() => {
     window.removeEventListener('beforeunload', onBeforeUnload)
     removeNavigationGuard?.()
     clearTimeout(validateTimer)
+    clearTimeout(draftTimer)
+    draftController?.abort()
+    saveDraft()
+    liveController?.abort()
+    validationController?.abort()
 })
 </script>
 
@@ -700,6 +954,19 @@ onBeforeUnmount(() => {
                 </template>
             </template>
         </PkPageHeader>
+
+        <PkModal
+            :open="pendingNavigation !== null"
+            title="Leave without saving?"
+            description="Your changes are still on this form and will be discarded if you leave."
+            @close="pendingNavigation = null"
+        >
+            <p class="text-sm">Continue to the next page without saving this form?</p>
+            <template #footer>
+                <Button variant="ghost" size="sm" @click="pendingNavigation = null">Stay</Button>
+                <Button variant="destructive" size="sm" @click="leaveWithoutSaving">Leave page</Button>
+            </template>
+        </PkModal>
 
         <!--
             Full-bleed PAGE_SHELL_COMPACT for the page; FORM_MEASURE (max-w-7xl,

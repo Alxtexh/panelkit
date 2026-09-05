@@ -4,7 +4,7 @@
  */
 import { Head, router, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
-import { PAGE_SHELL_STACK, PkButton as Button } from '@alxtexh-enterprise/panel'
+import { PAGE_SHELL_STACK, PkButton as Button, PkModal } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
@@ -40,6 +40,7 @@ const props = withDefaults(
 )
 
 const showForm = ref(false)
+const pendingRevoke = ref<string | null>(null)
 
 const form = useForm<{ email: string; role_id: string }>({
     email: '',
@@ -56,8 +57,20 @@ function submitInvite() {
     })
 }
 
-function revoke(id: string) {
-    router.post(props.revokeHref ?? '/apps/invites/revoke', { id }, { preserveScroll: true })
+function requestRevoke(id: string) {
+    pendingRevoke.value = id
+}
+
+function revoke() {
+    if (pendingRevoke.value === null) {
+        return
+    }
+
+    router.post(
+        props.revokeHref ?? '/apps/invites/revoke',
+        { id: pendingRevoke.value },
+        { preserveScroll: true, onFinish: () => (pendingRevoke.value = null) },
+    )
 }
 
 function roleLabel(roleId: string): string {
@@ -145,9 +158,22 @@ function roleLabel(roleId: string): string {
                             {{ roleLabel(row.role_id) }}
                         </p>
                     </div>
-                    <Button type="button" variant="ghost" @click="revoke(row.id)">Revoke</Button>
+                    <Button type="button" variant="ghost" @click="requestRevoke(row.id)">Revoke</Button>
                 </li>
             </ul>
         </section>
+
+        <PkModal
+            :open="pendingRevoke !== null"
+            title="Revoke invitation?"
+            description="The invitation link will stop working immediately."
+            @close="pendingRevoke = null"
+        >
+            <p class="text-sm">Revoke the invitation for <strong>{{ pending.find((row) => row.id === pendingRevoke)?.email ?? `#${pendingRevoke}` }}</strong>?</p>
+            <template #footer>
+                <Button variant="ghost" size="sm" @click="pendingRevoke = null">Cancel</Button>
+                <Button variant="destructive" size="sm" @click="revoke">Revoke invitation</Button>
+            </template>
+        </PkModal>
     </div>
 </template>

@@ -36,6 +36,7 @@ final class BulkRunner
      * @param  QueryBuilder  $target  The filtered, tenant-scoped set.
      * @param  class-string<Model>  $model
      * @param  Closure(int): (bool|void)|null  $onProgress  Return false to stop after the current chunk.
+     * @param  Closure(Model): bool|null  $authorizeRecord  Optional per-record policy check.
      * @return int How many records were actually written.
      */
     public function run(
@@ -45,6 +46,7 @@ final class BulkRunner
         string $keyColumn,
         ?Closure $onProgress = null,
         array $data = [],
+        ?Closure $authorizeRecord = null,
     ): int {
         $affected = 0;
         $after = null;
@@ -65,7 +67,7 @@ final class BulkRunner
 
             $after = end($chunk);
 
-            $affected += $this->apply($action, $model, $keyColumn, $chunk, $data);
+            $affected += $this->apply($action, $model, $keyColumn, $chunk, $data, $authorizeRecord);
 
             if ($onProgress !== null) {
                 if ($onProgress($affected) === false) {
@@ -95,7 +97,14 @@ final class BulkRunner
      *                                      once, which is what makes this one
      *                                      decision rather than one per batch.
      */
-    private function apply(BulkAction $action, string $model, string $keyColumn, array $ids, array $data = []): int
+    private function apply(
+        BulkAction $action,
+        string $model,
+        string $keyColumn,
+        array $ids,
+        array $data = [],
+        ?Closure $authorizeRecord = null,
+    ): int
     {
         /*
          * Through the MODEL, not the raw builder handed in.
@@ -107,6 +116,16 @@ final class BulkRunner
          * the read was built. Two locks on the same door, deliberately.
          */
         $query = $model::query()->whereIn($keyColumn, $ids);
+
+        if ($authorizeRecord !== null) {
+            $authorizedIds = $query->get()->filter($authorizeRecord)->modelKeys();
+
+            if ($authorizedIds === []) {
+                return 0;
+            }
+
+            $query = $model::query()->whereIn($keyColumn, $authorizedIds);
+        }
 
         $handler = $action->getHandler();
 

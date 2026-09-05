@@ -3,8 +3,8 @@
  * Inertia host for PlanSetupPage: grid on the index, editor on create/edit.
  */
 import { Head, router } from '@inertiajs/vue3'
-import { computed } from 'vue'
-import { PAGE_SHELL, PlanEditor, PlanGrid } from '@alxtexh-enterprise/panel'
+import { computed, ref } from 'vue'
+import { PAGE_SHELL, PkButton as Button, PkModal, PlanEditor, PlanGrid } from '@alxtexh-enterprise/panel'
 import type { PlanLimitField, PlanModuleOption, PlanRecord } from '@alxtexh-enterprise/panel'
 
 defineOptions({
@@ -28,6 +28,7 @@ const props = defineProps<{
 }>()
 
 const mode = computed(() => props.mode ?? (props.editing ? 'edit' : 'index'))
+const pendingDestroy = ref<string | null>(null)
 
 function visitIndex() {
     router.visit(props.indexHref ?? '/settings/plans')
@@ -49,12 +50,21 @@ function save(plan: PlanRecord) {
     })
 }
 
-function destroy(id: string) {
+function requestDestroy(id: string) {
+    pendingDestroy.value = id
+}
+
+function destroy() {
+    if (pendingDestroy.value === null) {
+        return
+    }
+
     router.post(
         props.destroyHref ?? `${props.indexHref ?? '/settings/plans'}/destroy`,
-        { id },
+        { id: pendingDestroy.value },
         {
             preserveScroll: true,
+            onFinish: () => (pendingDestroy.value = null),
         },
     )
 }
@@ -81,7 +91,22 @@ function destroy(id: string) {
             :plans="plans ?? []"
             @create="visitCreate"
             @edit="visitEdit"
-            @delete="destroy"
+            @delete="requestDestroy"
         />
+
+        <PkModal
+            :open="pendingDestroy !== null"
+            title="Delete plan?"
+            description="This removes the plan and cannot be undone from this screen."
+            @close="pendingDestroy = null"
+        >
+            <p class="text-sm">
+                Delete plan <strong>#{{ pendingDestroy }}</strong>?
+            </p>
+            <template #footer>
+                <Button variant="ghost" size="sm" @click="pendingDestroy = null">Cancel</Button>
+                <Button variant="destructive" size="sm" @click="destroy">Delete plan</Button>
+            </template>
+        </PkModal>
     </div>
 </template>

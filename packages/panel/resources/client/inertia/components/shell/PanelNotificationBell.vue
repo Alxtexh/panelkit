@@ -15,17 +15,18 @@
  * badge lit for as long as a condition persists - which trains people to ignore
  * the badge, and then they miss the notification that mattered.
  *
- * IT FETCHES ONLY WHEN OPENED. A bell that polls in the background costs a
- * request per interval per open tab forever. The unread count arrives with the
- * page payload, so the badge is correct on load with no request at all.
+ * IT FETCHES WHEN OPENED, THEN POLLS ONLY WHILE OPEN. This gives realtime-capable
+ * hosts a natural place to refresh after a push event, while installations that
+ * have no broadcaster still receive new notifications without background work
+ * in every open tab.
  *
  * THE ENDPOINT IS PANEL-PREFIXED, which is the one thing the reference app's
  * version could not do - it wrote `/notifications` in its own source, so a
  * portal mounted at `/reseller` asked the wrong panel and got the wrong bell.
  */
 import { usePage } from '@inertiajs/vue3'
-import { computed, ref } from 'vue'
-import { PkSlideover } from '@alxtexh-enterprise/panel'
+import { computed, onUnmounted, ref } from 'vue'
+import { PkModal, PkSlideover } from '@alxtexh-enterprise/panel'
 import {
     followNotificationAction,
     linkedNotificationActions,
@@ -86,6 +87,8 @@ const notifications = ref<Note[]>([])
 const hasMore = ref(false)
 const loadingMore = ref(false)
 const notificationsPage = ref(1)
+const confirmingClearAll = ref(false)
+let pollTimer: ReturnType<typeof setInterval> | null = null
 
 /**
  * Whether this person may write an announcement.
@@ -217,7 +220,21 @@ async function loadMore(): Promise<void> {
 function show(): void {
     open.value = true
     void load()
+    if (pollTimer === null) {
+        pollTimer = setInterval(() => {
+            if (open.value && !loading.value) {
+                void load()
+            }
+        }, 30_000)
+    }
 }
+
+onUnmounted(() => {
+    if (pollTimer !== null) {
+        clearInterval(pollTimer)
+        pollTimer = null
+    }
+})
 
 /*
  * THE COUNT MOVES BEFORE THE REQUEST DOES, in all three writes below. Marking a
@@ -275,9 +292,11 @@ async function clearAll(): Promise<void> {
         return
     }
 
-    if (!window.confirm('Delete every notification? This cannot be undone.')) {
-        return
-    }
+    confirmingClearAll.value = true
+}
+
+async function executeClearAll(): Promise<void> {
+    confirmingClearAll.value = false
 
     notifications.value = []
     unread.value = 0
@@ -589,4 +608,31 @@ function runNoteAction(note: Note, action: NotificationAction, event: Event): vo
             </div>
         </template>
     </PkSlideover>
+
+    <PkModal
+        :open="confirmingClearAll"
+        title="Clear all notifications?"
+        description="This removes every notification from your inbox and cannot be undone."
+        @close="confirmingClearAll = false"
+    >
+        <p class="text-sm">
+            Clear <strong>{{ notifications.length }}</strong> notification(s) from your inbox?
+        </p>
+        <template #footer>
+            <button
+                type="button"
+                class="hover:bg-accent rounded-md px-3 py-1.5 text-sm"
+                @click="confirmingClearAll = false"
+            >
+                Cancel
+            </button>
+            <button
+                type="button"
+                class="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md px-3 py-1.5 text-sm"
+                @click="executeClearAll"
+            >
+                Clear all
+            </button>
+        </template>
+    </PkModal>
 </template>

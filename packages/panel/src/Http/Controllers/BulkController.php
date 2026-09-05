@@ -166,6 +166,9 @@ final class BulkController extends Controller
             $list->keyColumnName(),
             null,
             $data,
+            $action->authorizesIndividualRecords()
+                ? static fn ($record): bool => $class::can($action->getAbility(), $record)
+                : null,
         );
 
         return response()->json(['status' => JobStatus::DONE, 'affected' => $affected]);

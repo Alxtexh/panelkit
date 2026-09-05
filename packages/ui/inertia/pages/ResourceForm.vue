@@ -25,7 +25,7 @@ defineOptions({ inheritAttrs: false })
 import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
-import { PkButton as Button } from '@alxtexh-enterprise/panel'
+import { PkButton as Button, PkModal } from '@alxtexh-enterprise/panel'
 import {
     CreateOptionError,
     FORM_MEASURE,
@@ -847,6 +847,7 @@ watch(
 )
 
 let removeNavigationGuard: (() => void) | undefined
+const pendingNavigation = ref<any | null>(null)
 
 onMounted(() => {
     window.addEventListener('beforeunload', onBeforeUnload)
@@ -872,11 +873,28 @@ onMounted(() => {
             return
         }
 
-        if (!window.confirm('You have unsaved changes. Leave without saving?')) {
-            event.preventDefault()
-        }
+        event.preventDefault()
+        pendingNavigation.value = event.detail.visit
     })
 })
+
+function leaveWithoutSaving(): void {
+    const visit = pendingNavigation.value
+
+    pendingNavigation.value = null
+    cancelling = true
+
+    if (visit) {
+        router.visit(visit.url, {
+            ...visit,
+            onFinish: () => {
+                cancelling = false
+            },
+        })
+    } else {
+        cancelling = false
+    }
+}
 
 onBeforeUnmount(() => {
     window.removeEventListener('beforeunload', onBeforeUnload)
@@ -936,6 +954,19 @@ onBeforeUnmount(() => {
                 </template>
             </template>
         </PkPageHeader>
+
+        <PkModal
+            :open="pendingNavigation !== null"
+            title="Leave without saving?"
+            description="Your changes are still on this form and will be discarded if you leave."
+            @close="pendingNavigation = null"
+        >
+            <p class="text-sm">Continue to the next page without saving this form?</p>
+            <template #footer>
+                <Button variant="ghost" size="sm" @click="pendingNavigation = null">Stay</Button>
+                <Button variant="destructive" size="sm" @click="leaveWithoutSaving">Leave page</Button>
+            </template>
+        </PkModal>
 
         <!--
             Full-bleed PAGE_SHELL_COMPACT for the page; FORM_MEASURE (max-w-7xl,
