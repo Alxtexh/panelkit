@@ -28,6 +28,7 @@ import {
     FORM_MEASURE,
     PAGE_SHELL_COMPACT,
     PkButton as Button,
+    PkModal,
     PkPageHeader,
     buttonClasses,
 } from '@alxtexh-enterprise/panel'
@@ -224,6 +225,12 @@ const statusVariant = computed(() => {
 })
 
 const workflowRunning = ref<string | null>(null)
+
+const pendingConfirmation = ref<{
+    title: string
+    description: string
+    run: () => void
+} | null>(null)
 
 /* ---------------------------------------------------------------------------
  * Related lists
@@ -608,11 +615,7 @@ function render(key: string): string {
     return [column?.prefix, text, column?.suffix].filter(Boolean).join(' ')
 }
 
-async function runWorkflowTransition(action: { key: string; label: string; confirm?: string }) {
-    if (action.confirm && !window.confirm(action.confirm)) {
-        return
-    }
-
+async function executeWorkflowTransition(action: { key: string; label: string; confirm?: string }) {
     workflowRunning.value = action.key
 
     try {
@@ -655,6 +658,20 @@ async function runWorkflowTransition(action: { key: string; label: string; confi
     }
 }
 
+function runWorkflowTransition(action: { key: string; label: string; confirm?: string }) {
+    if (action.confirm) {
+        pendingConfirmation.value = {
+            title: action.label,
+            description: action.confirm,
+            run: () => void executeWorkflowTransition(action),
+        }
+
+        return
+    }
+
+    void executeWorkflowTransition(action)
+}
+
 async function runInfolistAction(action: { key: string; label?: string }) {
     const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
     const token = match ? decodeURIComponent(match[1]) : ''
@@ -685,10 +702,6 @@ async function runInfolistAction(action: { key: string; label?: string }) {
 }
 
 function destroy() {
-    if (!window.confirm(`Delete ${title.value}? This cannot be undone.`)) {
-        return
-    }
-
     router.delete(`${props.schema.routes.index}/${props.record.id}`, {
         onSuccess: () => {
             toast.success(`${props.schema.label} deleted`)
@@ -696,6 +709,20 @@ function destroy() {
         },
         onError: () => toast.error('Could not delete this record'),
     })
+}
+
+function requestDelete() {
+    pendingConfirmation.value = {
+        title: `Delete ${title.value}?`,
+        description: 'This cannot be undone.',
+        run: destroy,
+    }
+}
+
+function confirmPending() {
+    const run = pendingConfirmation.value?.run
+    pendingConfirmation.value = null
+    run?.()
 }
 </script>
 
@@ -737,7 +764,7 @@ function destroy() {
                 </Button>
                 <!-- Primary last (DESIGN_RULES rule 2): Edit is the action this
                      page exists for, so it takes the outside edge. -->
-                <Button v-if="can.delete" variant="outline" size="sm" @click="destroy"
+                <Button v-if="can.delete" variant="outline" size="sm" @click="requestDelete"
                     >Delete</Button
                 >
                 <!-- A `<Link>` wearing button classes, not `<Button as-child>` wrapping one - see the note beside ResourceIndex's own New button. -->
@@ -890,6 +917,24 @@ function destroy() {
                 </div>
             </dl>
         </div>
+
+        <PkModal
+            :open="pendingConfirmation !== null"
+            :title="pendingConfirmation?.title ?? 'Confirm action'"
+            :description="pendingConfirmation?.description"
+            @close="pendingConfirmation = null"
+        >
+            <template #footer>
+                <Button variant="ghost" size="sm" @click="pendingConfirmation = null">Cancel</Button>
+                <Button
+                    variant="destructive"
+                    size="sm"
+                    @click="confirmPending"
+                >
+                    Confirm
+                </Button>
+            </template>
+        </PkModal>
 
         <!-- Related lists: tabs outside, TableShell chrome inside RelationPanel. -->
         <section v-if="relations.length" class="flex flex-col gap-3">

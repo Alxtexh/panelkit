@@ -1038,11 +1038,7 @@ function busyActionFor(row: Record<string, any>): string | null {
     return running.slice(String(row.id).length + 1)
 }
 
-async function runRecordAction(row: Record<string, any>, action: any) {
-    if (action.confirmation && !window.confirm(action.confirmation)) {
-        return
-    }
-
+async function executeRecordAction(row: Record<string, any>, action: any) {
     runningAction.value = `${row.id}:${action.key}`
 
     try {
@@ -1090,6 +1086,30 @@ async function runRecordAction(row: Record<string, any>, action: any) {
         router.reload({ only: ['records', 'total', 'tabCounts'] })
     } finally {
         runningAction.value = null
+    }
+}
+
+const pendingActionConfirmation = ref<{
+    row: Record<string, any>
+    action: any
+} | null>(null)
+
+function runRecordAction(row: Record<string, any>, action: any) {
+    if (action.confirmation) {
+        pendingActionConfirmation.value = { row, action }
+
+        return
+    }
+
+    void executeRecordAction(row, action)
+}
+
+function confirmRecordAction() {
+    const pending = pendingActionConfirmation.value
+    pendingActionConfirmation.value = null
+
+    if (pending) {
+        void executeRecordAction(pending.row, pending.action)
     }
 }
 
@@ -1881,6 +1901,18 @@ function badgeLabel(key: string, value: unknown): string {
             <template #footer>
                 <Button variant="ghost" size="sm" @click="confirmingDelete = null">Cancel</Button>
                 <Button variant="destructive" size="sm" @click="destroy">Delete</Button>
+            </template>
+        </PkModal>
+
+        <PkModal
+            :open="pendingActionConfirmation !== null"
+            :title="pendingActionConfirmation?.action.label ?? 'Confirm action'"
+            :description="pendingActionConfirmation?.action.confirmation ?? undefined"
+            @close="pendingActionConfirmation = null"
+        >
+            <template #footer>
+                <Button variant="ghost" size="sm" @click="pendingActionConfirmation = null">Cancel</Button>
+                <Button variant="destructive" size="sm" @click="confirmRecordAction">Confirm</Button>
             </template>
         </PkModal>
 

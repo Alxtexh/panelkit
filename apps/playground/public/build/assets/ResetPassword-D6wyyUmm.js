@@ -1,1 +1,0 @@
-import{A as e,Pt as t,R as n,et as r}from"./api-docs-D-YQgOc6.js";import{c as i}from"./inertia-BLH0sDsb.js";import{r as a}from"./password-DgzV_d5q.js";var o=n({__name:`ResetPassword`,props:{token:{},email:{}},setup(n){return(o,s)=>(r(),e(t(i),{action:t(a).form().action,token:n.token,email:n.email},null,8,[`action`,`token`,`email`]))}});export{o as default};

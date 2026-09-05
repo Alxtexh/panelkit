@@ -627,7 +627,10 @@ final class RecordAction
              */
             'icon' => $this->icon ?? self::defaultIconFor($this->key, $this->label, $this->destructive),
             'destructive' => $this->destructive,
-            'confirmation' => $this->confirmation,
+            // Destructive actions must pause in the client even when the
+            // resource author forgot to add ->confirm().
+            'confirmation' => $this->confirmation
+                ?? ($this->destructive ? "{$this->label} this record?" : null),
             'link' => $this->isLink(),
 
             /*

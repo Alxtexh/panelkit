@@ -1,1 +1,0 @@
-import{A as e,B as t,Lt as n,Pt as r,R as i,et as a}from"./api-docs-D-YQgOc6.js";import{o}from"./inertia-BLH0sDsb.js";var s=i({inheritAttrs:!1,__name:`VerifyEmail`,setup(i){return(i,s)=>(a(),e(r(o),n(t(i.$attrs)),null,16))}});export{s as default};

@@ -87,6 +87,8 @@ defineOptions({
 const selected = ref<Set<number | string>>(new Set())
 const confirming = ref<'one' | 'many' | null>(null)
 const confirmingRecord = ref<TrashedRecord | null>(null)
+const confirmingRestore = ref<'one' | 'many' | null>(null)
+const confirmingRestoreRecord = ref<TrashedRecord | null>(null)
 const configuring = ref(false)
 const days = ref(props.retentionDays)
 const paging = ref(false)
@@ -244,7 +246,7 @@ function path(suffix: string): string {
     return `${prefix}${suffix}`
 }
 
-function restoreOne(record: TrashedRecord) {
+function executeRestoreOne(record: TrashedRecord) {
     router.post(
         path(`/${active.value}/${record.id}/restore`),
         {},
@@ -259,7 +261,12 @@ function restoreOne(record: TrashedRecord) {
     )
 }
 
-function restoreSelected() {
+function restoreOne(record: TrashedRecord) {
+    confirmingRestoreRecord.value = record
+    confirmingRestore.value = 'one'
+}
+
+function executeRestoreSelected() {
     const ids = chosen.value.filter((r) => r.canRestore).map((r) => r.id)
 
     router.post(
@@ -274,6 +281,23 @@ function restoreSelected() {
             onError: () => toast.error('Those could not be restored.'),
         },
     )
+}
+
+function restoreSelected() {
+    confirmingRestore.value = 'many'
+}
+
+function confirmRestore() {
+    const mode = confirmingRestore.value
+    const record = confirmingRestoreRecord.value
+    confirmingRestore.value = null
+    confirmingRestoreRecord.value = null
+
+    if (mode === 'one' && record) {
+        executeRestoreOne(record)
+    } else if (mode === 'many') {
+        executeRestoreSelected()
+    }
 }
 
 /** Two statements in a template expression need a semicolon; a function is clearer. */
@@ -585,6 +609,28 @@ function deletedOn(value: string): string {
                 </Button>
             </div>
         </div>
+    </PkModal>
+
+    <PkModal
+        :open="confirmingRestore !== null"
+        title="Restore deleted record?"
+        description="The record will return to its normal list."
+        @close="confirmingRestore = null; confirmingRestoreRecord = null"
+    >
+        <p class="text-sm">
+            <template v-if="confirmingRestore === 'one'">
+                Restore <strong>{{ confirmingRestoreRecord?.title }}</strong>?
+            </template>
+            <template v-else>
+                Restore <strong>{{ chosen.filter((r) => r.canRestore).length }} record(s)</strong>?
+            </template>
+        </p>
+        <template #footer>
+            <Button type="button" variant="outline" size="sm" @click="confirmingRestore = null">
+                Cancel
+            </Button>
+            <Button type="button" size="sm" @click="confirmRestore">Restore</Button>
+        </template>
     </PkModal>
 
     <PkModal
