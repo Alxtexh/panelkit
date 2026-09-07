@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Support;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Alxtexh\Panel\Models\Role;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Who is here, and what they may do - the data behind one screen.
@@ -42,7 +42,7 @@ final class UserDirectory
     /**
      * The resource that lists users, if the application registered one.
      *
-     * @return class-string<resource>|null
+     * @return class-string<\Alxtexh\Panel\Resources\Resource>|null
      */
     public static function resource(): ?string
     {
@@ -60,7 +60,7 @@ final class UserDirectory
              * recognised. The reverse would be wrong, which is why the
              * arguments are this way round.
              */
-            if (is_string($resource) && is_a($resource::model(), $model, true)) {
+            if (is_a($resource::model(), $model, true)) {
                 return $resource;
             }
         }
@@ -94,7 +94,7 @@ final class UserDirectory
         $column = self::teamColumn();
         $tenant = $request->user()?->{config('panel.tenancy.column', 'tenant_id')} ?? null;
 
-        return Role::query()
+        $rows = Role::query()
             ->select('roles.*')
             ->where($column, $tenant)
             ->with('permissions:id,name')
@@ -118,10 +118,17 @@ final class UserDirectory
                  */
                 'isProtected' => $index === 0,
                 'permissions' => $role->permissions->pluck('name')->all(),
-                'userCount' => (int) $role->user_count,
+                'userCount' => (int) $role->getAttribute('user_count'),
             ])
             ->values()
             ->all();
+
+        $roles = [];
+        foreach ($rows as $row) {
+            $roles[] = $row;
+        }
+
+        return $roles;
     }
 
     /**

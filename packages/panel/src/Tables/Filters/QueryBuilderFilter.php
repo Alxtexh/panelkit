@@ -113,16 +113,18 @@ final class QueryBuilderFilter extends Filter
 
             $schema = $filter->toSchema();
 
+            $options = [];
+            foreach ((array) ($schema['options'] ?? []) as $option) {
+                $options[] = is_array($option)
+                    ? (string) ($option['value'] ?? '')
+                    : (string) $option;
+            }
+
             $fields[$filter->key] = [
                 'kind' => $kind,
                 'label' => (string) ($schema['label'] ?? $filter->key),
                 'column' => $filter->resolvedColumn(),
-                'options' => array_map(
-                    static fn (mixed $option): string => is_array($option)
-                        ? (string) ($option['value'] ?? '')
-                        : (string) $option,
-                    (array) ($schema['options'] ?? []),
-                ),
+                'options' => $options,
             ];
         }
 
@@ -139,6 +141,7 @@ final class QueryBuilderFilter extends Filter
      * line, for a tree that reached here anyway. An unusable tree applies
      * NOTHING rather than applying part of itself.
      */
+    /** @return array<string, mixed>|null */
     public function normalise(mixed $raw): ?array
     {
         if (is_string($raw)) {
@@ -224,6 +227,10 @@ final class QueryBuilderFilter extends Filter
     }
 
     /** The tree with empty groups removed, so an untouched builder applies nothing. */
+    /**
+     * @param array<string, mixed> $tree
+     * @return array<string, mixed>
+     */
     private function pruned(array $tree): array
     {
         $rules = [];
@@ -269,6 +276,7 @@ final class QueryBuilderFilter extends Filter
         });
     }
 
+    /** @param array<string, mixed> $group */
     private function applyGroup(Builder $query, array $group): void
     {
         $or = ($group['logic'] ?? 'and') === 'or';
@@ -302,6 +310,9 @@ final class QueryBuilderFilter extends Filter
         }
     }
 
+    /**
+     * @param array{kind: string, label: string, column: string, options: list<string>} $field
+     */
     private function applyRule(
         Builder $query,
         bool $or,

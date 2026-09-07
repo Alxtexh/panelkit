@@ -9,6 +9,7 @@ use InvalidArgumentException;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Pages\Page;
+use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Widgets\ChartWidget;
 use Alxtexh\Panel\Widgets\StatWidget;
 use Alxtexh\Panel\Widgets\TableWidget;
@@ -30,7 +31,7 @@ use Alxtexh\Panel\Widgets\TableWidget;
  */
 final class PluginContext
 {
-    /** @var list<class-string> */
+    /** @var list<class-string<Resource>> */
     private array $resources = [];
 
     /** @var list<array{title: string, href: string, icon: string, group: string|null}> */
@@ -67,7 +68,7 @@ final class PluginContext
      * manager records the panel this registration happened for, and that
      * overrides the class's own declaration.
      *
-     * @param  list<class-string>  $classes
+     * @param  list<class-string<Resource>>  $classes
      */
     public function resources(array $classes): self
     {
@@ -117,7 +118,7 @@ final class PluginContext
     public function pageClasses(array $classes): self
     {
         foreach ($classes as $class) {
-            if (! is_string($class) || ! is_subclass_of($class, Page::class)) {
+            if (! is_subclass_of($class, Page::class)) {
                 throw new InvalidArgumentException(
                     'pageClasses() expects a list of Page classes.'
                 );
@@ -154,10 +155,11 @@ final class PluginContext
     /**
      * Register widgets into this plugin's target panel.
      *
-     * @param  list<StatWidget|ChartWidget|TableWidget>  $widgets
+     * @param  list<mixed>  $widgets
      */
     public function widgets(array $widgets): self
     {
+        $validated = [];
         foreach ($widgets as $widget) {
             if (! ($widget instanceof StatWidget
                 || $widget instanceof ChartWidget
@@ -166,9 +168,11 @@ final class PluginContext
                     'widgets() expects a list of StatWidget, ChartWidget, or TableWidget instances.'
                 );
             }
+
+            $validated[] = $widget;
         }
 
-        $this->widgets = [...$this->widgets, ...$widgets];
+        $this->widgets = [...$this->widgets, ...$validated];
 
         return $this;
     }

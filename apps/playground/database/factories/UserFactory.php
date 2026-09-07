@@ -118,11 +118,17 @@ class UserFactory extends Factory
             $name ??= 'Role '.str()->random(8);
 
             $this->withTeam($user->tenant_id, function () use ($user, $abilities, $name): void {
-                $role = Role::create([
+                $created = Role::create([
                     'name' => $name,
                     'guard_name' => config('auth.defaults.guard', 'web'),
                     'tenant_id' => $user->tenant_id,
                 ]);
+
+                if (! $created instanceof Role) {
+                    throw new \UnexpectedValueException('The configured role model did not create a panel role.');
+                }
+
+                $role = $created;
 
                 foreach ($abilities as $ability) {
                     Permission::findOrCreate($ability, config('auth.defaults.guard', 'web'));
@@ -160,12 +166,18 @@ class UserFactory extends Factory
                 ->where('name', 'Administrator')
                 ->first();
 
-            if ($role === null) {
-                $role = Role::create([
+            if (! $role instanceof Role) {
+                $created = Role::create([
                     'name' => 'Administrator',
                     'guard_name' => config('auth.defaults.guard', 'web'),
                     'tenant_id' => $tenantId,
                 ]);
+
+                if (! $created instanceof Role) {
+                    throw new \UnexpectedValueException('The configured role model did not create a panel role.');
+                }
+
+                $role = $created;
 
                 $role->forceFill(['grants_all' => true])->save();
             }

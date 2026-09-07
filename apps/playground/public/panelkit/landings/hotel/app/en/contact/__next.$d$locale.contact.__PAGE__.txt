@@ -1,0 +1,9 @@
+1:"$Sreact.fragment"
+2:I[44078,["/panelkit/landings/hotel/app/_next/static/chunks/8eeae28b41dd539c.js","/panelkit/landings/hotel/app/_next/static/chunks/c0752bb9e79c5524.js"],"ClientPageRoot"]
+3:I[95153,["/panelkit/landings/hotel/app/_next/static/chunks/36270cc57465cb76.js","/panelkit/landings/hotel/app/_next/static/chunks/3c45ccfee9481157.js","/panelkit/landings/hotel/app/_next/static/chunks/81f95a6da7e62d6a.js","/panelkit/landings/hotel/app/_next/static/chunks/8d8ebe6d156112d4.js"],"default"]
+6:I[52478,["/panelkit/landings/hotel/app/_next/static/chunks/8eeae28b41dd539c.js","/panelkit/landings/hotel/app/_next/static/chunks/c0752bb9e79c5524.js"],"OutletBoundary"]
+7:"$Sreact.suspense"
+0:{"buildId":"l-EYMdx0JaCc09EDet9fP","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{"locale":"en"},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/panelkit/landings/hotel/app/_next/static/chunks/8d8ebe6d156112d4.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
+4:{}
+5:"$0:rsc:props:children:0:props:serverProvidedParams:params"
+8:null

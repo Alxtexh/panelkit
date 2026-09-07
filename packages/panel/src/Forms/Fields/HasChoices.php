@@ -25,6 +25,7 @@ trait HasChoices
     /** @var array<string|int, string>|Closure(): array<string|int, string> */
     private array|Closure $options = [];
 
+    /** @var array<string|int, string>|null */
     private ?array $resolvedOptions = null;
 
     /** @param array<string|int, string>|Closure(): array<string|int, string> $options */
@@ -55,7 +56,7 @@ trait HasChoices
      *
      * @return list<array{value: string|int, label: string}>
      */
-    public function resolveOptions(): ?array
+    public function resolveOptions(): array
     {
         return $this->optionList();
     }

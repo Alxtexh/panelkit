@@ -77,12 +77,19 @@ final class MonitorSampler
      */
     public function history(int $hours = 24): array
     {
-        return DB::table(self::TABLE)
+        $rows = DB::table(self::TABLE)
             ->where('created_at', '>=', now()->subHours($hours))
             ->orderBy('created_at')
             ->get(['cpu_pct', 'memory_pct', 'disk_pct', 'queue_waiting', 'failed_jobs', 'db_ms', 'created_at'])
             ->map(static fn (object $row): array => (array) $row)
             ->all();
+
+        $history = [];
+        foreach ($rows as $row) {
+            $history[] = $row;
+        }
+
+        return $history;
     }
 
     /** @return array<string, int> metric => threshold */

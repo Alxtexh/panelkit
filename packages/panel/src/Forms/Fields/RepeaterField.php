@@ -63,10 +63,12 @@ final class RepeaterField extends Field
     /**
      * The shape of one row.
      *
-     * @param  list<Field>  $fields
+     * @param  list<mixed>  $fields
      */
     public function schema(array $fields): self
     {
+        $validated = [];
+
         foreach ($fields as $field) {
             if (! $field instanceof Field) {
                 throw new InvalidArgumentException('A repeater schema may only contain fields.');
@@ -78,9 +80,11 @@ final class RepeaterField extends Field
                     .'repeating groups is a table with a foreign key - use a relation manager.'
                 );
             }
+
+            $validated[] = $field;
         }
 
-        $this->children = array_values($fields);
+        $this->children = $validated;
 
         return $this;
     }

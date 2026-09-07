@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\CustomFields;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
@@ -40,7 +41,7 @@ final class CustomField extends Model
     /** Memoized `Schema::hasTable` result - see `tableExists()`. */
     private static ?bool $tableExists = null;
 
-    /** Memoized definitions grouped by resource - see `byResource()`. */
+    /** @var Collection<string, EloquentCollection<int, self>> Memoized definitions grouped by resource. */
     private static ?Collection $byResource = null;
 
     /**
@@ -100,17 +101,23 @@ final class CustomField extends Model
      * installation-wide, so every organisation would warm its own copy of the
      * same rows. A static is the honest shape for installation-wide data.
      *
-     * @return Collection<string, Collection<int, self>>
+     * @return Collection<string, EloquentCollection<int, self>>
      */
     private static function byResource(): Collection
     {
-        if (! self::tableExists()) {
-            return new Collection;
+        if (self::$byResource instanceof Collection) {
+            return self::$byResource;
         }
 
-        return self::$byResource ??= self::query()
+        if (! self::tableExists()) {
+            return self::$byResource = new Collection;
+        }
+
+        $grouped = self::query()
             ->orderBy('sort')->orderBy('id')->get()
             ->groupBy('resource');
+
+        return self::$byResource ??= new Collection($grouped->all());
     }
 
     /**

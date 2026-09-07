@@ -130,9 +130,6 @@ final class RecordAction
 
     private string $transitionColumn = 'status';
 
-    /** @var class-string<Model>|null */
-    private ?string $transitionModel = null;
-
     private function __construct(public readonly string $key, private readonly string $label)
     {
         if (preg_match('/^[a-z][a-z0-9_-]*$/', $key) !== 1) {
@@ -273,7 +270,7 @@ final class RecordAction
      */
     public function keyBindings(array $bindings): self
     {
-        $this->keyBindings = array_values($bindings);
+        $this->keyBindings = $bindings;
 
         return $this;
     }
@@ -305,12 +302,12 @@ final class RecordAction
     {
         $this->transitionState = $state;
         $this->transitionColumn = $column;
-        $this->transitionModel = $model;
         $this->mutate([$column => $state]);
 
-        if ($model !== null && in_array(HasStateTransitions::class, class_uses_recursive($model), true)) {
+        if ($model !== null
+            && in_array(HasStateTransitions::class, class_uses_recursive($model), true)
+            && method_exists($model, 'canTransitionFromAttributes')) {
             $this->visible(static function (array $row) use ($model, $state, $column): bool {
-                /** @var class-string<Model&HasStateTransitions> $model */
                 return $model::canTransitionFromAttributes($row, $state, $column);
             });
         }
@@ -373,7 +370,7 @@ final class RecordAction
      *
      * The action modal renders the stepper from each step's form schema.
      *
-     * @param  list<ActionStep>  $steps
+     * @param  list<mixed>  $steps
      */
     public function steps(array $steps): self
     {
@@ -383,13 +380,17 @@ final class RecordAction
             );
         }
 
+        $validated = [];
+
         foreach ($steps as $step) {
             if (! $step instanceof ActionStep) {
                 throw new InvalidArgumentException('[steps()] accepts only ActionStep instances.');
             }
+
+            $validated[] = $step;
         }
 
-        $this->steps = array_values($steps);
+        $this->steps = $validated;
 
         return $this;
     }
@@ -802,11 +803,11 @@ final class RecordAction
             return;
         }
 
-        if (! in_array(HasStateTransitions::class, class_uses_recursive($record), true)) {
+        if (! in_array(HasStateTransitions::class, class_uses_recursive($record), true)
+            || ! method_exists($record, 'assertCanTransitionTo')) {
             return;
         }
 
-        /** @var Model&HasStateTransitions $record */
         $record->assertCanTransitionTo($this->transitionState, $this->transitionColumn);
     }
 }

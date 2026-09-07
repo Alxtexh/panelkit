@@ -99,6 +99,12 @@ final class BackupStatus
         }
 
         $newest = $files->first();
+        $backups = [];
+
+        foreach ($files->take(20) as $file) {
+            $backups[] = $file;
+        }
+
         $ageHours = round((time() - strtotime($newest['at'])) / 3600, 1);
         $stale = $ageHours > $this->staleAfterHours;
 
@@ -109,7 +115,7 @@ final class BackupStatus
             'newestAt' => $newest['at'],
             'ageHours' => $ageHours,
             'totalBytes' => (int) $files->sum('bytes'),
-            'backups' => $files->take(20)->all(),
+            'backups' => $backups,
             'problem' => $stale
                 ? "The newest backup is {$ageHours} hours old; the scheduler may not be running."
                 : null,

@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Widgets;
 use DateTimeImmutable;
 use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use InvalidArgumentException;
 
@@ -53,10 +54,11 @@ final class TimeSeries
 
     private ?string $aggregateColumn = null;
 
+    /** @param EloquentBuilder<covariant Model> $query */
     private function __construct(private readonly EloquentBuilder $query) {}
 
     /**
-     * @param  EloquentBuilder  $query  Eloquent, so global scopes still apply.
+     * @param  EloquentBuilder<covariant Model>  $query  Eloquent, so global scopes still apply.
      */
     public static function of(EloquentBuilder $query): self
     {
@@ -134,7 +136,7 @@ final class TimeSeries
      * one path for both is what stops "last 7 days" and "3-9 March" diverging.
      *
      * @return array{
-     *     points: list<array{label: string, value: int|float}>,
+     *     points: list<array{label: string, value: int|float, at: string}>,
      *     total: int|float,
      *     period: string,
      *     bucket: string

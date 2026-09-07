@@ -61,7 +61,7 @@ final class BuilderField extends Field
             );
         }
 
-        $this->blocks[$type] = ['label' => $label, 'fields' => array_values($fields)];
+        $this->blocks[$type] = ['label' => $label, 'fields' => $fields];
 
         return $this;
     }

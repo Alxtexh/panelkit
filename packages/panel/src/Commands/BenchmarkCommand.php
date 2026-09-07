@@ -171,7 +171,7 @@ final class BenchmarkCommand extends Command
      * thing the screen cannot do is worse than a gap in the table.
      *
      * @param  class-string  $class
-     * @return array<string, Closure>
+     * @return array<string, Closure|SurfaceWork>
      */
     private function surfaces(string $class, Table $definition): array
     {
@@ -299,7 +299,7 @@ final class BenchmarkCommand extends Command
             }
 
             $first = reset($options);
-            $value = is_array($first) ? ($first['value'] ?? null) : $first;
+            $value = is_array($first) ? $first['value'] : $first;
 
             return $value === null ? null : (string) $value;
         }

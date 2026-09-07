@@ -1,0 +1,289 @@
+{
+  "meta": {
+    "title": "Business Agency | Premium Website Template",
+    "description": "Experiencias digitales que elevan marcas e impulsan el crecimiento. Soluciones de Estrategia, Diseno, Desarrollo y Marketing."
+  },
+  "nav": {
+    "services": "Servicios",
+    "work": "Proyectos",
+    "about": "Nosotros",
+    "process": "Proceso",
+    "getInTouch": "Contacto",
+    "menu": "Menu"
+  },
+  "hero": {
+    "tagline": "Agencia Creativa Digital",
+    "title1": "Creamos",
+    "title2": "experiencias",
+    "title3": "digitales.",
+    "description": "Somos un colectivo de estrategas, disenadores y desarrolladores que crean experiencias digitales que elevan marcas e impulsan un crecimiento medible.",
+    "viewWork": "Ver Proyectos",
+    "startProject": "Iniciar Proyecto",
+    "stats": {
+      "projects": "Proyectos",
+      "years": "Anos",
+      "retention": "Retencion"
+    },
+    "awardsWon": "Premios Ganados",
+    "scroll": "Desplazar",
+    "imageAlt": "Espacio de trabajo de la agencia creativa"
+  },
+  "clients": {
+    "trustedBy": "Confian en Nosotros",
+    "subtitle": "Lideres de la industria que eligieron trabajar con nosotros"
+  },
+  "marquee": {
+    "strategy": "Estrategia",
+    "design": "Diseno",
+    "development": "Desarrollo",
+    "branding": "Branding",
+    "ecommerce": "E-commerce",
+    "marketing": "Marketing",
+    "uxui": "UX/UI",
+    "motion": "Motion"
+  },
+  "services": {
+    "sectionLabel": "Lo que Hacemos",
+    "title": "Servicios que generan resultados.",
+    "subtitle": "Soluciones digitales integrales desde el concepto hasta el lanzamiento — cada proyecto se adapta a sus objetivos unicos.",
+    "items": {
+      "strategy": {
+        "num": "01",
+        "title": "Estrategia y Consultoria",
+        "desc": "Alineamos su presencia digital con los objetivos comerciales a traves de insights basados en datos, investigacion de mercado y planificacion estrategica que establece la base para el crecimiento.",
+        "tags": [
+          "Estrategia de Marca",
+          "Investigacion de Mercado",
+          "Hojas de Ruta Digital",
+          "Analisis Competitivo"
+        ]
+      },
+      "design": {
+        "num": "02",
+        "title": "Diseno UI/UX",
+        "desc": "Creamos interfaces intuitivas y hermosas que deleitan a los usuarios e impulsan las conversiones. Cada pixel tiene un proposito, cada interaccion es intencional.",
+        "tags": [
+          "Investigacion de Usuarios",
+          "Wireframing",
+          "Diseno Visual",
+          "Prototipado"
+        ]
+      },
+      "development": {
+        "num": "03",
+        "title": "Desarrollo",
+        "desc": "Desde sitios web responsivos hasta aplicaciones web complejas, construimos soluciones performantes y escalables utilizando tecnologias de vanguardia.",
+        "tags": [
+          "React / Next.js",
+          "Full-Stack",
+          "E-Commerce",
+          "Integracion CMS"
+        ]
+      },
+      "branding": {
+        "num": "04",
+        "title": "Branding e Identidad",
+        "desc": "Creamos identidades de marca convincentes que resuenan con su audiencia y lo diferencian en el mercado.",
+        "tags": [
+          "Diseno de Logo",
+          "Guias de Marca",
+          "Identidad Visual",
+          "Mensajeria"
+        ]
+      }
+    }
+  },
+  "work": {
+    "sectionLabel": "Proyectos Destacados",
+    "title": "Proyectos de los que estamos orgullosos.",
+    "viewAll": "Ver Todos los Proyectos",
+    "bottomText": "Cada proyecto es una asociacion. Trabajamos estrechamente con nuestros clientes para entender su vision y darle vida.",
+    "startYourProject": "Inicia tu Proyecto",
+    "projects": {
+      "lumiere": {
+        "title": "Lumiere Fashion",
+        "category": "E-Commerce y Branding",
+        "description": "Una plataforma de e-commerce de moda de lujo con experiencias de producto inmersivas.",
+        "metrics": "+340% Conversiones"
+      },
+      "neurotech": {
+        "title": "NeuroTech AI",
+        "category": "Aplicacion Web y UI/UX",
+        "description": "Plataforma de analisis impulsada por IA para la toma de decisiones empresariales.",
+        "metrics": "50K+ Usuarios"
+      },
+      "atlas": {
+        "title": "Atlas Real Estate",
+        "category": "Sitio Web y Estrategia Digital",
+        "description": "Portal de propiedades premium para listados inmobiliarios de alta gama.",
+        "metrics": "+180% Leads"
+      },
+      "vitality": {
+        "title": "Vitality Wellness",
+        "category": "Identidad de Marca y Sitio Web",
+        "description": "Rebranding completo y presencia digital para startup de bienestar.",
+        "metrics": "2x Ingresos"
+      }
+    }
+  },
+  "about": {
+    "sectionLabel": "Sobre Nosotros",
+    "title": "Creemos en el poder del oficio digital.",
+    "description1": "Fundada en 2013, nuestra agencia ha crecido de un pequeno estudio de diseno a una agencia digital de servicio completo. Trabajamos con marcas ambiciosas — desde startups innovadoras hasta empresas establecidas — ayudandolas a navegar el panorama digital con claridad y proposito.",
+    "description2": "Nuestro equipo multidisciplinario de mas de 35 especialistas reune experiencia en estrategia, diseno, desarrollo y marketing. No solo construimos sitios web — creamos ecosistemas digitales que impulsan el crecimiento sostenible.",
+    "imageAlt": "Equipo de la agencia colaborando en oficina moderna",
+    "yearsLabel": "Anos de Excelencia",
+    "stats": {
+      "teamMembers": "Miembros del Equipo",
+      "globalOffices": "Oficinas Globales",
+      "projectsCompleted": "Proyectos Completados",
+      "clientRetention": "Retencion de Clientes"
+    }
+  },
+  "awards": {
+    "sectionLabel": "Reconocimiento",
+    "title": "Premios y distinciones.",
+    "description": "Nos sentimos honrados de que nuestro trabajo sea reconocido por algunas de las organizaciones de diseno mas prestigiosas del mundo.",
+    "awardsWon": "Premios Ganados",
+    "sotd": "SOTD",
+    "items": {
+      "item1": {
+        "year": "2025",
+        "title": "Site of the Day",
+        "org": "Awwwards",
+        "project": "Lumiere Fashion"
+      },
+      "item2": {
+        "year": "2025",
+        "title": "Honorable Mention",
+        "org": "CSS Design Awards",
+        "project": "NeuroTech AI"
+      },
+      "item3": {
+        "year": "2024",
+        "title": "Developer Award",
+        "org": "Awwwards",
+        "project": "Atlas Real Estate"
+      },
+      "item4": {
+        "year": "2024",
+        "title": "Best UI Design",
+        "org": "Webby Awards",
+        "project": "Vitality Wellness"
+      },
+      "item5": {
+        "year": "2024",
+        "title": "Site of the Day",
+        "org": "FWA",
+        "project": "Meridian Hotels"
+      },
+      "item6": {
+        "year": "2023",
+        "title": "Agencia del Ano",
+        "org": "Design Rush",
+        "project": "Your Agency"
+      }
+    }
+  },
+  "process": {
+    "sectionLabel": "Como Trabajamos",
+    "title": "Un proceso construido para la excelencia.",
+    "steps": {
+      "discover": {
+        "num": "01",
+        "title": "Descubrir",
+        "desc": "Inmersion profunda en su negocio, audiencia y objetivos. Investigamos, analizamos y definimos la base estrategica."
+      },
+      "design": {
+        "num": "02",
+        "title": "Disenar",
+        "desc": "Desde wireframes hasta prototipos de alta fidelidad, elaboramos cada detalle con intencion y experiencia de usuario en el centro."
+      },
+      "develop": {
+        "num": "03",
+        "title": "Desarrollar",
+        "desc": "Codigo limpio y performante traido a la vida. Construimos con tecnologias modernas y mejores practicas para escalabilidad."
+      },
+      "deliver": {
+        "num": "04",
+        "title": "Entregar",
+        "desc": "Lanzamiento, medicion, iteracion. Aseguramos un despliegue fluido y proporcionamos soporte continuo para el crecimiento."
+      }
+    }
+  },
+  "testimonials": {
+    "sectionLabel": "Testimonios",
+    "title": "Lo que dicen nuestros clientes.",
+    "items": {
+      "item1": {
+        "quote": "La agencia transformo completamente nuestra presencia digital. Su enfoque estrategico y experiencia en diseno nos ayudo a aumentar las conversiones en un 340% en seis meses.",
+        "name": "Sarah Chen",
+        "role": "CEO, Lumiere Fashion"
+      },
+      "item2": {
+        "quote": "Trabajar con esta agencia se sintio como tener una extension de nuestro propio equipo. Entendieron nuestra vision desde el primer dia y superaron las expectativas.",
+        "name": "Marcus Rodriguez",
+        "role": "Fundador, NeuroTech AI"
+      },
+      "item3": {
+        "quote": "La atencion al detalle y el compromiso con la calidad son inigualables. Esta agencia no solo nos construyo un sitio web — nos construyeron un motor de crecimiento.",
+        "name": "Elena Hoffmann",
+        "role": "CMO, Atlas Group"
+      }
+    }
+  },
+  "cta": {
+    "sectionLabel": "Listo para Empezar?",
+    "title": "Creemos algo extraordinario juntos.",
+    "description": "Ya sea que estes lanzando un nuevo producto, renovando tu marca o escalando tu presencia digital — estamos aqui para ayudar.",
+    "startProject": "Iniciar Proyecto",
+    "bookCall": "Agendar Llamada"
+  },
+  "footer": {
+    "ctaTitle": "Trabajemos juntos.",
+    "ctaDescription": "Tienes un proyecto en mente? Nos encantaria escucharlo.",
+    "startProject": "Iniciar Proyecto",
+    "bookCall": "Agendar Llamada",
+    "newsletterTitle": "Mantente informado",
+    "newsletterDescription": "Recibe insights de diseno y noticias de la industria semanalmente.",
+    "emailPlaceholder": "Ingresa tu email",
+    "subscribe": "Suscribirse",
+    "brandDescription": "Creamos experiencias digitales que elevan marcas e impulsan el crecimiento. Estrategia, Diseno, Desarrollo — lo hacemos todo.",
+    "servicesLabel": "Servicios",
+    "servicesList": {
+      "strategy": "Estrategia",
+      "uiux": "Diseno UI/UX",
+      "development": "Desarrollo",
+      "branding": "Branding",
+      "marketing": "Marketing"
+    },
+    "companyLabel": "Empresa",
+    "companyList": {
+      "about": "Nosotros",
+      "work": "Proyectos",
+      "process": "Proceso",
+      "careers": "Carreras",
+      "contact": "Contacto"
+    },
+    "contactLabel": "Contacto",
+    "contactInfo": {
+      "email": "hello@your-agency.com",
+      "phone": "+1 (555) 123-4567",
+      "address": "123 Design Street",
+      "city": "New York, NY 10001"
+    },
+    "copyright": "2025 Your Agency - Todos los derechos reservados.",
+    "legalLinks": {
+      "privacy": "Politica de Privacidad",
+      "terms": "Terminos de Servicio",
+      "imprint": "Aviso Legal",
+      "cookies": "Cookies"
+    },
+    "social": {
+      "twitter": "Twitter",
+      "linkedin": "LinkedIn",
+      "instagram": "Instagram",
+      "dribbble": "Dribbble"
+    }
+  }
+}

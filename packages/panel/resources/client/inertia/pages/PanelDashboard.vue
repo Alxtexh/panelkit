@@ -322,7 +322,7 @@ function stat(key: string) {
 }
 
 function retryWidget(dataKey: string) {
-    router.reload({ only: [dataKey], preserveState: true, preserveScroll: true })
+    router.reload({ only: [dataKey] })
 }
 
 function series(key: string): Series {
@@ -835,7 +835,11 @@ function layoutLabel(item: AnyLayoutItem): string {
     <Head :title="heading" />
 
     <div
-        :class="[PAGE_SHELL, '@container/main pk-dashboard flex flex-col gap-4', `pk-dashboard-${design}`]"
+        :class="[
+            PAGE_SHELL,
+            '@container/main pk-dashboard flex flex-col gap-4',
+            `pk-dashboard-${design}`,
+        ]"
         data-slot="dashboard-page"
     >
         <RenderHook position="dashboard.before" :hooks="renderHooks" />
@@ -1257,7 +1261,11 @@ function layoutLabel(item: AnyLayoutItem): string {
                 <div
                     v-else
                     class="w-full"
-                    :class="band.columns.length > 1 ? 'flex flex-col items-start gap-3 @lg/main:flex-row' : ''"
+                    :class="
+                        band.columns.length > 1
+                            ? 'flex flex-col items-start gap-3 @lg/main:flex-row'
+                            : ''
+                    "
                     data-slot="dashboard-widget-columns"
                 >
                     <div
@@ -1398,7 +1406,11 @@ function layoutLabel(item: AnyLayoutItem): string {
                 <div
                     v-else
                     class="w-full"
-                    :class="band.columns.length > 1 ? 'flex flex-col items-start gap-3 @lg/main:flex-row' : ''"
+                    :class="
+                        band.columns.length > 1
+                            ? 'flex flex-col items-start gap-3 @lg/main:flex-row'
+                            : ''
+                    "
                     data-slot="dashboard-widget-columns"
                 >
                     <div

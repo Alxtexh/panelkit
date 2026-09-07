@@ -30,7 +30,10 @@ export default defineConfig({
     build: {
         outDir: 'dist/kit',
         emptyOutDir: true,
-        cssCodeSplit: false,
+        // Keep route-only styles beside their lazy page chunks. The shell and
+        // design tokens still land in app.css, while large optional screens
+        // do not inflate first paint for every installation.
+        cssCodeSplit: true,
         rollupOptions: {
             input: fileURLToPath(new URL('src/kit/app.ts', import.meta.url)),
             output: {

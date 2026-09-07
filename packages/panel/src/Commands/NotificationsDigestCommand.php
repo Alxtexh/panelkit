@@ -23,7 +23,7 @@ final class NotificationsDigestCommand extends Command
             return self::SUCCESS;
         }
 
-        $frequency = (string) $this->option('frequency', 'daily');
+        $frequency = (string) ($this->option('frequency') ?? 'daily');
 
         $allowed = ['general', 'exports', 'actions'];
         $categories = (array) config('panel.notifications.categories', $allowed);
@@ -84,10 +84,6 @@ final class NotificationsDigestCommand extends Command
             foreach ($grouped as $category => $rows) {
                 $count = count($rows);
 
-                if ($count === 0) {
-                    continue;
-                }
-
                 $firstTitles = array_slice(
                     array_map(static fn (object $r): string => (string) ((is_array($r->data) ? ($r->data)['title'] : (json_decode((string) $r->data, true) ?: []))['title'] ?? 'Notification'), $rows),
                     0,
@@ -96,9 +92,7 @@ final class NotificationsDigestCommand extends Command
 
                 $body = 'You have '.$count.' new notifications in '.$category.'.';
 
-                if ($firstTitles !== []) {
-                    $body .= ' Latest: '.implode(', ', $firstTitles).'.';
-                }
+                $body .= ' Latest: '.implode(', ', $firstTitles).'.';
 
                 $user->notify(new BellText(
                     'Notification digest',
@@ -120,4 +114,3 @@ final class NotificationsDigestCommand extends Command
         return self::SUCCESS;
     }
 }
-

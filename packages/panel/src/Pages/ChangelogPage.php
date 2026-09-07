@@ -64,7 +64,7 @@ final class ChangelogPage extends Page
         return 'Changelog';
     }
 
-    public static function heading(): ?string
+    public static function heading(): string
     {
         return "What's new";
     }

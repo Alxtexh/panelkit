@@ -37,6 +37,10 @@ final class SendCommentMentionNotifications
         $body = Str::limit((string) $event->comment->body, 160);
 
         foreach ($users as $user) {
+            if (! method_exists($user, 'notify')) {
+                continue;
+            }
+
             $user->notify(new BellText(
                 title: $title,
                 body: $body,

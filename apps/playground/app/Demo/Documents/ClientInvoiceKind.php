@@ -45,15 +45,19 @@ final class ClientInvoiceKind extends InvoiceKind
      */
     public function records(): array
     {
-        return Client::query()
+        $records = [];
+
+        foreach (Client::query()
             ->orderByDesc('id')
             ->limit(10)
-            ->get(['id', 'name'])
-            ->map(static fn (Client $client): array => [
+            ->get(['id', 'name']) as $client) {
+            $records[] = [
                 'id' => $client->id,
                 'label' => $client->name,
-            ])
-            ->all();
+            ];
+        }
+
+        return $records;
     }
 
     /**

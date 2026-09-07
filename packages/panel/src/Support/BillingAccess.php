@@ -82,10 +82,6 @@ final class BillingAccess
         $normalized = self::defaultPortalActions();
 
         foreach ($actions as $key => $action) {
-            if (! is_string($key)) {
-                continue;
-            }
-
             $name = trim($key);
 
             if ($name === '') {
@@ -115,6 +111,7 @@ final class BillingAccess
         return $normalized;
     }
 
+    /** @param array<string, mixed> $state */
     public static function billingHref(Panel $panel, array $state = []): string
     {
         $fromState = self::stringOrNull(

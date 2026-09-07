@@ -194,6 +194,10 @@ abstract class Component
                 continue;
             }
 
+            if (! $node instanceof self) {
+                continue;
+            }
+
             $fields = [...$fields, ...self::collectFields($node->children())];
         }
 
@@ -219,6 +223,10 @@ abstract class Component
 
         foreach ($nodes as $node) {
             if ($node instanceof Field) {
+                continue;
+            }
+
+            if (! $node instanceof self) {
                 continue;
             }
 
@@ -266,6 +274,10 @@ abstract class Component
             if ($node instanceof Field) {
                 $fields[] = $node;
 
+                continue;
+            }
+
+            if (! $node instanceof self) {
                 continue;
             }
 

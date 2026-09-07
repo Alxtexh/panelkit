@@ -211,7 +211,7 @@ final class TwoFactor
         }
 
         $user->forceFill([
-            'two_factor_recovery_codes' => self::seal(json_encode($next)),
+            'two_factor_recovery_codes' => self::seal(json_encode($next, JSON_THROW_ON_ERROR)),
         ])->save();
     }
 
@@ -226,7 +226,12 @@ final class TwoFactor
         $counter = intdiv($timestamp ?? time(), 30);
         $hash = hash_hmac('sha1', pack('N*', 0, $counter), self::base32Decode($secret), true);
         $offset = ord($hash[19]) & 0x0F;
-        $truncated = unpack('N', substr($hash, $offset, 4))[1] & 0x7FFFFFFF;
+        $unpacked = unpack('N', substr($hash, $offset, 4));
+        if ($unpacked === false) {
+            throw new \RuntimeException('Unable to generate a TOTP code.');
+        }
+
+        $truncated = $unpacked[1] & 0x7FFFFFFF;
 
         return str_pad((string) ($truncated % 1_000_000), 6, '0', STR_PAD_LEFT);
     }
@@ -317,7 +322,7 @@ final class TwoFactor
                 break;
             }
 
-            $out .= chr(bindec($byte));
+            $out .= chr((int) bindec($byte));
         }
 
         return $out;

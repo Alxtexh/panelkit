@@ -159,6 +159,10 @@ final class RecordFormRequest extends FormRequest
             NestedRelation::constrain($query, $class, $parent);
         }
 
-        return $query->findOrFail($this->route('id'));
+        $record = $query->whereKey($this->route('id'))->first();
+
+        abort_if($record === null, 404);
+
+        return $record;
     }
 }

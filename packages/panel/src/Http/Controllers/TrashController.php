@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Inertia\Inertia;
 use Inertia\Response;
 use Alxtexh\Panel\PanelManager;
@@ -63,6 +64,10 @@ final class TrashController extends Controller
 
         foreach ($records as $record) {
             if (! $class::can('restore', $record)) {
+                continue;
+            }
+
+            if (! method_exists($record, 'restore')) {
                 continue;
             }
 
@@ -209,7 +214,7 @@ final class TrashController extends Controller
      * applies and another organisation's ids simply match nothing - the same
      * property the bulk endpoints on the tables have.
      *
-     * @return array{0: class-string<\Alxtexh\Panel\Resources\Resource>, 1: Collection}
+     * @return array{0: class-string<\Alxtexh\Panel\Resources\Resource>, 1: Collection<int, \Illuminate\Database\Eloquent\Model>}
      */
     private function selection(Request $request, TrashBin $bin): array
     {
@@ -230,9 +235,17 @@ final class TrashController extends Controller
         abort_unless($class::can('viewAny'), 403);
 
         $model = $class::model();
+        $query = $model::query();
+        $deletedAt = $bin->deletedColumnFor($model);
 
-        $records = $model::query()
-            ->onlyTrashed()
+        $records = $query
+            // `onlyTrashed()` is installed as an Eloquent builder macro by
+            // SoftDeletingScope, so `method_exists()` cannot detect it. The
+            // resource has already been filtered to SoftDeletes models above;
+            // use the explicit scope predicate here so restore works for
+            // custom builders and remains visible to static analysis.
+            ->withoutGlobalScope(SoftDeletingScope::class)
+            ->whereNotNull($deletedAt)
             ->whereIn((new $model)->getKeyName(), $validated['ids'])
             ->get();
 

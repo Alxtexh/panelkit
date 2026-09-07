@@ -27,7 +27,6 @@ const infoPanel = (): PanelInfoPanel | null => {
 
     return value as PanelInfoPanel
 }
-
 </script>
 
 <template>

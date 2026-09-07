@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Panel;
 
 use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Support\PanelSettings;
 
 /**
  * Every screen that is NOT a resource, and where it belongs in the navigation.
@@ -34,6 +35,11 @@ use Alxtexh\Panel\PanelManager;
  */
 final class Pages
 {
+    public const LANDING_SETTING = 'landing.pages';
+
+    /** The first polished preset shown by a fresh demo/install. */
+    public const LANDING_DEFAULT = 'chanseek';
+
     /**
      * Pages, filtered to the panel that should show them.
      *
@@ -48,7 +54,7 @@ final class Pages
      * genuinely want a screen in two portals - and a page with no declaration
      * belongs to the default panel, which is where every one of these lives.
      *
-     * @return list<array{title: string, href: string, icon: string, group: string}>
+     * @return list<array{title: string, href: string, icon: string, group: string, external?: bool, panel?: string, ability?: string}>
      */
     public static function forPanel(?string $panelId = null): array
     {
@@ -62,7 +68,348 @@ final class Pages
     }
 
     /**
-     * @return list<array{title: string, href: string, icon: string, group: string}>
+     * The landing documents exposed by the playground.
+     *
+     * KEEP THIS CATALOGUE NEXT TO THE NAVIGATION. The gallery and the sidebar
+     * must offer the same templates, otherwise a landing can be shipped and
+     * still be impossible to select from the screen a user actually sees.
+     * These are preview destinations only; each URL leaves the PanelKit shell
+     * and serves the template's own exported document.
+     *
+     * @return list<array{slug: string, title: string, eyebrow: string, description: string, href: string, icon: string, accent: string}>
+     */
+    public static function landingTemplates(): array
+    {
+        return [
+            [
+                'slug' => 'chanseek',
+                'title' => 'Chanseek',
+                'eyebrow' => 'Product launch',
+                'description' => 'A bold product-led page with a focused hero and clear conversion path.',
+                'href' => '/panelkit/landings/chanseek/app/landing/',
+                'icon' => 'megaphone',
+                'accent' => 'from-rose-500/25 via-orange-400/10 to-transparent',
+            ],
+            [
+                'slug' => 'magicui',
+                'title' => 'Magic UI Serenity',
+                'eyebrow' => 'Motion-first SaaS',
+                'description' => 'A polished SaaS presentation built around calm gradients and animated sections.',
+                'href' => '/panelkit/landings/magicui/app/',
+                'icon' => 'sparkles',
+                'accent' => 'from-violet-500/25 via-fuchsia-400/10 to-transparent',
+            ],
+            [
+                'slug' => 'benlhachemi',
+                'title' => 'Next SaaS',
+                'eyebrow' => 'SaaS marketing',
+                'description' => 'A direct SaaS landing layout with strong hierarchy, pricing and product proof.',
+                'href' => '/panelkit/landings/benlhachemi/app/',
+                'icon' => 'sparkles',
+                'accent' => 'from-blue-500/25 via-cyan-400/10 to-transparent',
+            ],
+            [
+                'slug' => 'bilal',
+                'title' => 'SaaSify',
+                'eyebrow' => 'Startup landing',
+                'description' => 'A compact startup-oriented page for presenting a product and its key benefits.',
+                'href' => '/panelkit/landings/bilal/app/',
+                'icon' => 'sparkles',
+                'accent' => 'from-amber-500/25 via-yellow-300/10 to-transparent',
+            ],
+            [
+                'slug' => 'qualiora',
+                'title' => 'Shadboard',
+                'eyebrow' => 'Dashboard product',
+                'description' => 'A product showcase for admin and analytics tools with a modern dark visual language.',
+                'href' => '/panelkit/landings/qualiora/en/pages/landing/',
+                'icon' => 'layout-template',
+                'accent' => 'from-slate-500/30 via-sky-400/10 to-transparent',
+            ],
+            [
+                'slug' => 'restaurant',
+                'title' => 'Restaurant Aurelia',
+                'eyebrow' => 'Hospitality',
+                'description' => 'An editorial fine-dining experience with menus, reservations and a strong visual identity.',
+                'href' => '/panelkit/landings/restaurant/app/',
+                'icon' => 'megaphone',
+                'accent' => 'from-red-500/25 via-amber-300/10 to-transparent',
+            ],
+            [
+                'slug' => 'hotel',
+                'title' => 'Boutique Hotel',
+                'eyebrow' => 'Hospitality',
+                'description' => 'A multilingual hotel experience with rooms, dining, amenities and booking-oriented pages.',
+                'href' => '/panelkit/landings/hotel/app/en/',
+                'icon' => 'package',
+                'accent' => 'from-teal-500/25 via-emerald-300/10 to-transparent',
+            ],
+            [
+                'slug' => 'free-landing',
+                'title' => 'Free Creative',
+                'eyebrow' => 'Creative agency',
+                'description' => 'An animated agency layout for services, work, testimonials and contact conversion.',
+                'href' => '/panelkit/landings/free-landing/app/en/',
+                'icon' => 'sparkles',
+                'accent' => 'from-pink-500/25 via-purple-400/10 to-transparent',
+            ],
+            [
+                'slug' => 'design',
+                'title' => 'AI Workspace',
+                'eyebrow' => 'AI SaaS',
+                'description' => 'A dark, high-contrast AI workspace page with feature, pricing, FAQ and team sections.',
+                'href' => '/panelkit/landings/design/app/en/',
+                'icon' => 'sparkles',
+                'accent' => 'from-indigo-500/25 via-cyan-400/10 to-transparent',
+            ],
+        ];
+    }
+
+    /**
+     * Resolve the safe, installation-wide landing configuration.
+     *
+     * A setting is never allowed to name an arbitrary URL. The selected page,
+     * enabled list and order are intersected with this allow-listed catalogue,
+     * so a damaged or hand-edited value can only fall back to a known template.
+     *
+     * @return array{selected: string, enabled: list<string>, order: list<string>, draft: array<string, mixed>, published: array<string, mixed>, drafts: array<string, array<string, mixed>>, publishedPages: array<string, array<string, mixed>>}
+     */
+    public static function landingConfiguration(): array
+    {
+        $templates = self::landingTemplates();
+        $slugs = array_column($templates, 'slug');
+        $saved = app(PanelSettings::class)->get(self::LANDING_SETTING, []);
+        $saved = is_array($saved) ? $saved : [];
+
+        $enabled = array_values(array_unique(array_intersect(
+            $slugs,
+            is_array($saved['enabled'] ?? null) ? $saved['enabled'] : $slugs,
+        )));
+        $order = array_values(array_unique(array_intersect(
+            $slugs,
+            is_array($saved['order'] ?? null) ? $saved['order'] : $slugs,
+        )));
+
+        foreach ($slugs as $slug) {
+            if (! in_array($slug, $order, true)) {
+                $order[] = $slug;
+            }
+        }
+
+        $selected = is_string($saved['selected'] ?? null) && in_array($saved['selected'], $slugs, true)
+            ? $saved['selected']
+            : self::LANDING_DEFAULT;
+
+        if (! in_array($selected, $enabled, true)) {
+            $selected = in_array(self::LANDING_DEFAULT, $enabled, true)
+                ? self::LANDING_DEFAULT
+                : (string) $slugs[0];
+        }
+
+        $drafts = self::normaliseLandingContentPages(
+            $saved['drafts'] ?? null,
+            $saved['draft'] ?? null,
+            $slugs,
+        );
+        $publishedPages = self::normaliseLandingContentPages(
+            $saved['publishedPages'] ?? null,
+            $saved['published'] ?? $drafts[$selected],
+            $slugs,
+        );
+        $draft = $drafts[$selected];
+        $published = $publishedPages[$selected];
+
+        return compact('selected', 'enabled', 'order', 'draft', 'published', 'drafts', 'publishedPages');
+    }
+
+    /**
+     * Keep CMS content isolated per imported design. The legacy fallback is
+     * read once so installations that already stored a single content object
+     * migrate without losing it; new designs start from clean defaults.
+     *
+     * @param list<string> $slugs
+     * @return array<string, array<string, mixed>>
+     */
+    public static function normaliseLandingContentPages(mixed $value, mixed $legacy, array $slugs): array
+    {
+        $pages = is_array($value) ? $value : [];
+        $legacyContent = self::normaliseLandingContent($legacy);
+        $result = [];
+
+        foreach ($slugs as $slug) {
+            $result[$slug] = is_array($pages[$slug] ?? null)
+                ? self::normaliseLandingContent($pages[$slug])
+                : ($slug === self::LANDING_DEFAULT ? $legacyContent : self::landingContentDefaults());
+        }
+
+        return $result;
+    }
+
+    /**
+     * CMS content for the active public landing page.
+     *
+     * The imported documents remain the visual presets, but this contract is
+     * applied to the rendered document rather than only displayed in the CMS.
+     * The named image slots cover the common brand/hero/social media needs;
+     * selector overrides let an application edit any text, image or link in a
+     * shipped preset without coupling the host to React/Next internals.
+     *
+     * @return array{siteName: string, eyebrow: string, headline: string, description: string, primaryLabel: string, primaryHref: string, secondaryLabel: string, secondaryHref: string, logoUrl: string, heroImageUrl: string, socialImageUrl: string, seoTitle: string, seoDescription: string, overrides: list<array{label: string, selector: string, type: string, value: string, alt: string}>}
+     */
+    public static function landingContentDefaults(): array
+    {
+        return [
+            'siteName' => 'PanelKit',
+            'eyebrow' => 'The Laravel panel foundation',
+            'headline' => 'Build a polished product experience faster.',
+            'description' => 'A reliable, modern administration foundation for SaaS and non-SaaS Laravel applications.',
+            'primaryLabel' => 'Get started',
+            'primaryHref' => '/login',
+            'secondaryLabel' => 'View live demo',
+            'secondaryHref' => '/dashboard',
+            'logoUrl' => '',
+            'heroImageUrl' => '',
+            'socialImageUrl' => '',
+            'seoTitle' => 'PanelKit',
+            'seoDescription' => 'A modern Laravel administration foundation for reliable products.',
+            'overrides' => [],
+        ];
+    }
+
+    /**
+     * Untouched presets must remain exactly as imported. Host-owned fields are
+     * applied only after an administrator changes them or adds an override.
+     * This prevents the CMS defaults from masquerading as the source content
+     * of an imported React/Next document.
+     *
+     * @param array<string, mixed> $content
+     */
+    public static function landingContentIsCustom(array $content): bool
+    {
+        $defaults = self::landingContentDefaults();
+
+        foreach (array_keys($defaults) as $key) {
+            if ($key === 'overrides') {
+                continue;
+            }
+
+            if (($content[$key] ?? $defaults[$key]) !== $defaults[$key]) {
+                return true;
+            }
+        }
+
+        return is_array($content['overrides'] ?? null) && $content['overrides'] !== [];
+    }
+
+    /**
+     * Read CMS values defensively so corrupt or hand-edited settings cannot
+     * break the public landing route.
+     *
+     * @return array{siteName: string, eyebrow: string, headline: string, description: string, primaryLabel: string, primaryHref: string, secondaryLabel: string, secondaryHref: string, logoUrl: string, heroImageUrl: string, socialImageUrl: string, seoTitle: string, seoDescription: string, overrides: list<array{label: string, selector: string, type: string, value: string, alt: string}>}
+     */
+    public static function normaliseLandingContent(mixed $value): array
+    {
+        $defaults = self::landingContentDefaults();
+        $input = is_array($value) ? $value : [];
+
+        foreach ($defaults as $key => $default) {
+            $candidate = $input[$key] ?? null;
+
+            if (! is_string($candidate) || trim($candidate) === '') {
+                continue;
+            }
+
+            $defaults[$key] = trim(mb_substr($candidate, 0, $key === 'description' || $key === 'seoDescription' ? 320 : 160));
+        }
+
+        foreach (['primaryHref', 'secondaryHref'] as $key) {
+            $href = $defaults[$key];
+
+            if (! str_starts_with($href, '/') && ! preg_match('/^https?:\/\//i', $href)) {
+                $defaults[$key] = self::landingContentDefaults()[$key];
+            }
+        }
+
+        foreach (['logoUrl', 'heroImageUrl', 'socialImageUrl'] as $key) {
+            $url = $defaults[$key];
+
+            if ($url !== '' && ! str_starts_with($url, '/') && ! preg_match('/^https?:\\/\\//i', $url)) {
+                $defaults[$key] = '';
+            }
+        }
+
+        $overrides = [];
+
+        foreach (is_array($input['overrides'] ?? null) ? $input['overrides'] : [] as $override) {
+            if (! is_array($override)) {
+                continue;
+            }
+
+            $selector = is_string($override['selector'] ?? null)
+                ? trim($override['selector'])
+                : '';
+            $value = is_string($override['value'] ?? null)
+                ? trim($override['value'])
+                : '';
+            $type = is_string($override['type'] ?? null)
+                ? trim($override['type'])
+                : 'text';
+
+            if ($selector === '' || $value === '' || ! in_array($type, ['text', 'image', 'link'], true)) {
+                continue;
+            }
+
+            if (mb_strlen($selector) > 240 || mb_strlen($value) > 2048) {
+                continue;
+            }
+
+            if (in_array($type, ['image', 'link'], true)
+                && ! str_starts_with($value, '/')
+                && ! preg_match('/^https?:\\/\\//i', $value)) {
+                continue;
+            }
+
+            $overrides[] = [
+                'label' => is_string($override['label'] ?? null)
+                    ? trim(mb_substr($override['label'], 0, 80))
+                    : $selector,
+                'selector' => $selector,
+                'type' => $type,
+                'value' => $value,
+                'alt' => is_string($override['alt'] ?? null)
+                    ? trim(mb_substr($override['alt'], 0, 160))
+                    : '',
+            ];
+
+            if (count($overrides) >= 50) {
+                break;
+            }
+        }
+
+        $defaults['overrides'] = $overrides;
+
+        return $defaults;
+    }
+
+    /**
+     * Return the selected public document, or null when the host should use its
+     * normal application home. The href comes only from the catalogue above.
+     */
+    public static function selectedLandingHref(): ?string
+    {
+        $selected = self::landingConfiguration()['selected'];
+
+        foreach (self::landingTemplates() as $template) {
+            if ($template['slug'] === $selected) {
+                return $template['href'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<array{title: string, href: string, icon: string, group: string, external?: bool, panel?: string, ability?: string}>
      */
     public static function all(): array
     {
@@ -118,6 +465,21 @@ final class Pages
              */
             ['title' => 'Device preview', 'href' => '/screens/devices', 'icon' => 'smartphone', 'group' => 'Building'],
 
+            /*
+             * THE PUBLIC SITE HAS ONE ACTIVE LANDING PAGE.
+             *
+             * The sidebar opens the CMS for that active page. Imported designs
+             * are presets inside the editor, not nine public destinations in
+             * the operator navigation. The public root resolves only the
+             * allow-listed selected preset in `landingConfiguration()`.
+             */
+            [
+                'title' => 'Landing page',
+                'href' => '/landing-pages',
+                'icon' => 'layout-template',
+                'group' => 'Website',
+                'ability' => 'view_landing_pages',
+            ],
             /*
              * The states a panel has but cannot normally be shown.
              *

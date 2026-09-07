@@ -84,7 +84,8 @@ final class AppearanceController extends Controller
 
         abort_if($user === null, 403);
 
-        $current = is_array($user->appearance ?? null) ? $user->appearance : [];
+        $appearance = $user->getAttribute('appearance');
+        $current = is_array($appearance) ? $appearance : [];
 
         if (array_key_exists('dashboardLayout', $validated)) {
             $panel = app(PanelManager::class)->currentPanel();
@@ -96,9 +97,9 @@ final class AppearanceController extends Controller
             }
         }
 
-        $user->appearance = [...$current, ...$validated];
+        $user->setAttribute('appearance', [...$current, ...$validated]);
         $user->save();
 
-        return response()->json(['appearance' => $user->appearance]);
+        return response()->json(['appearance' => $user->getAttribute('appearance')]);
     }
 }

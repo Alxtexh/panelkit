@@ -149,10 +149,12 @@ final class MagicLinkController extends Controller
 
         $column = config('panel.tenancy.column', 'tenant_id');
 
-        return $model::query()
+        $user = $model::query()
             ->when($tenant !== null && $column !== null, fn ($q) => $q->where($column, $tenant))
             ->where('email', $email)
             ->first();
+
+        return $user instanceof Authenticatable ? $user : null;
     }
 
     private function credential(): OneTimeCredential
@@ -213,7 +215,8 @@ final class MagicLinkController extends Controller
     private function organisationLabel(Authenticatable $user): string
     {
         if ($user instanceof Model && method_exists($user, 'tenant')) {
-            $name = $user->tenant?->name;
+            $tenant = $user->getRelationValue('tenant');
+            $name = $tenant instanceof Model ? $tenant->getAttribute('name') : null;
 
             if (is_string($name) && $name !== '') {
                 return $name;

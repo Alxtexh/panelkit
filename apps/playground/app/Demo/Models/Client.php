@@ -74,11 +74,13 @@ final class Client extends Model
         ];
     }
 
+    /** @return BelongsTo<Plan, $this> */
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
     }
 
+    /** @return BelongsTo<Router, $this> */
     public function router(): BelongsTo
     {
         return $this->belongsTo(Router::class);

@@ -29,7 +29,7 @@ final class IconPickerField extends Field
     /** @param list<string> $icons */
     public function icons(array $icons): static
     {
-        $this->icons = array_values(array_filter($icons, static fn ($i): bool => is_string($i) && $i !== ''));
+        $this->icons = array_values(array_filter($icons, static fn (string $icon): bool => $icon !== ''));
 
         return $this;
     }

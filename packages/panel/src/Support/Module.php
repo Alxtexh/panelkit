@@ -74,7 +74,7 @@ final class Module
      *
      * `number` is a cap (-1 = Unlimited). `toggle` is included or not.
      *
-     * @param  'number'|'toggle'  $kind
+     * @param  string  $kind
      */
     public function planLimit(string $kind = 'number', ?string $label = null, float|int|null $step = null, ?string $hint = null): self
     {

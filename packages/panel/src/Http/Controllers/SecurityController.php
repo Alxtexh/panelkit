@@ -236,6 +236,8 @@ final class SecurityController
      * screen listed the provider, EMAIL ADDRESS and nickname of whoever held
      * the same id under the other guard - so a customer saw an operator's
      * connected Google account, and the delete button next to it worked.
+     *
+     * @return list<array<string, mixed>>
      */
     private static function connectedAccounts(mixed $userId, string $guard): array
     {
@@ -243,7 +245,7 @@ final class SecurityController
             return [];
         }
 
-        return ConnectedAccount::query()
+        return array_values(ConnectedAccount::query()
             ->where('guard', $guard)
             ->where('user_id', $userId)
             ->orderBy('provider')
@@ -256,7 +258,7 @@ final class SecurityController
                 'nickname' => $a->nickname,
                 'lastUsedAt' => $a->last_used_at?->toIso8601String(),
             ])
-            ->all();
+            ->all());
     }
 
     /**
@@ -305,7 +307,7 @@ final class SecurityController
             'canManageTwoFactor' => true,
             'twoFactorEnabled' => method_exists($user, 'hasEnabledTwoFactorAuthentication')
                 ? $user->hasEnabledTwoFactorAuthentication()
-                : $user->two_factor_confirmed_at !== null,
+                : $user->getAttribute('two_factor_confirmed_at') !== null,
             'requiresConfirmation' => $features::optionEnabled($features::twoFactorAuthentication(), 'confirm'),
         ];
     }

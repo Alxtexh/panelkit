@@ -280,7 +280,8 @@ final class OperationsController
         $tenantId = $request->input('tenant');
 
         if ($tenantId !== null && $tenantId !== '') {
-            abort_unless(Tenants::find(is_numeric($tenantId) ? $tenantId : (string) $tenantId) !== null, 422, 'No such tenant.');
+            abort_unless(is_int($tenantId) || is_string($tenantId), 422, 'Invalid tenant.');
+            abort_unless(Tenants::find($tenantId) !== null, 422, 'No such tenant.');
         }
 
         RunBackupNow::dispatch(

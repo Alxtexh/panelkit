@@ -25,21 +25,20 @@ use InvalidArgumentException;
  */
 final class BadgeColumn extends Column implements InlineWritableColumn
 {
-    /** @var array<string, string> value => semantic intent */
+    /** @var array<string|int, string> value => semantic intent */
     private array $colors = [];
 
     private string $default = 'neutral';
 
-    /** @param array<string, string> $colors */
     /** @var array<string|int, string> */
     private array $labels = [];
 
     private bool $resolver = false;
 
-    /** @var array<string, string> value => label, when the picker is on */
+    /** @var array<string|int, string> value => label, when the picker is on */
     private array $options = [];
 
-    /** @param array<string, string> $colors */
+    /** @param array<string|int, string> $colors */
     public function colors(array $colors): static
     {
         $this->colors = $colors;
@@ -177,7 +176,13 @@ final class BadgeColumn extends Column implements InlineWritableColumn
     private function resolvedOptions(): array
     {
         if ($this->options !== []) {
-            return $this->options;
+            $out = [];
+
+            foreach ($this->options as $value => $label) {
+                $out[(string) $value] = $label;
+            }
+
+            return $out;
         }
 
         $keys = array_keys($this->colors);

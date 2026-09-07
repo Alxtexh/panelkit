@@ -124,9 +124,23 @@ final class LiveConfig
             intervalMs: (int) config('panel.live.interval_ms', 10_000),
             batchMs: (int) config('panel.live.batch_ms', 250),
             channel: config('panel.live.channel'),
-            events: (array) config('panel.live.events', []),
+            events: self::eventList(config('panel.live.events', [])),
             pauseWhenHidden: (bool) config('panel.live.pause_when_hidden', true),
         );
+    }
+
+    /** @return list<string> */
+    private static function eventList(mixed $events): array
+    {
+        $out = [];
+
+        foreach (is_array($events) ? $events : [] as $event) {
+            if (is_string($event) && $event !== '') {
+                $out[] = $event;
+            }
+        }
+
+        return $out;
     }
 
     /**

@@ -28,7 +28,7 @@ final class ActionStep
     private ?string $submitLabel = null;
 
     /**
-     * @var Closure(Model, array<string, mixed>): array<string, mixed>|void|null
+     * @var Closure(Model, array<string, mixed>): (array<string, mixed>|void)|null
      */
     private ?Closure $validate = null;
 
@@ -94,7 +94,7 @@ final class ActionStep
     }
 
     /**
-     * @param  Closure(Model, array<string, mixed>): array<string, mixed>|void  $callback
+     * @param  Closure(Model, array<string, mixed>): (array<string, mixed>|void)  $callback
      */
     public function onExecute(Closure $callback): self
     {

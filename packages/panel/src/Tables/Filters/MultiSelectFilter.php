@@ -24,6 +24,7 @@ final class MultiSelectFilter extends Filter implements HasOptions
     /** @var list<string>|Closure(): list<string> */
     private array|Closure $options = [];
 
+    /** @var list<string>|null */
     private ?array $resolved = null;
 
     /** @param list<string>|Closure(): list<string> $options */

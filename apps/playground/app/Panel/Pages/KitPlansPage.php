@@ -36,12 +36,12 @@ final class KitPlansPage extends PlanSetupPage
         return 'KitPlans';
     }
 
-    public static function heading(): ?string
+    public static function heading(): string
     {
         return 'Subscription plans';
     }
 
-    public static function description(): ?string
+    public static function description(): string
     {
         return 'Organisation-wide catalogue. Fake data; -1 is Unlimited.';
     }
@@ -50,7 +50,29 @@ final class KitPlansPage extends PlanSetupPage
     {
         $overrides = $request->session()->get('kit_saas_plans');
 
-        return is_array($overrides) ? $overrides : KitDemo::saasPlans();
+        if (! is_array($overrides)) {
+            return KitDemo::saasPlans();
+        }
+
+        $plans = [];
+
+        foreach ($overrides as $plan) {
+            if (! is_array($plan)) {
+                continue;
+            }
+
+            $normalised = [];
+
+            foreach ($plan as $key => $value) {
+                if (is_string($key)) {
+                    $normalised[$key] = $value;
+                }
+            }
+
+            $plans[] = $normalised;
+        }
+
+        return $plans;
     }
 
     public static function persist(array $plan): void

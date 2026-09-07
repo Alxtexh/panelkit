@@ -104,13 +104,13 @@ final class ModuleRegistry
      */
     public static function all(): array
     {
-        return array_values(array_map(static fn (array $module): array => [
+        return array_map(static fn (array $module): array => [
             'key' => (string) $module['key'],
             'label' => (string) $module['label'],
             'description' => $module['description'] ?? null,
             'children' => self::stringList($module['children'] ?? []),
             'requires' => self::stringList($module['requires'] ?? []),
-        ], self::definitions()));
+        ], self::definitions());
     }
 
     /**
@@ -160,7 +160,7 @@ final class ModuleRegistry
         }
 
         $resolver = app()->make(self::GRANTS);
-        $keys = $resolver instanceof Closure ? $resolver() : [];
+        $keys = $resolver();
         $raw = array_values(array_map('strval', is_array($keys) ? $keys : []));
 
         return array_values(array_filter(
@@ -248,7 +248,7 @@ final class ModuleRegistry
         }
 
         $resolver = app()->make(self::CAPS);
-        $caps = $resolver instanceof Closure ? $resolver() : [];
+        $caps = $resolver();
 
         if (! is_array($caps) || ! array_key_exists($key, $caps)) {
             return -1;
@@ -404,6 +404,10 @@ final class ModuleRegistry
     }
 
     /**
+     * @return list<string>
+     */
+    /**
+     * @param list<string> $seen
      * @return list<string>
      */
     private static function requiredParents(string $key, array $seen = []): array

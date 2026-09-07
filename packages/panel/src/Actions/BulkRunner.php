@@ -40,6 +40,7 @@ final class BulkRunner
      * @param  Closure(int, int|string|null): (bool|void)|null  $onProgress  Return false to stop after the current chunk.
      * @param  Closure(Model): bool|null  $authorizeRecord  Optional per-record policy check.
      * @param  Closure(int|string|null): bool|null  $beforeChunk  Return false when a durable chunk has already completed.
+     * @param  array<string, mixed>  $data
      * @param  Closure(int|string|null, array{selected: int, authorized: int, affected: int}): void|null  $afterChunk  Runs in the same transaction as the mutation.
      * @return int How many records were actually written.
      */
@@ -64,6 +65,9 @@ final class BulkRunner
      *
      * `run()` remains the small backwards-compatible API used by integrations;
      * controllers that need truthful operator feedback use this detailed form.
+     *
+     * The optional chunk callbacks are for durable queued execution. When they
+     * @param  array<string, mixed>  $data
      *
      * The optional chunk callbacks are for durable queued execution. When they
      * are present, a database transaction always wraps the callback and the
@@ -92,12 +96,17 @@ final class BulkRunner
         $qualified = $this->qualify($target, $keyColumn);
 
         while (true) {
-            $chunk = (clone $target)
+            $rawChunk = (clone $target)
                 ->when($after !== null, fn (QueryBuilder $q): QueryBuilder => $q->where($qualified, '>', $after))
                 ->orderBy($qualified)
                 ->limit($size)
                 ->pluck($qualified)
                 ->all();
+
+            $chunk = array_values(array_filter(
+                $rawChunk,
+                static fn (mixed $id): bool => is_int($id) || is_string($id),
+            ));
 
             if ($chunk === []) {
                 break;
@@ -148,6 +157,7 @@ final class BulkRunner
      *                                      VALUES FOR EVERY CHUNK - collected
      *                                      once, which is what makes this one
      *                                      decision rather than one per batch.
+     * @return array{selected: int, authorized: int, affected: int, processed: bool}
      */
     private function apply(
         BulkAction $action,
@@ -185,7 +195,7 @@ final class BulkRunner
             $afterChunk,
         ): array {
             if ($beforeChunk !== null && $beforeChunk($cursor) === false) {
-                return ['authorized' => 0, 'affected' => 0, 'processed' => false];
+                return ['selected' => 0, 'authorized' => 0, 'affected' => 0, 'processed' => false];
             }
 
             $authorizedQuery = $query;

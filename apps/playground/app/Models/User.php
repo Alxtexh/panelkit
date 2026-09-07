@@ -41,7 +41,6 @@ use Spatie\Permission\Traits\HasRoles;
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
-    /** @use HasFactory<UserFactory> */
     /*
      * AUDITED. Role changes and email changes are among the most consequential
      * edits in the panel, and both happen here - "who gave this account
@@ -53,6 +52,7 @@ class User extends Authenticatable implements PasskeyUser
      * trail says a password changed without saying what to.
      */
     use Auditable;
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /*

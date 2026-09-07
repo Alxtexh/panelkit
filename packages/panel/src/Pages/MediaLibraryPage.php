@@ -103,13 +103,19 @@ class MediaLibraryPage extends Page
             return [];
         }
 
-        return PanelMediaItem::query()
+        $folders = PanelMediaItem::query()
             ->where('tenant_id', $tenantId)
             ->distinct()
             ->orderBy('folder')
             ->pluck('folder')
-            ->map(static fn ($f): string => (string) $f)
             ->all();
+
+        $result = [];
+        foreach ($folders as $folder) {
+            $result[] = (string) $folder;
+        }
+
+        return $result;
     }
 
     /**
@@ -178,7 +184,7 @@ class MediaLibraryPage extends Page
 
         $path = $row->path;
 
-        if (! is_string($path) || $path === '' || ! FileStore::belongsToCurrentTenant($path)) {
+        if ($path === '' || ! FileStore::belongsToCurrentTenant($path)) {
             return null;
         }
 
@@ -191,7 +197,7 @@ class MediaLibraryPage extends Page
         $expires = now()->addMinutes(max(1, static::$urlTtlMinutes));
 
         try {
-            if (method_exists($disk, 'providesTemporaryUrls') && $disk->providesTemporaryUrls()) {
+            if ($disk->providesTemporaryUrls()) {
                 $options = [];
 
                 if ($disposition === 'attachment') {
@@ -220,12 +226,12 @@ class MediaLibraryPage extends Page
 
     public static function preview(Request $request): StreamedResponse
     {
-        return static::stream($request, disposition: 'inline');
+        return self::stream($request, disposition: 'inline');
     }
 
     public static function download(Request $request): StreamedResponse
     {
-        return static::stream($request, disposition: 'attachment');
+        return self::stream($request, disposition: 'attachment');
     }
 
     private static function stream(Request $request, string $disposition): StreamedResponse

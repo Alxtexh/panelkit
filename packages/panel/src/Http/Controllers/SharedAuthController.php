@@ -292,6 +292,7 @@ final class SharedAuthController extends Controller
         return $belongs ? $intended : PanelHome::urlFor($panel);
     }
 
+    /** @param array<string, mixed> $credentials */
     private function userFromCredentials(Panel $panel, array $credentials): ?Authenticatable
     {
         $provider = Auth::guard($panel->getGuard())->getProvider();
@@ -301,7 +302,7 @@ final class SharedAuthController extends Controller
             return null;
         }
 
-        if (config('hashing.rehash_on_login', true) && method_exists($provider, 'rehashPasswordIfRequired')) {
+        if (config('hashing.rehash_on_login', true)) {
             $provider->rehashPasswordIfRequired($user, ['password' => $credentials['password']]);
         }
 

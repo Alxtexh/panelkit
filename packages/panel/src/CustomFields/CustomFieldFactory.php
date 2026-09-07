@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\CustomFields;
 
-use Illuminate\Database\Query\Expression;
+use Illuminate\Contracts\Database\Query\Expression as QueryExpression;
 use Illuminate\Support\Facades\DB;
 use Alxtexh\Panel\Forms\Fields\DateField;
 use Alxtexh\Panel\Forms\Fields\Field;
@@ -149,7 +149,7 @@ final class CustomFieldFactory
      * `DriverCoverageTest` fails any driver-specific feature that misses
      * one of the three.
      */
-    public static function selectExpression(CustomField $definition): Expression
+    public static function selectExpression(CustomField $definition): QueryExpression
     {
         $key = self::formKey($definition);
         $path = '$.'.$definition->key;

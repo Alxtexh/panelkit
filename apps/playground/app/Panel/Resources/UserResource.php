@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Panel\Resources;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -505,9 +506,13 @@ final class UserResource extends Resource
                      * "that account can do things you cannot" is information for
                      * the operator, not a crash.
                      */
-                    ->handle(function (User $user): void {
+                    ->handle(function (Model $record, array $data): void {
+                        if (! $record instanceof User) {
+                            throw new \UnexpectedValueException('Impersonation requires a user record.');
+                        }
+
                         try {
-                            app(Impersonation::class)->start(auth()->user(), $user);
+                            app(Impersonation::class)->start(auth()->user(), $record);
                         } catch (\RuntimeException $e) {
                             throw ValidationException::withMessages([
                                 'impersonate' => $e->getMessage(),
@@ -537,8 +542,12 @@ final class UserResource extends Resource
                     ->authorize('update')
                     ->confirm('They will be asked to choose a new password next time they sign in. Continue?')
                     ->visible(fn (array $row): bool => (int) ($row['id'] ?? 0) !== (int) auth()->id())
-                    ->handle(function (User $user): void {
-                        $user->forceFill(['must_change_password' => true])->save();
+                    ->handle(function (Model $record, array $data): void {
+                        if (! $record instanceof User) {
+                            throw new \UnexpectedValueException('Password reset requires a user record.');
+                        }
+
+                        $record->forceFill(['must_change_password' => true])->save();
                     }),
             ])
             /*

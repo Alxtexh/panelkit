@@ -34,12 +34,12 @@ final class ChartGalleryPage extends Page
         return 'Chart gallery';
     }
 
-    public static function heading(): ?string
+    public static function heading(): string
     {
         return 'Chart gallery';
     }
 
-    public static function description(): ?string
+    public static function description(): string
     {
         return 'Every chart type PanelKit ships, rendered against this tenant\'s real data - a reference for picking one, not the operator dashboard.';
     }

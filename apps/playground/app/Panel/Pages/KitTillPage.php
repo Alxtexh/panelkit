@@ -37,12 +37,12 @@ final class KitTillPage extends TillPage
         return 'KitTill';
     }
 
-    public static function heading(): ?string
+    public static function heading(): string
     {
         return 'Till';
     }
 
-    public static function description(): ?string
+    public static function description(): string
     {
         return 'Tap products into a cart. LineItems, PkStatusBadge, and catalog ChartWidgets.';
     }
@@ -62,7 +62,7 @@ final class KitTillPage extends TillPage
         return 'VAT 16%';
     }
 
-    public static function itemPath(): ?string
+    public static function itemPath(): string
     {
         return '/kit-catalog';
     }

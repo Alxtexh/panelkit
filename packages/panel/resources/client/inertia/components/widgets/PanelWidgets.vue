@@ -67,7 +67,7 @@ function series(key: string): Series {
 }
 
 function retry(dataKey: string) {
-    router.reload({ only: [dataKey], preserveState: true, preserveScroll: true })
+    router.reload({ only: [dataKey] })
 }
 
 /**

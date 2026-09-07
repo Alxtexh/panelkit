@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Support;
 
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
 use Symfony\Component\HttpFoundation\Cookie;
 
 /**
@@ -34,7 +35,10 @@ final class SetupWizardState
         $request ??= request();
 
         $user = $request->user();
-        $appearance = is_array($user?->appearance ?? null) ? $user->appearance : [];
+        $appearanceValue = $user instanceof Model ? $user->getAttribute('appearance') : null;
+        $appearance = is_array($appearanceValue) ? $appearanceValue : [];
+        $cookieValue = $request->cookie(self::COOKIE);
+        $cookieDone = is_string($cookieValue) && $cookieValue === '1';
 
         /*
          * THE ACCOUNT WINS WHEN IT HAS AN OPINION - see `OnboardingSteps::isDone()`,
@@ -44,14 +48,14 @@ final class SetupWizardState
         if (array_key_exists(self::APPEARANCE_KEY, $appearance)) {
             $done = $appearance[self::APPEARANCE_KEY] === true;
 
-            if (! $done && (string) $request->cookie(self::COOKIE) === '1') {
+            if (! $done && $cookieDone) {
                 cookie()->queue(self::doneCookie(false));
             }
 
             return $done;
         }
 
-        return (string) $request->cookie(self::COOKIE) === '1';
+        return $cookieDone;
     }
 
     public static function persistDone(?Request $request = null): void
@@ -59,12 +63,13 @@ final class SetupWizardState
         $request ??= request();
         $user = $request->user();
 
-        if ($user === null) {
+        if (! $user instanceof Model) {
             return;
         }
 
-        $current = is_array($user->appearance ?? null) ? $user->appearance : [];
-        $user->appearance = [...$current, self::APPEARANCE_KEY => true];
+        $currentValue = $user->getAttribute('appearance');
+        $current = is_array($currentValue) ? $currentValue : [];
+        $user->setAttribute('appearance', [...$current, self::APPEARANCE_KEY => true]);
         $user->save();
     }
 

@@ -48,7 +48,12 @@ export function usePanelIdleLock() {
     function onHttpException(event: Event): void {
         const response = (event as CustomEvent<{ response?: { status?: number } }>).detail?.response
 
-        if (response?.status !== 423 || !config.value?.lockUrl || isAuthPage() || redirectingToLock) {
+        if (
+            response?.status !== 423 ||
+            !config.value?.lockUrl ||
+            isAuthPage() ||
+            redirectingToLock
+        ) {
             return
         }
 

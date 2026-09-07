@@ -56,7 +56,7 @@ final class DashboardPage extends AlxtexhpanelDashboard
 
     protected static ?int $sort = -100;
 
-    public static function infoPanel(): ?array
+    public static function infoPanel(): array
     {
         return [
             'title' => 'Dashboard guide',

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2ce5a72d7b210538c4d987812a33fce1",
+    "content-hash": "d96d4773ead3e1c1efcea50f35ed7d4e",
     "packages": [
         {
             "name": "alxtexh-enterprise/panel",
@@ -12,7 +12,7 @@
             "dist": {
                 "type": "path",
                 "url": "../../packages/panel",
-                "reference": "9ab5fa90140ef49ad041db9adaadaa716721085b"
+                "reference": "7e97368be3d9232bdd348dec227a3e602eecdb0a"
             },
             "require": {
                 "illuminate/database": "^12.0|^13.0",
@@ -28,8 +28,11 @@
                 "stancl/tenancy": "^3.10"
             },
             "suggest": {
+                "alxtexh-enterprise/panel-ai": "Needed only for provider-backed AI retrieval and tenant-scoped conversations. The default embedder is local and needs nothing.",
+                "alxtexh-enterprise/panel-billing": "Needed only for provider-agnostic billing webhook adapters.",
+                "alxtexh-enterprise/panel-documents": "Needed only for document templates and renderers.",
+                "alxtexh-enterprise/panel-operations": "Needed only for queued imports, exports, bulk actions, and scheduled reports.",
                 "alxtexh-enterprise/panel-telegram": "Needed only for Telegram alerts and Telegram notification delivery.",
-                "laravel/ai": "Needed only for ProviderEmbedder - model-backed retrieval. The default embedder is local and needs nothing.",
                 "laravel/socialite": "Needed only for social sign-in buttons. Credentials in config/services.php are the switch; without this package the buttons stay hidden.",
                 "phpoffice/phpspreadsheet": "Needed only for Excel import (Resource::excelImport()). CSV import needs nothing.",
                 "stancl/tenancy": "Needed only for `database` tenancy mode - dedicated database per tenant. The default `column` mode needs nothing."

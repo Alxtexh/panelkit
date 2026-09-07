@@ -55,7 +55,7 @@ final class TreeSelectField extends Field
         }
 
         if (array_is_list($raw) && isset($raw[0]) && is_array($raw[0]) && array_key_exists('label', $raw[0])) {
-            return array_values($raw);
+            return $raw;
         }
 
         $out = [];

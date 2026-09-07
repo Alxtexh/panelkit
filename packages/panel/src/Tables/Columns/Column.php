@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tables\Columns;
 
-use Illuminate\Database\Query\Expression;
+use Illuminate\Contracts\Database\Query\Expression as QueryExpression;
 use Illuminate\Support\Facades\DB;
 use Alxtexh\Panel\Schema\Renderable;
 use Alxtexh\Panel\Tables\Summarizer;
@@ -234,7 +234,7 @@ abstract class Column implements Renderable
      * already write `->from('plans.name as plan_name')`, and second-guessing
      * them would break the thing this is meant to fix.
      */
-    public function selectExpression(): string|Expression
+    public function selectExpression(): string|QueryExpression
     {
         // A computed value - see `fromRaw()` for why this cannot be a string.
         if ($this->rawExpression !== null) {

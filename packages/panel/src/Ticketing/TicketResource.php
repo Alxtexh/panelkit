@@ -55,7 +55,9 @@ final class TicketResource extends Resource
      */
     private static function userModel(): string
     {
-        return (string) config('auth.providers.users.model');
+        $model = config('auth.providers.users.model');
+
+        return is_string($model) && is_subclass_of($model, Model::class) ? $model : Model::class;
     }
 
     protected static string $model = Ticket::class;
@@ -123,7 +125,7 @@ final class TicketResource extends Resource
             ]);
     }
 
-    public static function comments(): ?Comments
+    public static function comments(): Comments
     {
         return Comments::make()->label('Internal notes');
     }

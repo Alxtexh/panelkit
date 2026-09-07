@@ -277,6 +277,7 @@ final class PanelPages
         ));
     }
 
+    /** @return array{written: list<string>, skipped: list<string>, directory: ?string} */
     public static function write(bool $force = false): array
     {
         /*

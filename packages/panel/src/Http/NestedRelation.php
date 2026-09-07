@@ -7,11 +7,13 @@ namespace Alxtexh\Panel\Http;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Contracts\Database\Query\Expression as QueryExpression;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Alxtexh\Panel\Forms\Fields\Field;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
 use Alxtexh\Panel\Tables\Table;
+use Alxtexh\Panel\Support\AllowListedQueryExpression;
 
 /**
  * Nested HasMany vs BelongsToMany, one choke point.
@@ -40,6 +42,7 @@ final class NestedRelation
      *
      * @param  resourceClass  $class
      */
+    /** @return BelongsToMany<Model, Model, \Illuminate\Database\Eloquent\Relations\Pivot, string>|null */
     public static function relationOn(string $class): ?BelongsToMany
     {
         $parentClass = $class::parentResource();
@@ -64,6 +67,7 @@ final class NestedRelation
     /**
      * @param  resourceClass  $class
      */
+    /** @return BelongsToMany<Model, Model, \Illuminate\Database\Eloquent\Relations\Pivot, string> */
     public static function of(Model $parent, string $class): BelongsToMany
     {
         $name = $class::relationship();
@@ -85,6 +89,10 @@ final class NestedRelation
      * Narrow a child list (or a find) to rows that belong to this parent.
      *
      * @param  resourceClass  $class
+     */
+    /**
+     * @param EloquentBuilder<Model> $query
+     * @param resourceClass $class
      */
     public static function constrain(EloquentBuilder $query, string $class, Model $parent): void
     {
@@ -140,7 +148,7 @@ final class NestedRelation
         $parentKey = DB::escape($parent->getKey());
 
         $definition->appendSelect(array_map(
-            static fn (Field $field) => DB::raw(sprintf(
+            static fn (Field $field): QueryExpression => AllowListedQueryExpression::fromValidated(sprintf(
                 '(select %1$s.%2$s from %1$s where %1$s.%3$s = %4$s and %1$s.%5$s = %6$s.%7$s) as %8$s',
                 $pivotTable,
                 $field->key,

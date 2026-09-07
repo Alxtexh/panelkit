@@ -7,7 +7,9 @@ namespace Alxtexh\Panel\Tests\Feature;
 use Alxtexh\Panel\Schema\Card;
 use Alxtexh\Panel\Schema\Column;
 use Alxtexh\Panel\Schema\Columns;
+use Alxtexh\Panel\Schema\Grid;
 use Alxtexh\Panel\Schema\Section;
+use Alxtexh\Panel\Schema\Tab;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Alxtexh\Panel\Tests\Fixtures\Pages\LayoutDemoPage;
@@ -66,6 +68,38 @@ final class PageLayoutTest extends TestCase
         $this->assertSame('column', $column['component']);
         $this->assertSame(2, $column['span']);
         $this->assertSame('columns', $columns['component']);
+    }
+
+    public function test_grid_accepts_a_responsive_column_map(): void
+    {
+        $grid = Grid::make([
+            'default' => 1,
+            'sm' => 2,
+            'lg' => 4,
+        ])->schema([])->toSchema();
+
+        $this->assertSame('grid', $grid['component']);
+        $this->assertSame([
+            'default' => 1,
+            'sm' => 2,
+            'lg' => 4,
+        ], $grid['columns']);
+    }
+
+    public function test_grid_rejects_unknown_breakpoints_and_invalid_counts(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Grid::make(['phone' => 2]);
+    }
+
+    public function test_tabs_serialize_badges_for_form_and_view_renderers(): void
+    {
+        $schema = Tab::make('Invoices')->badge(7)->schema([])->toSchema();
+
+        $this->assertSame('tab', $schema['component']);
+        $this->assertSame('Invoices', $schema['label']);
+        $this->assertSame(7, $schema['badge']);
     }
 
     public function test_a_layout_page_renders_page_layout_props(): void

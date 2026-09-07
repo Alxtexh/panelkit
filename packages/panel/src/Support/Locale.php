@@ -106,7 +106,7 @@ final class Locale
                 $line = $loader->load($fallback, $group, 'panel');
             }
 
-            $messages[$group] = is_array($line) ? $line : [];
+            $messages[$group] = $line;
         }
 
         $overlay = lang_path($locale.'/panel.php');
@@ -151,7 +151,7 @@ final class Locale
         $groups = array_map(static fn (string $file): string => basename($file, '.php'), $files);
         sort($groups);
 
-        return array_values($groups);
+        return $groups;
     }
 
     public static function packageLangPath(): string

@@ -226,7 +226,11 @@ function formatWhen(value?: string | null): string {
                                 {{ formatWhen(row.expires_at) }}
                             </td>
                             <td class="px-3 py-2 text-right">
-                                <Button type="button" variant="ghost" @click="requestRevoke(row.id)">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    @click="requestRevoke(row.id)"
+                                >
                                     Revoke
                                 </Button>
                             </td>
@@ -242,7 +246,10 @@ function formatWhen(value?: string | null): string {
             description="Applications using this key will lose access immediately."
             @close="pendingRevoke = null"
         >
-            <p class="text-sm">Revoke key <strong>#{{ pendingRevoke }}</strong>?</p>
+            <p class="text-sm">
+                Revoke key <strong>#{{ pendingRevoke }}</strong
+                >?
+            </p>
             <template #footer>
                 <Button variant="outline" @click="pendingRevoke = null">Cancel</Button>
                 <Button variant="destructive" @click="revoke">Revoke key</Button>

@@ -70,10 +70,10 @@ final class Sitemap
      */
     public const MAX_URLS_PER_FILE = 50_000;
 
-    /** @var list<array{loc: string, lastmod: ?DateTimeInterface, changefreq: ?string, priority: ?float}> */
+    /** @var list<array{loc: string, lastmod: ?DateTimeInterface, changefreq: ?string, priority: ?float, noindex?: bool, canonical?: string}> */
     private static array $entries = [];
 
-    /** @var list<Closure(): iterable> */
+    /** @var list<Closure(): iterable<string|array{loc: string, lastmod?: ?DateTimeInterface, changefreq?: ?string, priority?: ?float, noindex?: bool, canonical?: string}>> */
     private static array $sources = [];
 
     private const CHANGEFREQS = ['always', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'never'];
@@ -103,7 +103,7 @@ final class Sitemap
      * Each yielded item is either a plain URL string or the same shape
      * `add()` takes as an array: `['loc' => ..., 'lastmod' => ..., 'changefreq' => ..., 'priority' => ...]`.
      *
-     * @param  Closure(): iterable<string|array{loc: string, lastmod?: ?DateTimeInterface, changefreq?: ?string, priority?: ?float}>  $resolver
+     * @param  Closure(): iterable<string|array{loc: string, lastmod?: ?DateTimeInterface, changefreq?: ?string, priority?: ?float, noindex?: bool, canonical?: string}>  $resolver
      */
     public static function source(Closure $resolver): void
     {
@@ -137,7 +137,7 @@ final class Sitemap
         $enforceNoindex = (bool) config('panel.seo.enforce_noindex', true);
 
         foreach ($raw as $entry) {
-            $loc = trim((string) ($entry['loc'] ?? ''));
+            $loc = trim($entry['loc']);
 
             if ($loc === '') {
                 continue;

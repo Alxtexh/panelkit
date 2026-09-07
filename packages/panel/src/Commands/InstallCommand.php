@@ -15,7 +15,6 @@ use Composer\Autoload\ClassLoader;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Passkeys\Passkey;
-use Laravel\Passkeys\PasskeyAuthenticatable;
 use Laravel\Passkeys\Passkeys;
 use Symfony\Component\Process\Process;
 
@@ -677,6 +676,12 @@ final class InstallCommand extends Command
         }
 
         $source = file_get_contents($path);
+
+        if ($source === false) {
+            $this->components->warn("Could not read {$model} to add HasRoles automatically.");
+
+            return;
+        }
 
         if (UserRoles::present($source)) {
             $this->components->twoColumnDetail('Already holds roles', class_basename($model));
@@ -1576,8 +1581,14 @@ PHP;
     /** Point the User model at laravel/passkeys contracts when the class exists. */
     private function wirePasskeyUserModel(): void
     {
-        if (! class_exists(PasskeyAuthenticatable::class)
-            && ! trait_exists(PasskeyAuthenticatable::class)) {
+        $passkeyClass = (string) config(
+            'panel.auth.passkey_class',
+            'Laravel\\Passkeys\\PasskeyAuthenticatable',
+        );
+
+        if (! class_exists($passkeyClass)
+            && ! interface_exists($passkeyClass)
+            && ! trait_exists($passkeyClass)) {
             return;
         }
 

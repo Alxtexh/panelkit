@@ -46,6 +46,11 @@ const b = resolve(dirB);
 const filesA = new Set(readdirSync(a).filter((f) => f.endsWith('.png')));
 const filesB = new Set(readdirSync(b).filter((f) => f.endsWith('.png')));
 
+if (filesA.size === 0 && filesB.size === 0) {
+    console.error('no PNG screenshots found in either directory');
+    process.exit(2);
+}
+
 if (diffDir) {
     mkdirSync(resolve(diffDir), { recursive: true });
 }
@@ -95,6 +100,7 @@ for (const file of [...filesA].sort()) {
 for (const file of [...filesB].sort()) {
     if (!filesA.has(file)) {
         console.log(`  only in B: ${file}`);
+        failed += 1;
     }
 }
 

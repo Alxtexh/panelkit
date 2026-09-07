@@ -55,7 +55,13 @@ final class PruneTrashCommand extends Command
          */
         foreach ($bin->resources(null) as $key => $class) {
             $model = $class::model();
-            $column = (new $model)->getDeletedAtColumn();
+            $instance = new $model;
+
+            if (! method_exists($instance, 'getDeletedAtColumn')) {
+                continue;
+            }
+
+            $column = $instance->getDeletedAtColumn();
 
             /*
              * WITHOUT THE TENANT SCOPE, and that is deliberate rather than

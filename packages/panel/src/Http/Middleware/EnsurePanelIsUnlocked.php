@@ -30,6 +30,23 @@ final class EnsurePanelIsUnlocked
 
     public function handle(Request $request, Closure $next): Response
     {
+        /*
+         * IMPORTED LANDINGS ARE STANDALONE PUBLIC DOCUMENTS.
+         *
+         * The playground serves compiled React landing applications under
+         * `/panelkit/landings/*`. They intentionally sit outside the panel
+         * shell and its authentication/idle-lock boundary. Applying this
+         * middleware to their HTML, client-side routes, or assets can redirect
+         * a locked session into a route that only exists in the imported app
+         * (for example `/app/login`), leaving a white React shell. The host's
+         * real `/login` and panel routes remain protected by their normal
+         * middleware; this exemption is limited to the namespaced static
+         * landing surface.
+        */
+        if ($request->is('panelkit/landings/*')) {
+            return $next($request);
+        }
+
         if (! $request->hasSession() || ! PanelIdleActivity::isLocked($request)) {
             return $next($request);
         }

@@ -138,6 +138,7 @@ final class Summarizer
     }
 
     /** Presentation hints only - the client decides what they look like (§6.1). */
+    /** @return array<string, mixed> */
     public function toSchema(): array
     {
         return [

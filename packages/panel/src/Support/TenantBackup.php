@@ -64,12 +64,12 @@ final class TenantBackup
             ),
             'connection' => $payload['connection'],
             'scope' => $payload['scope'],
-        ], JSON_PRETTY_PRINT));
+        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
 
         foreach ($payload['tables'] as $table) {
             $zip->addFromString(
                 'tables/'.$table['name'].'.json',
-                json_encode($table['rows'], JSON_PRETTY_PRINT),
+                json_encode($table['rows'], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR),
             );
         }
 
@@ -142,7 +142,10 @@ final class TenantBackup
                     continue;
                 }
 
-                $rows = $query->limit(50_000)->get()->map(static fn ($row): array => (array) $row)->all();
+                $rows = [];
+                foreach ($query->limit(50_000)->get() as $row) {
+                    $rows[] = (array) $row;
+                }
             } catch (Throwable) {
                 continue;
             }

@@ -17,13 +17,21 @@ const loop = computed(() => [...props.items, ...props.items])
 
 <template>
     <PkSection v-if="items.length" class="overflow-hidden" :aria-label="title || 'Highlights'">
-        <p v-if="title" class="mb-6 text-center text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+        <p
+            v-if="title"
+            class="mb-6 text-center text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground"
+        >
             {{ title }}
         </p>
-        <div class="pk-marquee" :class="[`pk-marquee-${speed}`, reverse ? 'pk-marquee-reverse' : '']">
+        <div
+            class="pk-marquee"
+            :class="[`pk-marquee-${speed}`, reverse ? 'pk-marquee-reverse' : '']"
+        >
             <div class="pk-marquee-track" role="list">
                 <template v-for="(item, index) in loop" :key="`${item.name}-${index}`">
-                    <a v-if="item.href" :href="item.href" role="listitem" class="pk-marquee-item">{{ item.name }}</a>
+                    <a v-if="item.href" :href="item.href" role="listitem" class="pk-marquee-item">{{
+                        item.name
+                    }}</a>
                     <span v-else role="listitem" class="pk-marquee-item">{{ item.name }}</span>
                 </template>
             </div>

@@ -57,12 +57,12 @@ The reason is the one the user gave, and it is the correct one: duplicated
 copies drift, and drift is invisible until the day two screens disagree in
 front of a customer.
 
-## The de-duplication sweep: what is done, and the trap in the rest
+## The de-duplication sweep
 
-**Done:** three duplicate component folders in the application — `badge`,
-`collapsible` and `select`, fifteen files — were **dead**. Nothing imported
-them; `PkBadge` had already replaced the first, and the other two were starter-
-kit scaffolding no screen ever used. Deleted.
+**Done:** the application-owned duplicate component folders were removed or
+reduced to package re-exports. The application no longer carries separate
+button, skeleton, dropdown-menu, dialog, badge, collapsible, or select
+implementations that can drift from the package.
 
 **The trap, for whoever finishes this:** the remaining overlaps are **not
 drop-in swaps**, and treating them as a find-and-replace would break real
@@ -74,8 +74,7 @@ behaviour.
 | app `skeleton` ↔ `PkSkeleton` | Different concepts wearing one name. The app's is a bare `class`-driven `div`; `PkSkeleton` is a **named-variant** placeholder (`text`, `row`, `circle`, with counts) so six call sites cannot each invent a height. Its one consumer, `SidebarMenuSkeleton`, wants the bare div. |
 | app `dropdown-menu` (4 files) ↔ `PkDropdown` | Composed parts versus one component with an items prop. Genuinely different APIs. |
 
-So the right finish is **per-pair migration with the call sites read**, not a
-sed. The rule stands — one copy of every shared component, in the package —
-but reaching it means moving the *application's* implementation into
-`@alxtexh-enterprise/panel` where the package's version is the thinner one, rather than
-forcing every screen onto a primitive that was scoped for packaged use.
+The migration is complete for the current application. Future shared
+components must follow the same rule: add them to the package first, expose a
+stable public contract, and make application shims re-export that contract
+instead of introducing a second implementation.

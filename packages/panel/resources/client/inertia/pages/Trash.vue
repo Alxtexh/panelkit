@@ -287,6 +287,11 @@ function restoreSelected() {
     confirmingRestore.value = 'many'
 }
 
+function closeRestoreConfirmation() {
+    confirmingRestore.value = null
+    confirmingRestoreRecord.value = null
+}
+
 function confirmRestore() {
     const mode = confirmingRestore.value
     const record = confirmingRestoreRecord.value
@@ -612,11 +617,12 @@ function deletedOn(value: string): string {
         :open="confirmingRestore !== null"
         title="Restore deleted record?"
         description="The record will return to its normal list."
-        @close="confirmingRestore = null; confirmingRestoreRecord = null"
+        @close="closeRestoreConfirmation"
     >
         <p class="text-sm">
             <template v-if="confirmingRestore === 'one'">
-                Restore <strong>{{ confirmingRestoreRecord?.title }}</strong>?
+                Restore <strong>{{ confirmingRestoreRecord?.title }}</strong
+                >?
             </template>
             <template v-else>
                 Restore <strong>{{ chosen.filter((r) => r.canRestore).length }} record(s)</strong>?

@@ -35,7 +35,7 @@ final class BarcodeWidget
     /** @var Closure(): string|null */
     private ?Closure $value = null;
 
-    /** @var Closure(): list<array{value: string, format?: string, label?: string, height?: int, width?: int, displayValue?: bool}>|null */
+    /** @var Closure(): list<array{value: string, key?: string, format?: string, label?: string, height?: int, width?: int, displayValue?: bool}>|null */
     private ?Closure $barcodes = null;
 
     private function __construct(string $key, string $label)
@@ -86,7 +86,7 @@ final class BarcodeWidget
     }
 
     /**
-     * @param  Closure(): list<array{value: string, format?: string, label?: string, height?: int, width?: int, displayValue?: bool}>  $barcodes
+     * @param  Closure(): list<array{value: string, key?: string, format?: string, label?: string, height?: int, width?: int, displayValue?: bool}>  $barcodes
      */
     public function barcodes(Closure $barcodes): self
     {
@@ -149,8 +149,8 @@ final class BarcodeWidget
 
         return $this->chart->data(static function () use ($format, $height, $width, $displayValue, $value, $barcodes): array {
             if ($barcodes !== null) {
-                $rows = array_values(array_map(static function (array $row) use ($format, $height, $width, $displayValue): array {
-                    $payload = trim((string) ($row['value'] ?? ''));
+                $rows = array_map(static function (array $row) use ($format, $height, $width, $displayValue): array {
+                    $payload = trim($row['value']);
 
                     return [
                         'key' => $row['key'] ?? $payload,
@@ -163,7 +163,7 @@ final class BarcodeWidget
                             ? (bool) $row['displayValue']
                             : $displayValue,
                     ];
-                }, $barcodes()));
+                }, $barcodes());
 
                 return ['barcodes' => $rows];
             }

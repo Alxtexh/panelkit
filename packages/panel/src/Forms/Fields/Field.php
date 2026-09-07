@@ -152,11 +152,13 @@ abstract class Field implements Renderable
         return $this;
     }
 
+    /** @param array<string, mixed> $values */
     public function isHidden(array $values = []): bool
     {
         return $this->resolveFlag($this->hidden, $values);
     }
 
+    /** @param array<string, mixed> $values */
     public function isDisabled(array $values = []): bool
     {
         return $this->resolveFlag($this->disabled, $values);
@@ -202,6 +204,7 @@ abstract class Field implements Renderable
     }
 
     /** @param  bool|Closure(array<string, mixed>): bool  $flag */
+    /** @param array<string, mixed> $values */
     private function resolveFlag(bool|Closure $flag, array $values): bool
     {
         return $flag instanceof Closure ? (bool) $flag($values) : $flag;
@@ -219,7 +222,7 @@ abstract class Field implements Renderable
      */
     public function rule(object|string ...$rules): static
     {
-        $this->rules = [...$this->rules, ...$rules];
+        $this->rules = [...$this->rules, ...array_values($rules)];
 
         return $this;
     }

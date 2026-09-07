@@ -120,14 +120,10 @@ final class AppearancePrepaint
      */
     public static function cssFromPayload(array $payload): string
     {
-        $vars = $payload['vars'] ?? [];
+        $vars = $payload['vars'];
         $parts = [];
 
         foreach ($vars as $name => $value) {
-            if (! is_string($name) || ! is_string($value)) {
-                continue;
-            }
-
             $parts[] = $name.': '.$value.';';
         }
 

@@ -56,16 +56,22 @@
 
     .pk-shell [data-slot='dashboard-page'] [data-slot='stat-packed'] {
         border-color: color-mix(in srgb, var(--border) 88%, transparent);
-        box-shadow: 0 1px 2px rgb(0 0 0 / 0.035), 0 16px 36px -30px rgb(0 0 0 / 0.32);
+        box-shadow:
+            0 1px 2px rgb(0 0 0 / 0.035),
+            0 16px 36px -30px rgb(0 0 0 / 0.32);
     }
 
     .pk-shell [data-slot='dashboard-page'] [data-slot='stat-leftover'] {
-        box-shadow: 0 1px 2px rgb(0 0 0 / 0.035), 0 16px 36px -30px rgb(0 0 0 / 0.32);
+        box-shadow:
+            0 1px 2px rgb(0 0 0 / 0.035),
+            0 16px 36px -30px rgb(0 0 0 / 0.32);
     }
 
     .pk-shell [data-slot='dashboard-page'] [data-slot='chart-card'] {
         border-radius: calc(var(--radius) + 0.25rem);
-        box-shadow: 0 1px 2px rgb(0 0 0 / 0.035), 0 16px 36px -30px rgb(0 0 0 / 0.32);
+        box-shadow:
+            0 1px 2px rgb(0 0 0 / 0.035),
+            0 16px 36px -30px rgb(0 0 0 / 0.32);
     }
 
     .pk-shell [data-slot='dashboard-page'] [data-slot='chart-card'] > div:first-child {
@@ -99,7 +105,9 @@
 
     .pk-shell .pk-scroll [data-slot='table-row'] > * {
         height: 3.5rem;
-        transition: background-color 140ms ease, color 140ms ease;
+        transition:
+            background-color 140ms ease,
+            color 140ms ease;
     }
 
     .pk-shell .pk-scroll [data-slot='table-row']:hover > * {
@@ -139,14 +147,18 @@
         .pk-shell [data-slot='sidebar'][data-variant='inset'] [data-sidebar='sidebar'] {
             border: 1px solid color-mix(in srgb, var(--sidebar-border) 88%, transparent);
             border-radius: 1rem;
-            box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 18px 40px -32px rgb(0 0 0 / 0.4);
+            box-shadow:
+                0 1px 2px rgb(0 0 0 / 0.04),
+                0 18px 40px -32px rgb(0 0 0 / 0.4);
         }
 
         .pk-shell [data-slot='sidebar-inset'] > header {
             margin: 0.75rem 0.75rem 0;
             border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
             border-radius: 1rem;
-            box-shadow: 0 1px 2px rgb(0 0 0 / 0.035), 0 14px 30px -28px rgb(0 0 0 / 0.36);
+            box-shadow:
+                0 1px 2px rgb(0 0 0 / 0.035),
+                0 14px 30px -28px rgb(0 0 0 / 0.36);
         }
     }
 
@@ -182,7 +194,10 @@
        metric into a noisy animated tile. */
     .pk-shell [data-slot='stat-card'],
     .pk-shell [data-slot='chart-card'] {
-        transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+        transition:
+            border-color 160ms ease,
+            box-shadow 160ms ease,
+            transform 160ms ease;
     }
 
     @media (hover: hover) and (prefers-reduced-motion: no-preference) {
@@ -200,7 +215,10 @@
     }
 
     .pk-shell [data-slot='table-toolbar'] button {
-        transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease,
+        transition:
+            background-color 140ms ease,
+            border-color 140ms ease,
+            color 140ms ease,
             box-shadow 140ms ease;
     }
 
@@ -255,7 +273,10 @@
         border: 1px solid var(--input);
         border-radius: var(--radius-md);
         background: color-mix(in srgb, var(--background) 96%, var(--muted));
-        transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+        transition:
+            border-color 150ms ease,
+            box-shadow 150ms ease,
+            background-color 150ms ease;
     }
 
     .pk-control:focus-visible {
@@ -346,7 +367,10 @@
         font-weight: 600;
         text-decoration: none;
         white-space: nowrap;
-        transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease;
+        transition:
+            border-color 160ms ease,
+            color 160ms ease,
+            background-color 160ms ease;
     }
 
     .pk-marquee-item:hover {
@@ -355,16 +379,26 @@
         color: hsl(var(--foreground));
     }
 
-    .pk-marquee-slow .pk-marquee-track { animation-duration: 42s; }
-    .pk-marquee-fast .pk-marquee-track { animation-duration: 18s; }
-    .pk-marquee-reverse .pk-marquee-track { animation-direction: reverse; }
+    .pk-marquee-slow .pk-marquee-track {
+        animation-duration: 42s;
+    }
+    .pk-marquee-fast .pk-marquee-track {
+        animation-duration: 18s;
+    }
+    .pk-marquee-reverse .pk-marquee-track {
+        animation-direction: reverse;
+    }
 
     @keyframes pk-marquee {
-        to { transform: translateX(-50%); }
+        to {
+            transform: translateX(-50%);
+        }
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .pk-marquee-track { animation: none; }
+        .pk-marquee-track {
+            animation: none;
+        }
     }
 
     /* Inertia's progress bar handles the route; this gives it the same quiet,
@@ -385,7 +419,9 @@
     }
 
     #nprogress .peg {
-        box-shadow: 0 0 8px var(--primary), 0 0 4px var(--primary);
+        box-shadow:
+            0 0 8px var(--primary),
+            0 0 4px var(--primary);
         display: block;
         height: 100%;
         opacity: 0.9;

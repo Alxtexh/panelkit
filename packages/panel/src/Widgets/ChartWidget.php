@@ -85,8 +85,6 @@ final class ChartWidget
 
     private ?string $ability = null;
 
-    private ?Closure $format = null;
-
     private ?int $ttl = null;
 
     /** @var list<class-string> */
@@ -95,7 +93,7 @@ final class ChartWidget
     /** @var list<array{max: int|float, color: string}> */
     private array $thresholds = [];
 
-    private int|float|null $maxValue = null;
+    private ?int $maxValue = null;
 
     private function __construct(public readonly string $key, private readonly string $label) {}
 
@@ -136,7 +134,7 @@ final class ChartWidget
      * ?['value' => int|float, 'total' => ?int|float, 'tone' => ?string]]`. `status`
      * is a stored word (`paid`, `vacant`); `tone` overrides the built-in map.
      *
-     * @param  Closure(Period): (array{points: list<array{label: string, value: int|float}>}|array{rows: list<array<string, mixed>>}|array{items: list<array<string, mixed>>}|list<array{label: string, value: int|float}>)  $data
+     * @param  Closure  $data
      */
     public function data(Closure $data): self
     {
@@ -148,7 +146,7 @@ final class ChartWidget
     /**
      * The comparison against the preceding window.
      *
-     * @param  Closure(Period): Trend  $trend
+     * @param  Closure  $trend
      */
     public function trend(Closure $trend): self
     {
@@ -224,7 +222,6 @@ final class ChartWidget
         return $this;
     }
 
-    /** @return array<string, mixed> The structure. Never runs a query. */
     /**
      * An ability required to SEE this widget at all, or null for everyone.
      *
@@ -272,6 +269,7 @@ final class ChartWidget
         return Ability::allows($user, $this->ability);
     }
 
+    /** @return array<string, mixed> The structure. Never runs a query. */
     public function toArray(): array
     {
         return [

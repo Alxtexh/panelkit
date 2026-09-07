@@ -44,11 +44,7 @@ final class EmailTwoFactor
             return false;
         }
 
-        try {
-            return ($user->email_two_factor_confirmed_at ?? null) !== null;
-        } catch (QueryException) {
-            return false;
-        }
+        return ($user->email_two_factor_confirmed_at ?? null) !== null;
     }
 
     public static function enable(Authenticatable $user): void

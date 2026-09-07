@@ -358,7 +358,9 @@ function remove() {
             description="The file will be moved to Trash and can be restored according to your retention policy."
             @close="pendingDeleteId = null"
         >
-            <p class="text-sm">Move file <strong>#{{ pendingDeleteId }}</strong> to Trash?</p>
+            <p class="text-sm">
+                Move file <strong>#{{ pendingDeleteId }}</strong> to Trash?
+            </p>
             <template #footer>
                 <Button variant="outline" @click="pendingDeleteId = null">Cancel</Button>
                 <Button variant="destructive" @click="remove">Move to Trash</Button>

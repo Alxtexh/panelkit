@@ -74,10 +74,7 @@ export function packWidgetColumns<T extends { span?: ResponsiveSpan }>(
         // conspicuous blank half beside it. Once there are two items, the
         // normal independent tracks are retained so collapsing one still
         // cannot stretch or leave a shared-grid hole in the other.
-        const columns: T[][] = Array.from(
-            { length: Math.min(count, pending.length) },
-            () => [],
-        )
+        const columns: T[][] = Array.from({ length: Math.min(count, pending.length) }, () => [])
 
         pending.forEach((item, index) => {
             columns[index % count].push(item)

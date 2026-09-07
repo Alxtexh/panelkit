@@ -65,7 +65,7 @@ final class RoleController extends Controller
                     'grantsAll' => $role->grantsEverything(),
                     'isProtected' => $index === 0,
                     'permissions' => $role->permissions->pluck('name')->all(),
-                    'userCount' => (int) $role->user_count,
+                    'userCount' => (int) $role->getAttribute('user_count'),
                 ])->values(),
 
             /*

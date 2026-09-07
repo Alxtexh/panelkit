@@ -1,0 +1,1 @@
+import{Rt as e,V as t,j as n,tt as r,z as i}from"./api-docs-BN78F1L2.js";import{E as a}from"./inertia-bklNUjKi.js";import{t as o}from"./app-Qi9lu1_B.js";var s=i({layout:o,inheritAttrs:!1,__name:`DocumentPrint`,setup(i){return(i,o)=>(r(),n(a,e(t(i.$attrs)),null,16))}});export{s as default};

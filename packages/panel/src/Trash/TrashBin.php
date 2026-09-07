@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Trash;
 
-use Illuminate\Contracts\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Carbon;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Support\PanelSettings;
 use Alxtexh\Panel\Tables\Cursor;
+use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Carbon;
 
 /**
  * Everything this person has deleted, across every resource, in one place.
@@ -69,7 +70,12 @@ final class TrashBin
                 continue;
             }
 
-            $total = $class::model()::query()->onlyTrashed()->count();
+            $deletedAt = $this->deletedColumn($class::model());
+
+            $total = $class::model()::query()
+                ->withoutGlobalScope(SoftDeletingScope::class)
+                ->whereNotNull($deletedAt)
+                ->count();
 
             if ($total === 0) {
                 continue;
@@ -119,7 +125,9 @@ final class TrashBin
         $deletedAt = $this->deletedColumn($model);
         $key = (new $model)->getKeyName();
 
-        $query = $model::query()->onlyTrashed()
+        $query = $model::query()
+            ->withoutGlobalScope(SoftDeletingScope::class)
+            ->whereNotNull($deletedAt)
             // Most recently deleted first: the thing somebody is looking for
             // is almost always the thing they just removed.
             ->orderByDesc($deletedAt)
@@ -146,9 +154,9 @@ final class TrashBin
         $last = $page->last();
 
         return [
-            'records' => $page->map(
+            'records' => array_values($page->map(
                 fn (Model $record): array => $this->describe($class, $record)
-            )->values()->all(),
+            )->all()),
             'nextCursor' => $hasMore && $last !== null
                 ? Cursor::encode((string) $last->{$deletedAt}, (int) $last->getKey())
                 : null,
@@ -206,13 +214,27 @@ final class TrashBin
     }
 
     /**
+     * Resolve a resource model's soft-delete column for a companion write.
+     *
+     * Controllers must use the same model metadata as the bin reader. Keeping
+     * this lookup here avoids assuming the conventional `deleted_at` name
+     * when a consumer has customised the model's soft-delete column.
+     *
+     * @param class-string<Model> $model
+     */
+    public function deletedColumnFor(string $model): string
+    {
+        return $this->deletedColumn($model);
+    }
+
+    /**
      * Resources whose records can be in the bin at all.
      *
      * A RESOURCE WITHOUT SOFT DELETES IS NOT AN ERROR AND NOT SHOWN. Deleting
      * there is immediate and always was; listing an empty section for it would
      * suggest a recovery that does not exist.
      *
-     * @return array<string, class-string<resource>>
+     * @return array<string, class-string<\Alxtexh\Panel\Resources\Resource>>
      */
     public function resources(?string $panelId = null): array
     {
@@ -288,7 +310,10 @@ final class TrashBin
         return max(self::MINIMUM_DAYS, min(self::MAXIMUM_DAYS, (int) $configured));
     }
 
-    /** @param  class-string<resource>  $class */
+    /**
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
+     * @return array{id: int|string, title: string, deletedAt: string, purgesAt: string, canRestore: bool, canForceDelete: bool}
+     */
     private function describe(string $class, Model $record): array
     {
         return [
@@ -314,7 +339,7 @@ final class TrashBin
      * when scanning the list. Falling back to the key means a record with an
      * empty first column is still actionable rather than a blank line.
      *
-     * @param  class-string<resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      */
     private function titleFor(string $class, Model $record): string
     {

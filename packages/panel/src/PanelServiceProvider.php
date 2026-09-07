@@ -8,6 +8,7 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Contracts\Events\Dispatcher as EventsDispatcher;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Gate;
@@ -279,7 +280,7 @@ final class PanelServiceProvider extends ServiceProvider
         $this->loadGeneratedAuthRoutes();
         $this->redirectGuestsToTheirPanel();
 
-        $this->app['router']->aliasMiddleware(
+        $this->app->make(\Illuminate\Routing\Router::class)->aliasMiddleware(
             'panel.module',
             Http\Middleware\EnsureModule::class,
         );
@@ -326,9 +327,7 @@ final class PanelServiceProvider extends ServiceProvider
     {
         $class = Http\Middleware\SharePanelProps::class;
         $kernel = $this->app->make(Kernel::class);
-        $groups = method_exists($kernel, 'getMiddlewareGroups')
-            ? $kernel->getMiddlewareGroups()
-            : $this->app['router']->getMiddlewareGroups();
+        $groups = $kernel->getMiddlewareGroups();
 
         if (in_array($class, $groups['web'] ?? [], true)) {
             return;
@@ -340,7 +339,7 @@ final class PanelServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->app['router']->pushMiddlewareToGroup('web', $class);
+        $this->app->make(\Illuminate\Routing\Router::class)->pushMiddlewareToGroup('web', $class);
     }
 
     /**
@@ -354,9 +353,7 @@ final class PanelServiceProvider extends ServiceProvider
     {
         $class = Http\Middleware\VerifyTurnstile::class;
         $kernel = $this->app->make(Kernel::class);
-        $groups = method_exists($kernel, 'getMiddlewareGroups')
-            ? $kernel->getMiddlewareGroups()
-            : $this->app['router']->getMiddlewareGroups();
+        $groups = $kernel->getMiddlewareGroups();
 
         if (in_array($class, $groups['web'] ?? [], true)) {
             return;
@@ -368,7 +365,7 @@ final class PanelServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->app['router']->pushMiddlewareToGroup('web', $class);
+        $this->app->make(\Illuminate\Routing\Router::class)->pushMiddlewareToGroup('web', $class);
     }
 
     /**
@@ -412,7 +409,7 @@ final class PanelServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->app['events']->listen(
+        $this->app->make(EventsDispatcher::class)->listen(
             Login::class,
             Auth\EnforceSessionLimit::class,
         );
@@ -426,7 +423,7 @@ final class PanelServiceProvider extends ServiceProvider
          * see the listener, where that restraint is the reason the channel
          * stays worth having.
          */
-        $this->app['events']->listen(
+        $this->app->make(EventsDispatcher::class)->listen(
             Events\TicketOpened::class,
             Listeners\AnnounceNewTicket::class,
         );

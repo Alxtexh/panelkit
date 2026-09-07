@@ -42,19 +42,23 @@ final class PlanCatalogPage extends BasePlanCatalogPage
 
     public static function plans(Request $request): array
     {
-        return Plan::query()
+        $plans = [];
+
+        foreach (Plan::query()
             ->where('is_active', true)
             ->selectRaw('MIN(id) as id, speed_mbps, price_cents')
             ->groupBy('speed_mbps', 'price_cents')
             ->orderBy('price_cents')
-            ->get()
-            ->map(static fn (Plan $plan): array => [
+            ->get() as $plan) {
+            $plans[] = [
                 'id' => (string) $plan->id,
                 'name' => "{$plan->speed_mbps} Mbps",
                 'price' => $plan->price_cents / 100,
                 'priceFormatted' => 'KES '.number_format($plan->price_cents / 100, 2),
                 'interval' => 'month',
-            ])
-            ->all();
+            ];
+        }
+
+        return $plans;
     }
 }

@@ -190,11 +190,11 @@ final class DatabaseInspector
                 'mysql', 'mariadb' => (int) (DB::connection($connection)->selectOne(
                     'select data_length + index_length as size from information_schema.tables where table_schema = database() and table_name = ?',
                     [$table],
-                )?->size ?? 0) ?: 0,
+                )->size ?? 0) ?: 0,
                 'pgsql' => (int) (DB::connection($connection)->selectOne(
                     'select pg_total_relation_size(?::regclass) as size',
                     [$table],
-                )?->size ?? 0) ?: 0,
+                )->size ?? 0) ?: 0,
                 default => null,
             };
         } catch (Throwable) {
@@ -209,10 +209,10 @@ final class DatabaseInspector
                 'sqlite' => $this->sqliteBytes($connection),
                 'mysql', 'mariadb' => (int) (DB::connection($connection)->selectOne(
                     'select sum(data_length + index_length) as size from information_schema.tables where table_schema = database()'
-                )?->size ?? 0) ?: null,
+                )->size ?? 0) ?: null,
                 'pgsql' => (int) (DB::connection($connection)->selectOne(
                     'select pg_database_size(current_database()) as size'
-                )?->size ?? 0) ?: null,
+                )->size ?? 0) ?: null,
                 default => null,
             };
         } catch (Throwable) {
@@ -224,7 +224,7 @@ final class DatabaseInspector
     {
         $path = DB::connection($connection)->getDatabaseName();
 
-        if (! is_string($path) || ! is_file($path)) {
+        if (! is_file($path)) {
             return null;
         }
 

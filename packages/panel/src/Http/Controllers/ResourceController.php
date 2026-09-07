@@ -4,6 +4,21 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers;
 
+use Alxtexh\Panel\CustomFields\CustomField;
+use Alxtexh\Panel\CustomFields\CustomFieldFactory;
+use Alxtexh\Panel\CustomFields\CustomFieldStorage;
+use Alxtexh\Panel\Forms\DraftStore;
+use Alxtexh\Panel\Forms\Fields\Field;
+use Alxtexh\Panel\Forms\Fields\SelectField;
+use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Http\NestedContext;
+use Alxtexh\Panel\Http\NestedRelation;
+use Alxtexh\Panel\Live\LiveConfig;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Widgets;
+use Alxtexh\Panel\Workflow\WorkflowHistory;
+use Alxtexh\Panel\Workflow\WorkflowOverride;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -11,23 +26,9 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use Alxtexh\Panel\CustomFields\CustomField;
-use Alxtexh\Panel\CustomFields\CustomFieldFactory;
-use Alxtexh\Panel\CustomFields\CustomFieldStorage;
-use Alxtexh\Panel\Forms\Form;
-use Alxtexh\Panel\Forms\DraftStore;
-use Alxtexh\Panel\Forms\Fields\Field;
-use Alxtexh\Panel\Widgets;
-use Alxtexh\Panel\Forms\Fields\SelectField;
-use Alxtexh\Panel\Http\NestedContext;
-use Alxtexh\Panel\Http\NestedRelation;
-use Alxtexh\Panel\Live\LiveConfig;
-use Alxtexh\Panel\PanelManager;
-use Alxtexh\Panel\Resources\Resource;
-use Alxtexh\Panel\Workflow\WorkflowHistory;
-use Alxtexh\Panel\Workflow\WorkflowOverride;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -176,7 +177,7 @@ final class ResourceController extends Controller
             return response()->json(['draft' => null]);
         }
 
-        $current = $record?->updated_at?->toIso8601String();
+        $current = $this->updatedAt($record);
 
         return response()->json([
             'draft' => $draft,
@@ -210,7 +211,7 @@ final class ResourceController extends Controller
         $record = $this->draftRecord($request, $class, $id);
 
         abort_unless($record === null ? $class::can('create') : $class::can('update', $record), 403);
-        $current = $record?->updated_at?->toIso8601String();
+        $current = $this->updatedAt($record);
 
         if ($record !== null && $validated['version'] !== $current) {
             return response()->json(['message' => 'The record changed since this draft began.', 'currentVersion' => $current], 409);
@@ -227,12 +228,19 @@ final class ResourceController extends Controller
         return response()->json(['ok' => true, 'version' => $current, 'savedAt' => now()->toIso8601String()]);
     }
 
+    /**
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
+     */
     private function draftRecord(Request $request, string $class, mixed $id): ?Model
     {
         if ($id === null || $id === '') {
             NestedContext::parent($request, $class);
 
             return null;
+        }
+
+        if (! is_int($id) && ! is_string($id)) {
+            throw new NotFoundHttpException('The draft record identifier is invalid.');
         }
 
         $query = $class::model()::query();
@@ -349,7 +357,7 @@ final class ResourceController extends Controller
     }
 
     /**
-     * @param  class-string<resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      */
     private function tableSelectField(string $class, string $field): SelectField
     {
@@ -363,7 +371,7 @@ final class ResourceController extends Controller
     }
 
     /**
-     * @param  class-string<resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      */
     private function safeReturnUrl(Request $request, string $class): string
     {
@@ -383,7 +391,7 @@ final class ResourceController extends Controller
     }
 
     /**
-     * @param  class-string<resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      */
     private function pickerChooseBase(Request $request, string $class, string $field): string
     {
@@ -399,7 +407,7 @@ final class ResourceController extends Controller
     }
 
     /**
-     * @param  class-string<resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      * @return list<array{title: string, href: string}>
      */
     private function formTrail(Request $request, string $class): array
@@ -620,8 +628,8 @@ final class ResourceController extends Controller
             // Same filter contract as ResourceIndex: search + filter keys on
             // the query string, options and chips on the payload so the
             // relation TableShell can reuse TableToolbar without a second trip.
-            'search' => $result->state['search'] ?? '',
-            'filters' => $result->state['filters'] ?? [],
+            'search' => $result->state['search'],
+            'filters' => $result->state['filters'],
             'filterOptions' => $manager->definition()->resolveFilterOptions(),
             'indicators' => $result->indicators,
         ]);
@@ -709,7 +717,7 @@ final class ResourceController extends Controller
                 ...$this->customFieldValues($class::key(), $record),
                 // Carried so a stale save is rejected rather than silently
                 // overwriting another admin (addendum C).
-                '_updated_at' => $record->updated_at?->toIso8601String(),
+                '_updated_at' => $this->updatedAt($record),
             ],
             'formOptions' => $form->resolveOptions(),
             'breadcrumbs' => $parent === null
@@ -782,7 +790,7 @@ final class ResourceController extends Controller
     }
 
     /**
-     * @param  class-string<resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      * @return array<string, mixed>
      */
     private function modalFormPayload(string $class, ?Model $record): array
@@ -799,7 +807,7 @@ final class ResourceController extends Controller
                 : [
                     ...$form->valuesFor($record),
                     ...$this->customFieldValues($class::key(), $record),
-                    '_updated_at' => $record->updated_at?->toIso8601String(),
+                    '_updated_at' => $this->updatedAt($record),
                 ],
             'formOptions' => $form->resolveOptions(),
         ];
@@ -819,7 +827,7 @@ final class ResourceController extends Controller
      * button; hiding is not enforcement (the write path re-authorizes), but
      * offering a control that can only 403 teaches people the panel lies.
      *
-     * @param  class-string<resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      * @return array{resource: string, labelPlural: string, types: list<string>, endpoint: string}|null
      */
     /**
@@ -835,7 +843,7 @@ final class ResourceController extends Controller
      * ORDER IS DELIBERATE: the record form wins a shared key, which keeps the
      * answer identical to what it was before actions could ask.
      *
-     * @param  class-string  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      * @return list<Field>
      */
     private function searchableFields(string $class): array
@@ -856,7 +864,7 @@ final class ResourceController extends Controller
     /**
      * Shared `{ options, schema, values }` body for live() and affix POST.
      *
-     * @param  class-string<Resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      * @param  array<string, mixed>  $values
      * @return array{options: array<string, mixed>, schema: array<string, mixed>, values: array<string, mixed>}
      */
@@ -879,6 +887,7 @@ final class ResourceController extends Controller
         ];
     }
 
+    /** @return array{resource: string, label: string, types: list<string>, endpoint: string}|null */
     private function customFieldSupport(string $class): ?array
     {
         if (! in_array($class::key(), CustomFieldStorage::resources(), true)) {
@@ -930,7 +939,6 @@ final class ResourceController extends Controller
             ->all();
     }
 
-    /** @return list<array{title: string, href: string}> */
     /**
      * THE CRUMB BACK TO THE LIST, in the panel this screen belongs to.
      *
@@ -939,6 +947,8 @@ final class ResourceController extends Controller
      * Assembling `'/'.$class::key()` here was correct in one portal and wrong
      * in every other - a breadcrumb that navigates out of the portal you are
      * standing in.
+     *
+     * @return list<array{title: string, href: string}>
      */
     private function trail(string $class, string $leaf): array
     {
@@ -948,7 +958,17 @@ final class ResourceController extends Controller
         ];
     }
 
-    /** @return class-string<resource> */
+    /** Return the model version used by the draft conflict contract. */
+    private function updatedAt(?Model $record): ?string
+    {
+        $updatedAt = $record?->getAttribute('updated_at');
+
+        return $updatedAt instanceof \DateTimeInterface
+            ? $updatedAt->format(DATE_ATOM)
+            : null;
+    }
+
+    /** @return class-string<\Alxtexh\Panel\Resources\Resource> */
     private function guard(string $resource): string
     {
         $class = app(PanelManager::class)->resource($resource);
@@ -972,7 +992,7 @@ final class ResourceController extends Controller
      * HasMany compares the foreign key. BelongsToMany checks the pivot.
      * A miss is a 404, never a 403: confirming the row exists would leak.
      *
-     * @param  class-string<resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      */
     private static function childBelongs(string $class, Model $parent, Model $record): bool
     {
@@ -1001,7 +1021,7 @@ final class ResourceController extends Controller
 
         abort_unless($class::can('viewAny'), 403);
 
-        /** @var class-string<resource> $class */
+        /** @var class-string<\Alxtexh\Panel\Resources\Resource> $class */
         // Built ONCE and reused for both the query and the option lists.
         $definition = $class::definition();
 
@@ -1429,14 +1449,14 @@ final class ResourceController extends Controller
 
         foreach ($validated['transitions'] as $index => $t) {
             if (! in_array($t['to'], $stateKeys, true)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     "transitions.{$index}.to" => "Transition target \"{$t['to']}\" is not a declared state.",
                 ]);
             }
 
             foreach ($t['from'] as $fromIndex => $from) {
                 if (! in_array($from, $stateKeys, true)) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
+                    throw ValidationException::withMessages([
                         "transitions.{$index}.from.{$fromIndex}" => "Transition source \"{$from}\" is not a declared state.",
                     ]);
                 }
@@ -1522,7 +1542,7 @@ final class ResourceController extends Controller
     }
 
     /**
-     * @param  class-string<Resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      * @param  array<string, mixed>  $row
      * @return array<string, mixed>|null
      */
@@ -1554,7 +1574,7 @@ final class ResourceController extends Controller
     }
 
     /**
-     * @param  class-string<Resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      * @return array<string, mixed>|null
      */
     private static function commentsContext(string $class, Model $record, Request $request): ?array

@@ -103,7 +103,9 @@ final class Tenants
         $model = self::model();
         $key = $request->user()?->{self::column()} ?? null;
 
-        $tenant = $model === null || $key === null ? null : $model::query()->find($key);
+        $tenant = $model === null || $key === null
+            ? null
+            : $model::query()->whereKey($key)->first();
 
         $memo['tenant'] = $tenant;
 
@@ -189,7 +191,12 @@ final class Tenants
             $query->orderBy('name');
         }
 
-        return $query->get()->all();
+        $rows = [];
+        foreach ($query->get() as $tenant) {
+            $rows[] = $tenant;
+        }
+
+        return $rows;
     }
 
     public static function find(string|int $id): ?Model

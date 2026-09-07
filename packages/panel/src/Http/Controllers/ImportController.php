@@ -11,12 +11,12 @@ use Alxtexh\Panel\Imports\ImportRetry;
 use Alxtexh\Panel\Imports\RowsReader;
 use Alxtexh\Panel\Jobs\ImportRecords;
 use Alxtexh\Panel\PanelManager;
-use Alxtexh\Panel\Resources\Resource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -200,7 +200,7 @@ final class ImportController extends Controller
         ]);
     }
 
-    /** @return class-string<resource> */
+    /** @return class-string<\Alxtexh\Panel\Resources\Resource> */
     private function guard(string $resource): string
     {
         $class = app(PanelManager::class)->resource($resource);
@@ -215,7 +215,7 @@ final class ImportController extends Controller
         return $class;
     }
 
-    /** @param  class-string<resource>  $class */
+    /** @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class */
     private function uploadedPath(Request $request, string $class): string
     {
         $file = $request->file('file');
@@ -235,7 +235,7 @@ final class ImportController extends Controller
         if (in_array($extension, RowsReader::EXCEL, true)) {
             abort_unless($class::excelImport(), 422, 'This resource imports CSV only. Call excelImport() and require phpoffice/phpspreadsheet to accept Excel.');
             abort_unless(
-                class_exists(\PhpOffice\PhpSpreadsheet\IOFactory::class),
+                class_exists(IOFactory::class),
                 422,
                 'Excel import needs phpoffice/phpspreadsheet. composer require phpoffice/phpspreadsheet',
             );

@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Alxtexh\Panel\Actions\BulkAction;
 use Alxtexh\Panel\Actions\BulkRunner;
 use Alxtexh\Panel\Actions\ExportedFile;
@@ -17,6 +12,11 @@ use Alxtexh\Panel\Jobs\ExportRecords;
 use Alxtexh\Panel\Jobs\RunBulkAction;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -401,7 +401,7 @@ final class BulkController extends Controller
         return hash('sha256', json_encode($normalize($payload), JSON_THROW_ON_ERROR));
     }
 
-    /** @return class-string<resource> */
+    /** @return class-string<\Alxtexh\Panel\Resources\Resource> */
     /**
      * Where this export will be downloadable from, including the portal prefix.
      *

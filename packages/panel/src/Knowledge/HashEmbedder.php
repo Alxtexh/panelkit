@@ -87,7 +87,7 @@ final class HashEmbedder implements Embedder
             $vector[$bucket] += 1.0;
         }
 
-        return $vector;
+        return array_values($vector);
     }
 
     /**

@@ -53,7 +53,7 @@ final class AnnouncementResource extends Resource
         return 'mail';
     }
 
-    public static function group(): ?string
+    public static function group(): string
     {
         return 'Apps';
     }

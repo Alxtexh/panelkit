@@ -4,33 +4,34 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers;
 
+use Alxtexh\Panel\Actions\RecordAction;
+use Alxtexh\Panel\CustomFields\CustomField;
+use Alxtexh\Panel\CustomFields\CustomFieldFactory;
+use Alxtexh\Panel\Forms\Fields\RepeaterField;
+use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Http\NestedContext;
+use Alxtexh\Panel\Http\NestedRelation;
+use Alxtexh\Panel\Http\Requests\RecordFormRequest;
+use Alxtexh\Panel\Models\Scopes\TenantScope;
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Support\TenantContext;
+use Alxtexh\Panel\Support\Transaction;
+use Alxtexh\Panel\Tables\Columns\InlineWritableColumn;
+use Alxtexh\Panel\Tables\Reorderer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Schema;
-use Alxtexh\Panel\Models\Scopes\TenantScope;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
-use Alxtexh\Panel\Actions\RecordAction;
-use Alxtexh\Panel\CustomFields\CustomField;
-use Alxtexh\Panel\CustomFields\CustomFieldFactory;
-use Alxtexh\Panel\Http\NestedContext;
-use Alxtexh\Panel\Http\NestedRelation;
-use Alxtexh\Panel\Forms\Form;
-use Alxtexh\Panel\Forms\Fields\RepeaterField;
-use Alxtexh\Panel\Http\Requests\RecordFormRequest;
-use Alxtexh\Panel\PanelManager;
-use Alxtexh\Panel\Resources\Resource;
-use Alxtexh\Panel\Support\Transaction;
-use Alxtexh\Panel\Support\TenantContext;
-use Alxtexh\Panel\Tables\Columns\InlineWritableColumn;
-use Alxtexh\Panel\Tables\Reorderer;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -255,10 +256,6 @@ final class RecordController extends Controller
                 'recordId' => (string) $record->getKey(),
                 'actionKey' => $action->key,
                 'validatedUntil' => -1,
-                /**
-                 * @var array<int, array<string, mixed>>
-                 * Keys are wizard step indexes.
-                 */
                 'valuesByStep' => [],
             ];
         } else {
@@ -419,7 +416,7 @@ final class RecordController extends Controller
      * resource declares no pivot columns, so the request body's `pivot` key
      * is never even read in the common case.
      *
-     * @param  class-string<Resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      * @return array<string, mixed>
      */
     private function attachPivotInput(Request $request, string $class): array
@@ -631,7 +628,7 @@ final class RecordController extends Controller
             'value' => $value,
             // Echoed so the row's staleness guard stays armed for the next edit
             // without a full reload.
-            'updated_at' => $record->updated_at?->toIso8601String(),
+            'updated_at' => $this->updatedAt($record),
         ]);
     }
 
@@ -675,7 +672,7 @@ final class RecordController extends Controller
             'id' => $record->getKey(),
             'column' => $board->column(),
             'value' => $validated['column'],
-            'updated_at' => $record->updated_at?->toIso8601String(),
+            'updated_at' => $this->updatedAt($record),
         ]);
     }
 
@@ -715,7 +712,9 @@ final class RecordController extends Controller
         // without letting them resurrect one.
         abort_unless($class::can('restore', $record), 403);
 
-        Transaction::run(static fn () => $record->restore());
+        Transaction::run(static function () use ($record): void {
+            $record->restore();
+        });
 
         return back()->with('success', $class::label().' restored.');
     }
@@ -766,6 +765,9 @@ final class RecordController extends Controller
      * parent they may. The tenant scope still applied, so it is horizontal
      * movement inside one tenant - against `forceDelete`, which is permanent.
      */
+    /**
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
+     */
     private function findTrashed(string $class, string $id): Model
     {
         $model = $class::model();
@@ -776,7 +778,7 @@ final class RecordController extends Controller
             "Resource [{$class::key()}] does not support soft deletes.",
         );
 
-        $query = $model::query()->withTrashed();
+        $query = $model::query()->withoutGlobalScope(SoftDeletingScope::class);
 
         $parent = NestedContext::parent(request(), $class);
 
@@ -799,11 +801,13 @@ final class RecordController extends Controller
     {
         $submitted = $request->input('_updated_at');
 
-        if ($submitted === null || $record->updated_at === null) {
+        $updatedAt = $record->getAttribute('updated_at');
+
+        if ($submitted === null || ! $updatedAt instanceof \DateTimeInterface) {
             return;
         }
 
-        if ($record->updated_at->toIso8601String() === $submitted) {
+        if ($updatedAt->format(DATE_ATOM) === $submitted) {
             return;
         }
 
@@ -811,6 +815,22 @@ final class RecordController extends Controller
             '_conflict' => 'This record was changed by someone else while you were editing. '
                 .'Reload to see the current values, or save again to overwrite them.',
         ]);
+    }
+
+    /**
+     * Return the canonical timestamp used by optimistic concurrency responses.
+     *
+     * Eloquent models expose attributes dynamically, so this deliberately uses
+     * the model's attribute API instead of asking static analysis to assume
+     * every model has a concrete `updated_at` property.
+     */
+    private function updatedAt(Model $record): ?string
+    {
+        $updatedAt = $record->getAttribute('updated_at');
+
+        return $updatedAt instanceof \DateTimeInterface
+            ? $updatedAt->format(DATE_ATOM)
+            : null;
     }
 
     private function applyTenant(Model $record): void
@@ -962,6 +982,7 @@ final class RecordController extends Controller
      * outside this parent. The parent policy already authorizes the form write;
      * the repeater's child schema is the mass-assignment allowlist.
      *
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      * @param  array<string, mixed>  $validated
      */
     private function syncRelationshipRepeaters(string $class, Model $record, array $validated): void
@@ -1022,7 +1043,6 @@ final class RecordController extends Controller
         }
     }
 
-    /** @return class-string<resource> */
     /**
      * `isEnabled()` TOO, WHICH THIS ALONE USED TO OMIT.
      *
@@ -1037,6 +1057,8 @@ final class RecordController extends Controller
      * routes. Hiding the link alone is not a control." The route constraint
      * cannot cover it - `whereIn('resource', $keys)` is per PANEL, and a
      * feature flag is per TENANT.
+     *
+     * @return class-string<\Alxtexh\Panel\Resources\Resource>
      */
     private function resolve(string $resource): string
     {
@@ -1055,7 +1077,7 @@ final class RecordController extends Controller
      * The tenant global scope makes this a 404 for another tenant's record,
      * which is the correct answer - confirming existence would itself leak.
      *
-     * @param  class-string<resource>  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      */
     private function findScoped(string $class, string $id): Model
     {

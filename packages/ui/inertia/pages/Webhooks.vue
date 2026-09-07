@@ -340,7 +340,12 @@ function statusLabel(row: DeliveryRow): string {
                         <Button type="button" variant="ghost" size="sm" @click="openEdit(row)">
                             Edit
                         </Button>
-                        <Button type="button" variant="ghost" size="sm" @click="requestRemove(row.id)">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            @click="requestRemove(row.id)"
+                        >
                             Delete
                         </Button>
                     </div>
@@ -425,7 +430,10 @@ function statusLabel(row: DeliveryRow): string {
             description="Future deliveries will stop for this endpoint."
             @close="pendingDeleteId = null"
         >
-            <p class="text-sm">Delete endpoint <strong>#{{ pendingDeleteId }}</strong>?</p>
+            <p class="text-sm">
+                Delete endpoint <strong>#{{ pendingDeleteId }}</strong
+                >?
+            </p>
             <template #footer>
                 <Button variant="outline" @click="pendingDeleteId = null">Cancel</Button>
                 <Button variant="destructive" @click="remove">Delete endpoint</Button>

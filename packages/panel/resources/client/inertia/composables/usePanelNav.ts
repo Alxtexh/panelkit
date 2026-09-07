@@ -34,6 +34,7 @@ interface NavPayload {
     href: string
     icon: string
     group: string | null
+    external?: boolean
 }
 
 export interface NavGroup {
@@ -103,6 +104,7 @@ export function usePanelNav() {
                 title: item.title,
                 href: item.href,
                 icon: resolvePanelIcon(item.icon),
+                external: item.external,
             }
 
             // Ungrouped resources stay at the top level rather than landing in a

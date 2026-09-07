@@ -4,14 +4,6 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Resources;
 
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Expression;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Route;
 use Alxtexh\Panel\Actions\Action;
 use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Comments\Comments;
@@ -24,6 +16,7 @@ use Alxtexh\Panel\Http\NestedRelation;
 use Alxtexh\Panel\Infolists\Entry;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Schema\Component;
+use Alxtexh\Panel\Schema\Renderable;
 use Alxtexh\Panel\Support\Abilities;
 use Alxtexh\Panel\Support\SchemaCache;
 use Alxtexh\Panel\Support\TenantContext;
@@ -31,8 +24,21 @@ use Alxtexh\Panel\Tables\Columns\Column;
 use Alxtexh\Panel\Tables\Columns\InlineWritableColumn;
 use Alxtexh\Panel\Tables\ListResult;
 use Alxtexh\Panel\Tables\Table;
+use Illuminate\Contracts\Database\Query\Expression as QueryExpression;
+use Alxtexh\Panel\Widgets\ChartWidget;
+use Alxtexh\Panel\Widgets\StatWidget;
+use Alxtexh\Panel\Widgets\TableWidget;
 use Alxtexh\Panel\Workflow\Workflow;
 use Alxtexh\Panel\Workflow\WorkflowOverride;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Expression;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 /**
  * A panel resource. One subclass per screen, and no Vue at all.
@@ -52,7 +58,7 @@ use Alxtexh\Panel\Workflow\WorkflowOverride;
  */
 abstract class Resource
 {
-    /** @var class-string */
+    /** @var class-string<Model> */
     protected static string $model;
 
     protected static string $icon = 'list';
@@ -93,7 +99,7 @@ abstract class Resource
      * rows whose foreign key points at that record. Creation stamps the key
      * from the URL, never from the form body.
      *
-     * @var class-string<resource>|null
+     * @var class-string<\Alxtexh\Panel\Resources\Resource>|null
      */
     protected static ?string $parent = null;
 
@@ -231,12 +237,14 @@ abstract class Resource
             return $base;
         }
 
+        $model = $base->getModel();
+
         return Workflow::fromStored([
             'column' => $base->column(),
             'group_label' => $override->group_label ?? $base->groupLabel(),
             'states' => $override->states,
             'transitions' => $override->transitions,
-        ], $base->getModel());
+        ], is_subclass_of($model, Model::class) ? $model : null);
     }
 
     /** Optional write form. A resource without one is read-only. */
@@ -294,7 +302,7 @@ abstract class Resource
      * `RepeatableEntry`, `BadgeEntry`, `DateTimeEntry`, `MoneyEntry`,
      * `ViewEntry`). Empty means the view falls back to table columns.
      *
-     * @return list<Component|\Alxtexh\Panel\Schema\Renderable>
+     * @return list<Component|Renderable>
      */
     public static function infolist(): array
     {
@@ -397,7 +405,7 @@ abstract class Resource
         return false;
     }
 
-    public static function importForm(): \Alxtexh\Panel\Forms\Form
+    public static function importForm(): Form
     {
         $importer = static::importable();
 
@@ -505,7 +513,7 @@ abstract class Resource
                 && static::isWritable()
                 && static::can('create'),
             'excelImport' => static::excelImport()
-                && class_exists(\PhpOffice\PhpSpreadsheet\IOFactory::class),
+                && class_exists(IOFactory::class),
         ];
     }
 
@@ -582,7 +590,7 @@ abstract class Resource
      * subtly different on a second surface is how a panel leaks a number here
      * that it correctly withholds there.
      *
-     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget|\Alxtexh\Panel\Widgets\TableWidget>
+     * @return list<StatWidget|ChartWidget|TableWidget>
      */
     /**
      * Stat strip above this resource's index. Deferred through `WidgetSet`.
@@ -590,7 +598,7 @@ abstract class Resource
      * Prefer this over `headerWidgets()` on new resources. When empty, the
      * controller falls back to `headerWidgets()` for backwards compatibility.
      *
-     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget|\Alxtexh\Panel\Widgets\TableWidget>
+     * @return list<StatWidget|ChartWidget|TableWidget>
      */
     public static function indexMetrics(): array
     {
@@ -598,7 +606,7 @@ abstract class Resource
     }
 
     /**
-     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget|\Alxtexh\Panel\Widgets\TableWidget>
+     * @return list<StatWidget|ChartWidget|TableWidget>
      */
     public static function headerWidgets(): array
     {
@@ -611,7 +619,7 @@ abstract class Resource
      * alias here: that split is about naming two header methods for the
      * same slot, which a single footer method has no reason to repeat.
      *
-     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget|\Alxtexh\Panel\Widgets\TableWidget>
+     * @return list<StatWidget|ChartWidget|TableWidget>
      */
     public static function footerWidgets(): array
     {
@@ -619,7 +627,7 @@ abstract class Resource
     }
 
     /**
-     * @return list<\Alxtexh\Panel\Widgets\StatWidget|\Alxtexh\Panel\Widgets\ChartWidget|\Alxtexh\Panel\Widgets\TableWidget>
+     * @return list<StatWidget|ChartWidget|TableWidget>
      */
     public static function resolvedIndexWidgets(): array
     {
@@ -732,7 +740,7 @@ abstract class Resource
         return static::$cluster;
     }
 
-    /** @return class-string<resource>|null */
+    /** @return class-string<\Alxtexh\Panel\Resources\Resource>|null */
     public static function parentResource(): ?string
     {
         return static::$parent;
@@ -792,7 +800,7 @@ abstract class Resource
     }
 
     /**
-     * @param  list<Component|\Alxtexh\Panel\Schema\Renderable>  $nodes
+     * @param  list<Component|Renderable>  $nodes
      */
     private static function findInfolistAction(array $nodes, string $key): ?Action
     {
@@ -870,7 +878,7 @@ abstract class Resource
         return true;
     }
 
-    /** @return class-string */
+    /** @return class-string<Model> */
     public static function model(): string
     {
         return static::$model;
@@ -891,6 +899,7 @@ abstract class Resource
      *
      * The default does nothing, which is the previous behaviour exactly.
      */
+    /** @param EloquentBuilder<Model> $query */
     public static function modifySearchQuery(EloquentBuilder $query, string $term): void {}
 
     /**
@@ -1018,7 +1027,7 @@ abstract class Resource
         );
 
         $select = array_map(
-            static fn (CustomField $f): Expression => CustomFieldFactory::selectExpression($f),
+            static fn (CustomField $f): QueryExpression => CustomFieldFactory::selectExpression($f),
             $definitions,
         );
 
@@ -1127,7 +1136,7 @@ abstract class Resource
                     'table' => $table->toSchema(),
                     'form' => static::formDefinition()->toSchema(),
                     'infolist' => array_map(
-                        static fn (Component|\Alxtexh\Panel\Schema\Renderable $c): array => $c->toSchema(),
+                        static fn (Component|Renderable $c): array => $c->toSchema(),
                         static::infolist(),
                     ),
                     // Structure only - column definitions for each related list.
@@ -1171,7 +1180,12 @@ abstract class Resource
     /** @return list<CustomField> */
     protected static function customFields(): array
     {
-        return CustomField::forResource(static::key())->all();
+        $fields = [];
+        foreach (CustomField::forResource(static::key())->all() as $field) {
+            $fields[] = $field;
+        }
+
+        return $fields;
     }
 
     /**

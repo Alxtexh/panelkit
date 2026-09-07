@@ -60,7 +60,7 @@ final class BackupArchive
     {
         $disk = $this->filesystem();
 
-        return collect($disk->files($this->directory()))
+        $rows = collect($disk->files($this->directory()))
             ->filter(fn (string $path): bool => str_ends_with($path, '.zip'))
             ->map(fn (string $path): array => [
                 'path' => $path,
@@ -70,6 +70,13 @@ final class BackupArchive
             ->sortByDesc('at')
             ->values()
             ->all();
+
+        $backups = [];
+        foreach ($rows as $row) {
+            $backups[] = $row;
+        }
+
+        return $backups;
     }
 
     /** @return list<string> */

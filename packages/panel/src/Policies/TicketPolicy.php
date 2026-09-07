@@ -162,11 +162,11 @@ final class TicketPolicy
             )
             ->first();
 
-        if ($hourLimit > 0 && (int) $counts->hourly >= $hourLimit) {
+        if ($hourLimit > 0 && (int) $counts->getAttribute('hourly') >= $hourLimit) {
             return false;
         }
 
-        return $dayLimit <= 0 || (int) $counts->daily < $dayLimit;
+        return $dayLimit <= 0 || (int) $counts->getAttribute('daily') < $dayLimit;
     }
 
     /**

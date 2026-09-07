@@ -128,7 +128,7 @@ function onLeave(el: Element, done: () => void): void {
                 <div
                     :class="[
                         FORM_MEASURE,
-                        'pointer-events-auto flex items-center gap-3 rounded-xl border bg-card/95 py-2.5 pr-2.5 pl-4 shadow-md ring-1 ring-black/5 backdrop-blur-sm dark:ring-white/10',
+                        'pointer-events-auto flex items-center gap-3 rounded-xl border bg-card/95 py-3 pr-3 pl-4 shadow-md ring-1 ring-black/5 backdrop-blur-sm dark:ring-white/10',
                     ]"
                 >
                     <span class="text-amber-600 dark:text-amber-400" aria-hidden="true">
@@ -149,7 +149,7 @@ function onLeave(el: Element, done: () => void): void {
                     <button
                         v-if="discardLabel"
                         type="button"
-                        class="hover:bg-muted rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
+                        class="hover:bg-muted inline-flex min-h-9 items-center rounded-lg px-3 text-sm font-medium transition-colors disabled:opacity-50"
                         :disabled="processing"
                         @click="$emit('discard')"
                     >
@@ -158,7 +158,7 @@ function onLeave(el: Element, done: () => void): void {
 
                     <button
                         type="button"
-                        class="bg-muted hover:bg-muted/70 rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
+                        class="bg-muted hover:bg-muted/70 inline-flex min-h-9 items-center rounded-lg px-3 text-sm font-medium transition-colors disabled:opacity-50"
                         :disabled="processing"
                         @click="$emit('cancel')"
                     >
@@ -168,7 +168,7 @@ function onLeave(el: Element, done: () => void): void {
                     <button
                         v-if="extraLabel"
                         type="button"
-                        class="hover:bg-muted rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
+                        class="hover:bg-muted inline-flex min-h-9 items-center rounded-lg px-3 text-sm font-medium transition-colors disabled:opacity-50"
                         :disabled="processing"
                         @click="$emit('extra')"
                     >
@@ -177,7 +177,7 @@ function onLeave(el: Element, done: () => void): void {
 
                     <button
                         type="button"
-                        class="bg-primary text-primary-foreground rounded-md px-4 py-1.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
+                        class="bg-primary text-primary-foreground inline-flex min-h-9 items-center rounded-lg px-4 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
                         :disabled="processing"
                         @click="$emit('save')"
                     >

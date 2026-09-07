@@ -158,6 +158,7 @@ final class PlatformReport
      * simply never ran. `schedule:run` touches a cache key on every tick, so a
      * missing or stale one is the evidence.
      */
+    /** @return array{lastRunAt: string|null, healthy: bool} */
     private function scheduler(): array
     {
         /*

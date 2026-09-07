@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Support;
 
 use Alxtexh\Panel\PanelManager;
-use Alxtexh\Panel\Resources\RelationManager;
 use Alxtexh\Panel\Tables\Table;
 
 /**
@@ -155,10 +154,6 @@ final class OpenApiSpec
             }
 
             foreach ($class::relations() as $relation) {
-                if (! $relation instanceof RelationManager) {
-                    continue;
-                }
-
                 $relationKey = $relation->key;
                 $relationLabel = (string) ($relation->toSchema()['label'] ?? $relationKey);
 
@@ -268,7 +263,7 @@ final class OpenApiSpec
             'perPage',
             'Anything not in this list is refused rather than clamped, so a request for '
                 .'50000 rows fails instead of quietly returning 100.',
-            enum: array_map('strval', (array) ($schema['perPageOptions'] ?? [])),
+                enum: self::stringList((array) ($schema['perPageOptions'] ?? [])),
         );
 
         if (($schema['tabs'] ?? []) !== []) {
@@ -276,7 +271,7 @@ final class OpenApiSpec
                 'tab',
                 'A predefined slice of the list, applied ALONGSIDE the filters rather than '
                     .'instead of them.',
-                enum: array_map('strval', array_values((array) $schema['tabs'])),
+                enum: self::stringList(array_values((array) $schema['tabs'])),
             );
         }
 
@@ -368,7 +363,7 @@ final class OpenApiSpec
                 'required' => true,
                 'content' => ['application/json' => ['schema' => $accepts]],
             ],
-            'responses' => array_filter([
+            'responses' => [
                 '200' => array_filter([
                     'description' => 'OK',
                     'content' => $responds === null ? null : [
@@ -381,7 +376,7 @@ final class OpenApiSpec
                     'description' => 'Validation failed.',
                     'content' => ['application/json' => ['schema' => (new JsonSchema)->validationError()]],
                 ],
-            ]),
+            ],
         ], static fn (mixed $v): bool => $v !== '' && $v !== [] && $v !== null);
     }
 
@@ -401,5 +396,22 @@ final class OpenApiSpec
                 'enum' => $enum,
             ], static fn (mixed $v): bool => $v !== []),
         ];
+    }
+
+    /**
+     * @param array<int|string, mixed> $values
+     * @return list<string>
+     */
+    private static function stringList(array $values): array
+    {
+        $result = [];
+
+        foreach ($values as $value) {
+            if (is_scalar($value)) {
+                $result[] = (string) $value;
+            }
+        }
+
+        return $result;
     }
 }

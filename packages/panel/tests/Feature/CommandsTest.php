@@ -6,12 +6,12 @@ namespace Alxtexh\Panel\Tests\Feature;
 
 use Alxtexh\Panel\Support\Blueprint;
 use Alxtexh\Panel\Support\PanelModules;
+use Alxtexh\Panel\Support\SchemaCache;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Alxtexh\Panel\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Permission;
 
@@ -266,13 +266,13 @@ final class CommandsTest extends TestCase
 
     public function test_cache_clear_runs_and_bumps_the_generation(): void
     {
-        $before = app(\Alxtexh\Panel\Support\SchemaCache::class)->generation();
+        $before = app(SchemaCache::class)->generation();
 
         $this->artisan('panel:cache-clear')->assertSuccessful();
 
         $this->assertGreaterThan(
             $before,
-            app(\Alxtexh\Panel\Support\SchemaCache::class)->generation(),
+            app(SchemaCache::class)->generation(),
             'Clearing the cache did not invalidate the schemas.',
         );
     }
@@ -312,5 +312,26 @@ final class CommandsTest extends TestCase
         // asserts the failing direction; the passing direction is covered by
         // every other command test in this file running against the same host.
         $this->artisan('panel:doctor')->assertFailed();
+    }
+
+    public function test_production_doctor_reports_unsafe_secrets_and_cookie_flags(): void
+    {
+        config([
+            'app.key' => 'too-short',
+            'app.debug' => true,
+            'app.url' => 'https://panel.example.test',
+            'session.secure' => false,
+            'session.http_only' => false,
+            'session.same_site' => 'none',
+            'session.partitioned' => true,
+        ]);
+
+        $this->artisan('panel:doctor', ['--profile' => 'production'])
+            ->expectsOutputToContain('APP_KEY is missing or too weak')
+            ->expectsOutputToContain('Debug mode is on in production')
+            ->expectsOutputToContain('Session cookies are not marked Secure')
+            ->expectsOutputToContain('Session cookies are not HttpOnly')
+            ->expectsOutputToContain('Partitioned cookies are configured with incompatible flags')
+            ->assertFailed();
     }
 }

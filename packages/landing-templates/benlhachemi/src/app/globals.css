@@ -1,0 +1,31 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --color-background: #ffffff;
+  --color-foreground: #707070;
+  --color-primary: #6ECE9D;
+  --color-secondary: #F8F5ED;
+  --color-accent: #FFDA6E;
+  --color-muted: #F0F0F0;
+  --color-border: rgba(0, 0, 0, 0.1);
+
+  --text-base: 18px;
+  --text-link: 16px;
+  --text-header: 64px;
+  --text-title: 28px;
+  --text-hero: 96px;
+}
+
+:root {
+  color: var(--color-foreground);
+  background: var(--color-background);
+  font-size: var(--text-base);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+

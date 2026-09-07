@@ -23,15 +23,19 @@ final class PanelVerifyEmail extends VerifyEmail
 
     protected function verificationUrl($notifiable): string
     {
+        if (! is_object($notifiable)) {
+            throw new \InvalidArgumentException('The verification recipient must be an object.');
+        }
+
         $email = method_exists($notifiable, 'getEmailForVerification')
             ? (string) $notifiable->getEmailForVerification()
-            : (string) ($notifiable->email ?? '');
+            : (string) data_get($notifiable, 'email', '');
 
         return URL::temporarySignedRoute(
             $this->panel->getRouteName().'verification.verify',
             Carbon::now()->addMinutes((int) Config::get('auth.verification.expire', 60)),
             [
-                'id' => $notifiable->getKey(),
+                'id' => method_exists($notifiable, 'getKey') ? $notifiable->getKey() : '',
                 'hash' => sha1($email),
             ],
         );

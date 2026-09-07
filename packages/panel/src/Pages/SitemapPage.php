@@ -38,7 +38,7 @@ final class SitemapPage extends Page
         return 'Sitemap';
     }
 
-    public static function ability(): ?string
+    public static function ability(): string
     {
         return 'view_sitemap';
     }
@@ -68,12 +68,12 @@ final class SitemapPage extends Page
         return 'Sitemap';
     }
 
-    public static function heading(): ?string
+    public static function heading(): string
     {
         return 'Sitemap';
     }
 
-    public static function description(): ?string
+    public static function description(): string
     {
         return 'What this installation tells search engines is public, and when it was last written.';
     }

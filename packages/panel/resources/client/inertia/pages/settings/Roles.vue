@@ -557,9 +557,7 @@ function save(): void {
     >
         <template #footer>
             <Button variant="outline" @click="confirmingDeleteRole = null"> Cancel </Button>
-            <Button variant="destructive" @click="reallyDestroyRole">
-                Delete role
-            </Button>
+            <Button variant="destructive" @click="reallyDestroyRole"> Delete role </Button>
         </template>
     </PkModal>
 </template>

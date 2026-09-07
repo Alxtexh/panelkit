@@ -8,6 +8,11 @@
 
 PLAYGROUND := apps/playground
 ARTISAN    := cd $(PLAYGROUND) && php artisan
+# Keep local build/test commands deterministic when Corepack's pnpm manager
+# check cannot open its global SQLite store (common in containers and sandboxes).
+# This does not change dependency resolution; it only prevents an implicit
+# networked manager install before an already-installed workspace command.
+PNPM_LOCAL_FLAGS := --config.manage-package-manager-versions=false --config.verify-deps-before-run=false
 
 .DEFAULT_GOAL := help
 
@@ -35,24 +40,32 @@ fresh: ## Drop everything, re-migrate, re-seed
 
 .PHONY: test
 test: ## Run the playground test suite
-	@$(ARTISAN) test
+	@cd $(PLAYGROUND) && PAO_DISABLE=1 timeout 300s php artisan test
 
 .PHONY: test-fast
 test-fast: ## Run the fast application unit and focused feature gate
-	@cd $(PLAYGROUND) && timeout 120s php artisan test --testsuite=Unit --stop-on-failure
-	@cd $(PLAYGROUND) && timeout 120s php artisan test --testsuite=Feature --filter='RecordWrite|CrossTenant|Authorization|ExportOwnership|ImportHttp|BulkAction' --stop-on-failure
+	@cd $(PLAYGROUND) && PAO_DISABLE=1 timeout 120s php artisan test --testsuite=Unit --stop-on-failure
+	@cd $(PLAYGROUND) && PAO_DISABLE=1 timeout 120s php artisan test --testsuite=Feature --filter='RecordWrite|CrossTenant|Authorization|ExportOwnership|ImportHttp|BulkAction' --stop-on-failure
 
 .PHONY: test-playground-feature
-test-playground-feature: ## Run the deterministic playground feature suite with a hard bound
-	@cd $(PLAYGROUND) && timeout 180s php artisan test --testsuite=FeatureFast --stop-on-failure
+test-playground-feature: ## Run the deterministic playground feature suite in isolated local shards
+	@scripts/test-playground-parallel.sh
+
+.PHONY: test-playground-feature-serial
+test-playground-feature-serial: ## Run the deterministic playground feature suite serially for debugging
+	@cd $(PLAYGROUND) && PAO_DISABLE=1 timeout 300s php artisan test --testsuite=FeatureFast --stop-on-failure
+
+.PHONY: test-playground-feature-parallel
+test-playground-feature-parallel: ## Alias for the isolated local feature runner
+	@scripts/test-playground-parallel.sh
 
 .PHONY: test-playground-performance
 test-playground-performance: ## Run the benchmark-heavy playground performance suite with a hard bound
-	@cd $(PLAYGROUND) && timeout 180s php artisan test --testsuite=Performance --stop-on-failure
+	@cd $(PLAYGROUND) && PAO_DISABLE=1 timeout 180s php artisan test --testsuite=Performance --stop-on-failure
 
 .PHONY: test-security
 test-security: ## Run tenant, authorization, auth, upload, API, and webhook checks
-	@cd $(PLAYGROUND) && timeout 120s php artisan test --testsuite=Feature --filter='Tenant|Authorization|Auth|Security|Upload|Api|Webhook|CrossTenant' --stop-on-failure
+	@cd $(PLAYGROUND) && PAO_DISABLE=1 timeout 120s php artisan test --testsuite=Feature --filter='Tenant|Authorization|Auth|Security|Upload|Api|Webhook|CrossTenant' --stop-on-failure
 
 .PHONY: browser
 browser: ## Run the browser tests (needs Chrome - see scripts/dusk.sh)
@@ -74,16 +87,16 @@ counts: ## Print seeded row counts
 # workspace and fails outright. See the comment in .npmrc for the full story.
 .PHONY: build
 build: ## Production asset build
-	@pnpm --filter playground run build
+	@pnpm $(PNPM_LOCAL_FLAGS) --filter playground run build
 
 .PHONY: install
 install: ## Install PHP and JS dependencies
 	@cd $(PLAYGROUND) && composer install
-	@pnpm install
+	@pnpm $(PNPM_LOCAL_FLAGS) install
 
 .PHONY: sync-client
 sync-client: ## Build packages/ui (lib + kit SPA) and mirror it into packages/panel/resources/client
-	@pnpm --filter @alxtexh-enterprise/panel run build
+	@pnpm $(PNPM_LOCAL_FLAGS) --filter @alxtexh-enterprise/panel run build
 	@rm -rf packages/panel/resources/client
 	@mkdir -p packages/panel/resources/client
 	@cp packages/ui/package.json packages/panel/resources/client/
@@ -108,10 +121,30 @@ check-page-shell: ## Fail on new mx-auto + max-w-* congested admin chrome (desig
 check-public-api: ## Verify the documented package extension surface remains present
 	@php scripts/check-public-api.php
 
+.PHONY: check-release-metadata
+check-release-metadata: ## Ensure a tagged release carries the same client version
+	@scripts/check-release-metadata.sh
+
+.PHONY: check-bundle-budget
+check-bundle-budget: ## Fail when the shipped kit exceeds its size budgets
+	@scripts/check-bundle-budget.sh
+
+.PHONY: visual-regression
+visual-regression: ## Compare two screenshot directories (BASELINE and CURRENT)
+	@scripts/visual-regression.sh "$(BASELINE)" "$(CURRENT)" "$(DIFF_DIR)"
+
 .PHONY: test-package
 test-package: ## Run packages/panel's own suite - Testbench, fixture models, no playground
 	@cd packages/panel && [ -d vendor ] || composer install --no-interaction --no-progress
-	@cd packages/panel && timeout 180s vendor/bin/pest --no-coverage
+	@cd packages/panel && PAO_DISABLE=1 timeout 300s vendor/bin/pest --no-coverage
+
+.PHONY: check-dependencies
+check-dependencies: ## Validate locked PHP dependencies and local platform requirements
+	@scripts/check-dependencies.sh
+
+.PHONY: check-static-analysis
+check-static-analysis: ## Run PHPStan with a bounded, actionable local diagnostic
+	@scripts/check-static-analysis.sh
 
 # THE RELEASE GATE FOR DEMO = KIT. Playground Vite aliases packages/ui source,
 # so a green demo can hide a stale Composer mirror. Before tagging:
@@ -123,9 +156,13 @@ check-css-parity: ## Fail when stub, kit, and playground CSS drift on critical b
 	@scripts/check-css-parity.sh
 
 .PHONY: release-check
-release-check: check-client check-css-parity check-page-shell check-public-api test-fast test-package ## Pre-tag: client/CSS/design checks plus fast app, API, and package tests
-	@echo "release-check ok: client mirror matches packages/ui; CSS parity ok; page-shell freeze ok; package tests passed."
+release-check: check-client check-css-parity check-page-shell check-public-api check-release-metadata check-bundle-budget check-dependencies check-static-analysis test-fast test-package ## Pre-tag: client/CSS/design, dependency, API, static analysis, package, metadata, and bundle checks
+	@echo "release-check ok: client mirror, CSS, page shell, API, metadata, bundle budget, and test gates passed."
 	@echo "Remember: demo UI must match the published kit (sync-client before tag)."
+
+.PHONY: release-check-full
+release-check-full: release-check test-playground-feature test-playground-performance verify-install verify-broadcast browser ## Full pre-release validation including consumer, transport, performance, and browser journeys
+	@echo "release-check-full ok: release gates, consumer install, transport, performance, and browser journeys passed."
 
 .PHONY: split
 split: ## Build the standalone package branches (see scripts/split.sh; nothing is pushed)
@@ -158,7 +195,7 @@ verify-broadcast: ## Prove a broadcast reaches a subscriber over a real socket
 # client-only against a server that is running perfectly.
 .PHONY: ssr
 ssr: ## Build the SSR bundle and start the SSR server (flag first - see the note)
-	@pnpm --filter playground run build:ssr
+	@pnpm $(PNPM_LOCAL_FLAGS) --filter playground run build:ssr
 	@echo
 	@echo "SSR bundle built. Starting the server; serve the app with INERTIA_SSR_ENABLED=true:"
 	@echo "    cd $(PLAYGROUND) && INERTIA_SSR_ENABLED=true php artisan serve"

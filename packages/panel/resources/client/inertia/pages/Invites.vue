@@ -158,7 +158,9 @@ function roleLabel(roleId: string): string {
                             {{ roleLabel(row.role_id) }}
                         </p>
                     </div>
-                    <Button type="button" variant="ghost" @click="requestRevoke(row.id)">Revoke</Button>
+                    <Button type="button" variant="ghost" @click="requestRevoke(row.id)"
+                        >Revoke</Button
+                    >
                 </li>
             </ul>
         </section>
@@ -169,7 +171,13 @@ function roleLabel(roleId: string): string {
             description="The invitation link will stop working immediately."
             @close="pendingRevoke = null"
         >
-            <p class="text-sm">Revoke the invitation for <strong>{{ pending.find((row) => row.id === pendingRevoke)?.email ?? `#${pendingRevoke}` }}</strong>?</p>
+            <p class="text-sm">
+                Revoke the invitation for
+                <strong>{{
+                    pending.find((row) => row.id === pendingRevoke)?.email ?? `#${pendingRevoke}`
+                }}</strong
+                >?
+            </p>
             <template #footer>
                 <Button variant="outline" @click="pendingRevoke = null">Cancel</Button>
                 <Button variant="destructive" @click="revoke">Revoke invitation</Button>

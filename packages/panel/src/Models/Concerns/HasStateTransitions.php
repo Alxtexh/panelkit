@@ -47,11 +47,7 @@ trait HasStateTransitions
             return $overlay;
         }
 
-        if (property_exists($this, 'transitions') && is_array($this->transitions)) {
-            return $this->transitions;
-        }
-
-        return [];
+        return $this->transitions;
     }
 
     public function currentState(): string
@@ -126,7 +122,7 @@ trait HasStateTransitions
 
         foreach ($override->transitions as $t) {
             $sources = $t['from'] ?? [];
-            $to = $t['to'] ?? '';
+            $to = $t['to'];
 
             if ($to === '') {
                 continue;

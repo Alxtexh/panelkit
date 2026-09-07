@@ -20,7 +20,7 @@ const props = defineProps<{
 const dataKey = `${props.prefix}_stat_${props.widget.key}`
 
 function retry() {
-    router.reload({ only: [dataKey], preserveState: true, preserveScroll: true })
+    router.reload({ only: [dataKey] })
 }
 
 useWidgetPoll(

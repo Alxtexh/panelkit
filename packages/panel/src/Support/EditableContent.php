@@ -61,11 +61,25 @@ final class EditableContent
 
         Changelog::set(static function (): array {
             $rows = self::rows();
+            $releases = self::releases($rows[ContentEntry::KIND_RELEASE] ?? []);
 
-            return [
-                ...self::releases($rows[ContentEntry::KIND_RELEASE] ?? []),
-                ...(array) config('panel.changelog', []),
-            ];
+            foreach (is_array(config('panel.changelog', [])) ? config('panel.changelog', []) : [] as $release) {
+                if (! is_array($release)) {
+                    continue;
+                }
+
+                $normalised = [];
+
+                foreach ($release as $key => $value) {
+                    if (is_string($key)) {
+                        $normalised[$key] = $value;
+                    }
+                }
+
+                $releases[] = $normalised;
+            }
+
+            return $releases;
         });
     }
 

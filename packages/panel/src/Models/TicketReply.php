@@ -30,6 +30,12 @@ use Alxtexh\Panel\Support\TicketTables;
  *
  * Any one of those alone is a single point of failure for the worst bug this
  * feature can have.
+ *
+ * @property int|string|null $tenant_id
+ * @property int|string|null $author_id
+ * @property string $body
+ * @property string $visibility
+ * @property array<string, mixed>|null $attachments
  */
 #[ScopedBy(TenantScope::class)]
 final class TicketReply extends Model
@@ -74,6 +80,10 @@ final class TicketReply extends Model
      * answer keeps one decision in one place. A scope that re-derived it
      * would be a second implementation of "may you see internal notes", and
      * the two would disagree eventually.
+     */
+    /**
+     * @param Builder<self> $query
+     * @return Builder<self>
      */
     public function scopeVisibleTo(Builder $query, bool $seesInternal): Builder
     {

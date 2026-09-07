@@ -117,7 +117,12 @@ final class Devices
             }
         }
 
-        return $rows;
+        $devices = [];
+        foreach ($rows as $row) {
+            $devices[] = $row;
+        }
+
+        return $devices;
     }
 
     /**

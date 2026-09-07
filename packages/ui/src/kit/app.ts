@@ -83,9 +83,7 @@ createInertiaApp({
     title: (title) => (title ? `${title} - Panel` : 'Panel'),
 
     resolve: (name) => {
-        const pages = import.meta.glob<DefineComponent>('../../inertia/pages/**/*.vue', {
-            eager: true,
-        })
+        const pages = import.meta.glob<DefineComponent>('../../inertia/pages/**/*.vue')
         const page = pages[`../../inertia/pages/${name}.vue`]
 
         if (!page) {
@@ -95,7 +93,7 @@ createInertiaApp({
             )
         }
 
-        return page
+        return page()
     },
 
     layout: (name) => {

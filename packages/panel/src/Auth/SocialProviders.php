@@ -100,6 +100,7 @@ final class SocialProviders
     /**
      * Every provider this installation might offer, package list plus config.
      *
+     * @param list<mixed>|null $extra
      * @return array<string, string>
      */
     private static function supported(?array $extra = null): array

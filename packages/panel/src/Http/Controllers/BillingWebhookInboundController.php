@@ -25,8 +25,6 @@ final class BillingWebhookInboundController extends Controller
         $rawBody = (string) $request->getContent();
         $payload = $request->json()->all();
 
-        abort_if(! is_array($payload), 422, 'Invalid webhook payload.');
-
         $verifier = $panel->billingWebhookVerifierUsing();
         $verified = $verifier === null
             ? true

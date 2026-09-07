@@ -135,13 +135,14 @@ final class CommentController extends Controller
         return $class;
     }
 
+    /** @return array<string, mixed> */
     private static function serialize(PanelComment $comment): array
     {
         $author = $comment->author;
 
         return [
             'id' => $comment->getKey(),
-            'body' => $comment->body,
+            'body' => (string) $comment->getAttribute('body'),
             'mentions' => $comment->mentions ?? [],
             'author' => [
                 'id' => $author?->getKey(),

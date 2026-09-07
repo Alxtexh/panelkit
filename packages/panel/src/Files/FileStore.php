@@ -11,6 +11,7 @@ use DateTimeInterface;
 use InvalidArgumentException;
 use Alxtexh\Panel\Support\TenantContext;
 use RuntimeException;
+use Throwable;
 
 /**
  * Where uploaded files go, and what is allowed to become one.
@@ -255,9 +256,7 @@ final class FileStore
                 fclose($output);
             }
 
-            if (is_string($assembled)) {
-                @unlink($assembled);
-            }
+            @unlink($assembled);
             self::forgetChunked($uploadId);
         }
 
@@ -483,10 +482,6 @@ final class FileStore
         }
 
         $disk = Storage::disk(self::disk());
-
-        if (! method_exists($disk, 'temporaryUrl')) {
-            throw new RuntimeException('The configured upload disk cannot issue temporary URLs.');
-        }
 
         return (string) $disk->temporaryUrl($path, $expiration, $options);
     }

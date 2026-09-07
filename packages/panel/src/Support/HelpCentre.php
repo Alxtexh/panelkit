@@ -211,12 +211,12 @@ final class HelpCentre
      */
     private static function registered(): array
     {
-        $appended = app()->bound(self::KEY) ? (array) app(self::KEY) : [];
+        $appended = self::normaliseArticles(app()->bound(self::KEY) ? app(self::KEY) : []);
 
         $fromSources = [];
 
         foreach (self::resolvedSources() as $source) {
-            $fromSources = [...$fromSources, ...($source['articles'] ?? [])];
+            $fromSources = [...$fromSources, ...self::normaliseArticles($source['articles'] ?? [])];
         }
 
         return [...$appended, ...$fromSources];
@@ -225,15 +225,63 @@ final class HelpCentre
     /** @return list<array{title: string, items: list<array{q: string, a: string}>}> */
     private static function registeredQuestions(): array
     {
-        $appended = app()->bound(self::FAQ_KEY) ? (array) app(self::FAQ_KEY) : [];
+        $appended = self::normaliseQuestions(app()->bound(self::FAQ_KEY) ? app(self::FAQ_KEY) : []);
 
         $fromSources = [];
 
         foreach (self::resolvedSources() as $source) {
-            $fromSources = [...$fromSources, ...($source['questions'] ?? [])];
+            $fromSources = [...$fromSources, ...self::normaliseQuestions($source['questions'] ?? [])];
         }
 
         return [...$appended, ...$fromSources];
+    }
+
+    /** @return list<array<string, mixed>> */
+    private static function normaliseArticles(mixed $articles): array
+    {
+        $out = [];
+
+        foreach (is_array($articles) ? $articles : [] as $article) {
+            if (! is_array($article)) {
+                continue;
+            }
+
+            $normalised = [];
+
+            foreach ($article as $key => $value) {
+                if (is_string($key)) {
+                    $normalised[$key] = $value;
+                }
+            }
+
+            $out[] = $normalised;
+        }
+
+        return $out;
+    }
+
+    /** @return list<array{title: string, items: list<array{q: string, a: string}>}> */
+    private static function normaliseQuestions(mixed $groups): array
+    {
+        $out = [];
+
+        foreach (is_array($groups) ? $groups : [] as $group) {
+            if (! is_array($group) || ! is_string($group['title'] ?? null) || ! is_array($group['items'] ?? null)) {
+                continue;
+            }
+
+            $items = [];
+
+            foreach ($group['items'] as $item) {
+                if (is_array($item) && is_string($item['q'] ?? null) && is_string($item['a'] ?? null)) {
+                    $items[] = ['q' => $item['q'], 'a' => $item['a']];
+                }
+            }
+
+            $out[] = ['title' => $group['title'], 'items' => $items];
+        }
+
+        return $out;
     }
 
     /**

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Testing;
 
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Testing\TestResponse;
-use Alxtexh\Panel\PanelManager;
-use Alxtexh\Panel\Resources\Resource;
 
 /**
  * Assertions for somebody building ON this package.
@@ -321,7 +321,7 @@ trait InteractsWithPanels
             ->post($this->panelUrl($resourceKey), $payload)
             ->assertSessionHasNoErrors();
 
-        /** @var class-string<resource> $class */
+        /** @var class-string<\Alxtexh\Panel\Resources\Resource> $class */
         $model = $class::model();
 
         $this->assertDatabaseHas((new $model)->getTable(), $expect === [] ? $payload : $expect);

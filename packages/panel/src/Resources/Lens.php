@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Resources;
 
 use Closure;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Model;
 use Alxtexh\Panel\Tables\Table;
 
 /**
@@ -34,7 +35,7 @@ final class Lens
         return new self($key, $label);
     }
 
-    /** @param Closure(EloquentBuilder): void $query */
+    /** @param Closure(EloquentBuilder<covariant Model>): void $query */
     public function query(Closure $query): self
     {
         $this->query = $query;
@@ -59,6 +60,7 @@ final class Lens
         return ($this->table)($table);
     }
 
+    /** @param EloquentBuilder<covariant Model> $query */
     public function applyQuery(EloquentBuilder $query): void
     {
         if ($this->query !== null) {

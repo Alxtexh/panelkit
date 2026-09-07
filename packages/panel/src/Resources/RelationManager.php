@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Resources;
 
-use Closure;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
-use InvalidArgumentException;
 use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Http\NestedRelation;
 use Alxtexh\Panel\Models\Scopes\TenantScope;
 use Alxtexh\Panel\Support\TenantContext;
 use Alxtexh\Panel\Tables\ListResult;
 use Alxtexh\Panel\Tables\Table;
+use Closure;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use InvalidArgumentException;
 
 /**
  * A related list shown on a record's page - a client's sessions, a router's
@@ -64,7 +64,7 @@ final class RelationManager
     /**
      * Nested child resource that owns the dedicated list/create/edit pages.
      *
-     * @var class-string<resource>|null
+     * @var class-string<\Alxtexh\Panel\Resources\Resource>|null
      */
     private ?string $resource = null;
 
@@ -148,7 +148,7 @@ final class RelationManager
      * (`/{parent}/{id}/{child}`), the same surface `$parent` already provides.
      * The relation tab on the view page stays a summary that LINKS there.
      *
-     * @param  class-string<resource>  $resource
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $resource
      */
     public function resource(string $resource): self
     {
@@ -240,7 +240,7 @@ final class RelationManager
     /**
      * Whether create-from-tab is offered. Edit and view stay on dedicated pages.
      *
-     * @param  class-string<resource>  $parentResourceClass
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $parentResourceClass
      */
     public function canInlineCreate(string $parentResourceClass, Model $parent): bool
     {
@@ -266,7 +266,7 @@ final class RelationManager
      *
      * The parent key is stamped from the URL context, never honoured from input.
      *
-     * @param  class-string<resource>  $parentResourceClass
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $parentResourceClass
      * @param  array<string, mixed>  $validated
      */
     public function store(string $parentResourceClass, Model $parent, array $validated): Model

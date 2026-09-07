@@ -462,15 +462,11 @@ defineOptions({
             <template v-else-if="pendingSecurityAction?.kind === 'email-two-factor'">
                 Continue only if you have another reliable second factor or recovery method.
             </template>
-            <template v-else>
-                Continue with this security change?
-            </template>
+            <template v-else> Continue with this security change? </template>
         </p>
         <template #footer>
             <Button variant="outline" @click="pendingSecurityAction = null">Cancel</Button>
-            <Button variant="destructive" @click="confirmSecurityAction">
-                Confirm
-            </Button>
+            <Button variant="destructive" @click="confirmSecurityAction"> Confirm </Button>
         </template>
     </PkModal>
 </template>

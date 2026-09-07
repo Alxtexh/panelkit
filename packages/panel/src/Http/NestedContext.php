@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http;
 
+use Alxtexh\Panel\Resources\Resource;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
@@ -39,7 +40,7 @@ final class NestedContext
     /**
      * The resolved, authorised parent record - or null on a flat request.
      *
-     * @param  class-string  $class  The (child) resource being served.
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class  The (child) resource being served.
      */
     public static function parent(Request $request, string $class): ?Model
     {
@@ -84,7 +85,7 @@ final class NestedContext
     /**
      * The URL base every child screen lives under: `/clients/5/sessions`.
      *
-     * @param  class-string  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      */
     public static function base(string $class, Model $parent): string
     {
@@ -102,7 +103,7 @@ final class NestedContext
      * serve `/clients/5/sessions` and `/clients/9/sessions` alike.
      *
      * @param  array<string, mixed>  $schema
-     * @param  class-string  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      * @return array<string, mixed>
      */
     public static function schema(array $schema, string $class, Model $parent): array
@@ -142,7 +143,7 @@ final class NestedContext
     /**
      * Breadcrumbs that walk in through the parent.
      *
-     * @param  class-string  $class
+     * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
      * @return list<array{title: string, href: string}>
      */
     public static function breadcrumbs(string $class, Model $parent): array

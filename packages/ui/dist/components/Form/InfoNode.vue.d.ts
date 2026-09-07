@@ -3,8 +3,9 @@ export interface InfoNode {
     children?: InfoNode[];
     key?: string;
     label?: string;
+    badge?: string | number | null;
     description?: string;
-    columns?: number;
+    columns?: number | ResponsiveColumns;
     collapsible?: boolean;
     collapsed?: boolean;
     icon?: string | null;
@@ -20,6 +21,7 @@ export interface InfoNode {
     defaultColor?: string;
     [key: string]: any;
 }
+type ResponsiveColumns = Partial<Record<'default' | 'sm' | 'md' | 'lg' | 'xl' | '2xl', number>>;
 type __VLS_Props = {
     node: InfoNode;
     record: Record<string, any>;

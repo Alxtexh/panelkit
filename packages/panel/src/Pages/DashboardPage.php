@@ -382,7 +382,7 @@ abstract class DashboardPage extends Page
              * bookmarked URL renders with each selector highlighting the window
              * it is actually showing.
              */
-            'periods' => static::selectedPeriods($request, $charts),
+            'periods' => self::selectedPeriods($request, $charts),
             'filters' => $filters->toArray(),
             'filterDimensions' => static::filterDimensions(),
             'heading' => static::label(),
@@ -412,7 +412,7 @@ abstract class DashboardPage extends Page
             ),
             'prefix' => rtrim((string) app(PanelManager::class)->panel(static::panel())?->getPath(), '/'),
             'userDashboards' => (bool) (app(PanelManager::class)->panel(static::panel())?->hasUserDashboards()),
-            'dashboardLayout' => static::dashboardLayoutFor($user),
+            'dashboardLayout' => self::dashboardLayoutFor($user),
         ];
 
         $shortcuts = static::shortcuts();
@@ -436,7 +436,7 @@ abstract class DashboardPage extends Page
          */
         $strip = static::strip();
 
-        if ($strip !== null && static::allows($user, static::stripAbility())) {
+        if ($strip !== null && self::allows($user, static::stripAbility())) {
             $props['strip'] = Inertia::defer(
                 static fn (): array => $strip($filters, $now, $tenantKey),
                 'strip',
@@ -499,7 +499,7 @@ abstract class DashboardPage extends Page
             $props['onboardingDismiss'] = $dismissName !== '' && \Illuminate\Support\Facades\Route::has($dismissName)
                 ? route($dismissName)
                 : null;
-        } elseif ($user !== null && static::allows($user, static::checklistAbility())) {
+        } elseif ($user !== null && self::allows($user, static::checklistAbility())) {
             $props['checklist'] = Inertia::defer(
                 static fn (): array => app(SetupChecklist::class)->items(),
                 'checklist',
@@ -534,7 +534,7 @@ abstract class DashboardPage extends Page
             );
         }
 
-        $hiddenChartKeys = array_flip(static::hiddenWidgetKeys($request));
+        $hiddenChartKeys = array_flip(self::hiddenWidgetKeys($request));
 
         foreach ($charts as $chart) {
             /*

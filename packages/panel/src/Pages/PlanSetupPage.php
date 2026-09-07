@@ -183,14 +183,23 @@ abstract class PlanSetupPage extends Page
                     }
 
                     $prior = $existing['perks']['modules']['value'] ?? [];
-                    $previous = is_array($prior) ? array_map('strval', $prior) : [];
+                    if (is_array($prior)) {
+                        foreach ($prior as $module) {
+                            $previous[] = (string) $module;
+                        }
+                    }
                     break;
                 }
             }
 
+            $selectedKeys = [];
+            foreach ($selected as $module) {
+                $selectedKeys[] = (string) $module;
+            }
+
             $plan['perks']['modules']['value'] = ModuleRegistry::applyGrants(
                 $request->user(),
-                array_map('strval', $selected),
+                $selectedKeys,
                 $previous,
             );
         }

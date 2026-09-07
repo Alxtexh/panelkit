@@ -20,6 +20,7 @@ use Illuminate\Database\Query\Builder;
  */
 final class NumberRangeFilter extends Filter
 {
+    /** @return array{from: float|int|null, to: float|int|null}|null */
     public function normalise(mixed $raw): ?array
     {
         if (is_array($raw)) {

@@ -188,13 +188,19 @@ final class KnowledgeBase
             [$literal, $this->tenantKey(), $literal, $limit],
         );
 
-        return array_map(static fn (object $row): array => [
-            'title' => (string) $row->title,
-            'content' => (string) $row->content,
-            'url' => $row->url === null ? null : (string) $row->url,
-            'source' => (string) $row->source,
-            'score' => (float) $row->score,
-        ], $rows);
+        $matches = [];
+
+        foreach ($rows as $row) {
+            $matches[] = [
+                'title' => (string) $row->title,
+                'content' => (string) $row->content,
+                'url' => $row->url === null ? null : (string) $row->url,
+                'source' => (string) $row->source,
+                'score' => (float) $row->score,
+            ];
+        }
+
+        return $matches;
     }
 
     /**
@@ -227,12 +233,27 @@ final class KnowledgeBase
                         continue;
                     }
 
+                    $embedding = [];
+
+                    foreach ($stored as $component) {
+                        if (! is_int($component) && ! is_float($component)) {
+                            $embedding = [];
+                            break;
+                        }
+
+                        $embedding[] = (float) $component;
+                    }
+
+                    if ($embedding === []) {
+                        continue;
+                    }
+
                     $scored[] = [
                         'title' => (string) $row->title,
                         'content' => (string) $row->content,
                         'url' => $row->url === null ? null : (string) $row->url,
                         'source' => (string) $row->source,
-                        'score' => self::cosine($vector, $stored),
+                        'score' => self::cosine($vector, $embedding),
                     ];
                 }
             });

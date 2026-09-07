@@ -36,12 +36,12 @@ final class KitCatalogPage extends CatalogBrowserPage
         return 'KitCatalog';
     }
 
-    public static function heading(): ?string
+    public static function heading(): string
     {
         return 'Catalog';
     }
 
-    public static function description(): ?string
+    public static function description(): string
     {
         return 'CatalogGrid of products and units. Search, Filters, and Tiles sit on one row. Open a tile for the product page.';
     }

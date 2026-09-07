@@ -34,6 +34,7 @@ final class PanelInvite extends Model
         ];
     }
 
+    /** @param list<string>|null $roles */
     public static function mint(int|string $tenantId, string $email, ?array $roles = null, ?int $invitedBy = null): self
     {
         return self::query()->create([

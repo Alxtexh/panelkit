@@ -11,6 +11,8 @@ use Alxtexh\Panel\Support\CommentTables;
 
 /**
  * A comment on any record whose resource opted in via `Resource::comments()`.
+ * @property string $body
+ * @property \Carbon\CarbonImmutable|null $created_at
  */
 class PanelComment extends Model
 {
@@ -28,11 +30,13 @@ class PanelComment extends Model
         return CommentTables::comments();
     }
 
+    /** @return MorphTo<Model, $this> */
     public function commentable(): MorphTo
     {
         return $this->morphTo();
     }
 
+    /** @return BelongsTo<Model, $this> */
     public function author(): BelongsTo
     {
         /** @var class-string<Model> $model */

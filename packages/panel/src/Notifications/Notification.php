@@ -102,17 +102,21 @@ final class Notification
     /**
      * Buttons on the toast and, with `bell()`, the inbox row.
      *
-     * @param  list<Action>  $actions
+     * @param  list<mixed>  $actions
      */
     public function actions(array $actions): self
     {
+        $normalised = [];
+
         foreach ($actions as $action) {
             if (! $action instanceof Action) {
                 throw new InvalidArgumentException('Notification actions must be Alxtexh\\Panel\\Actions\\Action instances.');
             }
+
+            $normalised[] = $action;
         }
 
-        $this->actions = array_values($actions);
+        $this->actions = $normalised;
 
         return $this;
     }
@@ -233,7 +237,7 @@ final class Notification
         $normalized = [];
 
         foreach ($channels as $channel) {
-            if (! is_string($channel) || ! in_array($channel, $allowed, true)) {
+            if (! in_array($channel, $allowed, true)) {
                 throw new InvalidArgumentException(
                     'Notification channels must be one of: '.implode(', ', $allowed).'.',
                 );

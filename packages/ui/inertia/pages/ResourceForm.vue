@@ -670,14 +670,14 @@ async function onFieldChange(key: string, value: any): Promise<void> {
 
     try {
         res = await fetch(`${props.schema.routes.index}/form-state`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-XSRF-TOKEN': csrf(),
-        },
-        credentials: 'same-origin',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-XSRF-TOKEN': csrf(),
+            },
+            credentials: 'same-origin',
             body: JSON.stringify({ field: key, values: form.data() }),
             signal: liveController.signal,
         })
@@ -780,16 +780,16 @@ async function validateField(key: string): Promise<void> {
 
     try {
         res = await fetch(url, {
-        method: props.record?.id ? 'PUT' : 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            Precognition: 'true',
-            'Precognition-Validate-Only': key,
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-XSRF-TOKEN': csrf(),
-        },
-        credentials: 'same-origin',
+            method: props.record?.id ? 'PUT' : 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                Precognition: 'true',
+                'Precognition-Validate-Only': key,
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-XSRF-TOKEN': csrf(),
+            },
+            credentials: 'same-origin',
             body: JSON.stringify({ field: key, ...form.data() }),
             signal: validationController.signal,
         })
@@ -840,11 +840,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     }
 }
 
-watch(
-    formValues,
-    () => scheduleDraft(),
-    { deep: true },
-)
+watch(formValues, () => scheduleDraft(), { deep: true })
 
 let removeNavigationGuard: (() => void) | undefined
 const pendingNavigation = ref<any | null>(null)
@@ -921,7 +917,11 @@ onBeforeUnmount(() => {
     <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4 pb-24']">
         <PkPageHeader
             :title="isEdit ? `Edit ${schema.label}` : `New ${schema.label}`"
-            :purpose="record?.label ?? null"
+            :purpose="
+                isEdit
+                    ? (record?.label ?? `Update this ${schema.label.toLowerCase()}`)
+                    : `Create a new ${schema.label.toLowerCase()}`
+            "
         >
             <template v-if="schema.links?.length" #actions>
                 <template v-for="link in schema.links" :key="link.href">
@@ -994,7 +994,7 @@ onBeforeUnmount(() => {
                 :class="
                     formSchema.nodes?.length
                         ? ''
-                        : 'bg-card rounded-xl border p-4 shadow-sm ring-1 ring-black/5 sm:p-6 dark:ring-white/10'
+                        : 'bg-card overflow-hidden rounded-xl border p-4 shadow-sm ring-1 ring-black/5 sm:p-6 dark:ring-white/10'
                 "
             >
                 <RecordForm

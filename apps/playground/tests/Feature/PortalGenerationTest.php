@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Demo\Models\Client;
-use App\Models\Tenant;
-use App\Models\User;
-use App\Panel\Reseller\Resources\PlanResource;
-use App\Demo\Panel\Resources\ClientResource;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Route;
 use Alxtexh\Panel\Http\Middleware\UsePanel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Tables\Table;
+use App\Demo\Models\Client;
+use App\Demo\Panel\Resources\ClientResource;
+use App\Models\Tenant;
+use App\Models\User;
+use App\Panel\Reseller\Resources\PlanResource;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
@@ -158,13 +158,21 @@ final class PortalGenerationTest extends TestCase
              * reachable from no menu, which reads as a navigation bug in the
              * application rather than as debris from a generator test.
              */
-            if (is_dir($resources.'/Resources')) {
-                @unlink($resources.'/Resources/.gitkeep');
-                @rmdir($resources.'/Resources');
-                @rmdir($resources);
+           if (is_dir($resources.'/Resources')) {
+               @unlink($resources.'/Resources/.gitkeep');
+               @rmdir($resources.'/Resources');
+               @rmdir($resources);
+           }
+
+            foreach (['Pages', 'Widgets'] as $directory) {
+                @unlink($resources.'/'.$directory.'/.gitkeep');
+                @rmdir($resources.'/'.$directory);
             }
 
+            @rmdir($resources);
+
             $this->removeProviderRegistration('DisposablePanelProvider');
+            app(PanelManager::class)->unregisterPanel('disposable');
         }
     }
 

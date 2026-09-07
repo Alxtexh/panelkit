@@ -1,6 +1,6 @@
 {
     "name": "@alxtexh-enterprise/panel",
-    "version": "1.4.43",
+    "version": "1.4.71",
     "description": "The client half: the Vue rendering layer and the Inertia screens. Import from \".\" for components that name no transport, \"./inertia\" for the screens.",
     "type": "module",
     "license": "MIT",

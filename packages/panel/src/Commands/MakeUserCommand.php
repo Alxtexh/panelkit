@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Alxtexh\Panel\Models\Role;
@@ -51,6 +52,12 @@ final class MakeUserCommand extends Command
 
         if (! class_exists($model)) {
             $this->components->error("The configured user model [{$model}] does not exist.");
+
+            return self::FAILURE;
+        }
+
+        if (! is_subclass_of($model, Model::class)) {
+            $this->components->error("The configured user model [{$model}] must extend Eloquent's Model.");
 
             return self::FAILURE;
         }

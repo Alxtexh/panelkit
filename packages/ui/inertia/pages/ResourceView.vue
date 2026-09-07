@@ -764,7 +764,7 @@ function confirmPending() {
                 </Button>
                 <!-- Primary last (DESIGN_RULES rule 2): Edit is the action this
                      page exists for, so it takes the outside edge. -->
-                <Button v-if="can.delete" variant="outline" size="sm" @click="requestDelete"
+                <Button v-if="can.delete" variant="destructive" size="sm" @click="requestDelete"
                     >Delete</Button
                 >
                 <!-- A `<Link>` wearing button classes, not `<Button as-child>` wrapping one - see the note beside ResourceIndex's own New button. -->
@@ -799,7 +799,7 @@ function confirmPending() {
                  labelled pairs than as a table row turned on its side. -->
             <dl
                 v-else
-                class="bg-card divide-y rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+                class="bg-card divide-y overflow-hidden rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10"
             >
                 <div
                     v-for="column in schema.table.columns"
@@ -926,23 +926,21 @@ function confirmPending() {
         >
             <template #footer>
                 <Button variant="outline" @click="pendingConfirmation = null">Cancel</Button>
-                <Button
-                    variant="destructive"
-                    @click="confirmPending"
-                >
-                    Confirm
-                </Button>
+                <Button variant="destructive" @click="confirmPending"> Confirm </Button>
             </template>
         </PkModal>
 
         <!-- Related lists: tabs outside, TableShell chrome inside RelationPanel. -->
         <section v-if="relations.length" class="flex flex-col gap-3">
-            <div v-if="relations.length > 1" class="bg-muted/40 flex w-fit gap-1 rounded-md p-1">
+            <div
+                v-if="relations.length > 1"
+                class="bg-muted/40 border-border/60 flex w-fit gap-1 rounded-lg border p-1"
+            >
                 <button
                     v-for="relation in relations"
                     :key="relation.key"
                     type="button"
-                    class="rounded px-3 py-1.5 text-sm transition-colors"
+                    class="min-h-9 rounded-md px-3 text-sm transition-colors"
                     :class="
                         activeRelation === relation.key
                             ? 'bg-background text-foreground font-medium shadow-sm'

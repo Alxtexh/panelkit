@@ -8,6 +8,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@alxtexh-enterprise/panel'
+import { toUrl } from '@alxtexh-enterprise/panel'
 import { useCurrentUrl } from '../../composables/useCurrentUrl'
 import type { NavItem } from '../../types'
 
@@ -60,7 +61,28 @@ const { isCurrentUrl } = useCurrentUrl()
         -->
         <SidebarMenu v-if="nested" class="gap-0.5">
             <SidebarMenuItem v-for="item in items" :key="item.title">
+                <a
+                    v-if="item.external"
+                    :href="toUrl(item.href)"
+                    class="relative flex items-center gap-2.5 rounded-md py-1.5 pr-2 pl-8 text-sm transition-colors"
+                    @click="emit('navigate')"
+                    :aria-current="isCurrentUrl(item.href) ? 'page' : undefined"
+                    :class="
+                        isCurrentUrl(item.href)
+                            ? 'bg-primary/10 font-medium text-primary'
+                            : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                    "
+                >
+                    <span class="truncate">{{ item.title }}</span>
+                    <span
+                        v-if="item.badge != null && item.badge !== ''"
+                        class="bg-sidebar-accent text-sidebar-accent-foreground ml-auto inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-md px-1 text-xs font-medium tabular-nums"
+                    >
+                        {{ item.badge }}
+                    </span>
+                </a>
                 <Link
+                    v-else
                     :href="item.href"
                     prefetch="hover"
                     cache-for="30s"
@@ -108,7 +130,17 @@ const { isCurrentUrl } = useCurrentUrl()
                         item is the one you are on. Colour and weight say it to
                         everybody else and say nothing at all here.
                     -->
+                    <a
+                        v-if="item.external"
+                        :href="toUrl(item.href)"
+                        :aria-current="isCurrentUrl(item.href) ? 'page' : undefined"
+                        @click="emit('navigate')"
+                    >
+                        <component :is="item.icon" />
+                        <span>{{ item.title }}</span>
+                    </a>
                     <Link
+                        v-else
                         :href="item.href"
                         prefetch="hover"
                         cache-for="30s"

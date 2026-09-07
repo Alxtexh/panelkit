@@ -35,6 +35,11 @@ describe('BulkActions - count before commit', () => {
             attachTo: document.body,
         })
 
+        const trigger = wrapper.find('button[aria-haspopup="menu"]')
+        expect(trigger.text()).toContain('Bulk actions')
+        expect(trigger.text()).toContain('2') // Delete + Export CSV
+        expect(trigger.classes()).toContain('min-h-9')
+
         await openMenu(wrapper)
         await body().find('[role="menuitem"].text-destructive').trigger('click')
 

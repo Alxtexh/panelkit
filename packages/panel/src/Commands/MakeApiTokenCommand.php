@@ -60,7 +60,12 @@ final class MakeApiTokenCommand extends Command
             return self::FAILURE;
         }
 
-        $abilities = (array) $this->option('ability');
+        $abilities = [];
+        foreach ((array) $this->option('ability') as $ability) {
+            if (is_string($ability) && $ability !== '') {
+                $abilities[] = $ability;
+            }
+        }
 
         if ($abilities === []) {
             /*

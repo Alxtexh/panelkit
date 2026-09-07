@@ -1,0 +1,1 @@
+import{Rt as e,V as t,j as n,tt as r,z as i}from"./api-docs-BN78F1L2.js";import{t as a}from"./Security-3C1D-B-F.js";var o=i({inheritAttrs:!1,__name:`Security`,setup(i){return(i,o)=>(r(),n(a,e(t(i.$attrs)),null,16))}});export{o as default};

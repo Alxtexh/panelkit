@@ -3,9 +3,10 @@ export interface SchemaNode {
     component: 'field' | 'section' | 'card' | 'columns' | 'column' | 'grid' | 'flex' | 'fieldset' | 'callout' | 'tabs' | 'tab' | 'wizard' | 'step';
     children?: SchemaNode[];
     label?: string;
+    badge?: string | number | null;
     title?: string;
     description?: string;
-    columns?: number;
+    columns?: number | ResponsiveColumns;
     span?: number;
     collapsible?: boolean;
     collapsed?: boolean;
@@ -22,6 +23,7 @@ export interface SchemaNode {
     persistInQueryString?: string | null;
     [key: string]: any;
 }
+export type ResponsiveColumns = Partial<Record<'default' | 'sm' | 'md' | 'lg' | 'xl' | '2xl', number>>;
 type __VLS_Props = {
     node: SchemaNode;
     values: Record<string, any>;

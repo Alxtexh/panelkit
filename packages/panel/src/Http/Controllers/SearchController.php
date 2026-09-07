@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Http\Controllers;
 
+use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Alxtexh\Panel\PanelManager;
-use Alxtexh\Panel\Resources\Resource;
 
 /**
  * What the command palette asks when somebody types.
@@ -36,7 +36,6 @@ use Alxtexh\Panel\Resources\Resource;
  */
 final class SearchController extends Controller
 {
-
     /** Below this a prefix search matches too much to be worth the round trip. */
     private const MIN_LENGTH = 2;
 
@@ -86,7 +85,7 @@ final class SearchController extends Controller
                 break;
             }
 
-            /** @var class-string<resource> $class */
+            /** @var class-string<\Alxtexh\Panel\Resources\Resource> $class */
             /*
              * THE SAME ABILITY THE LIST PAGE ASKS FOR.
              *
@@ -225,7 +224,11 @@ final class SearchController extends Controller
             return [];
         }
 
-        $parts = preg_split('/\s+/u', $normalised, flags: PREG_SPLIT_NO_EMPTY) ?? [];
+        $parts = preg_split('/\s+/u', $normalised, flags: PREG_SPLIT_NO_EMPTY);
+
+        if ($parts === false) {
+            return [];
+        }
 
         return array_values(array_filter($parts, static fn (string $p): bool => trim($p) !== ''));
     }
@@ -246,6 +249,7 @@ final class SearchController extends Controller
 
             if (str_starts_with($lower, $word)) {
                 $score += 2;
+
                 continue;
             }
 
@@ -313,6 +317,7 @@ final class SearchController extends Controller
      * is the honest guess, and the key itself is the fallback so a row is never
      * blank.
      */
+    /** @param  list<array<string, mixed>>  $records */
     private function titleColumn(array $records): string
     {
         foreach (['name', 'title', 'label', 'reference', 'subject', 'description', 'email'] as $candidate) {

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
-use Illuminate\Support\Facades\Route;
 use Alxtexh\Panel\PanelManager;
+use Illuminate\Support\Facades\Route;
 
 /**
  * Every screen in the application, derived from the router.
@@ -130,6 +130,7 @@ final class PanelScreens
     public static function all(): array
     {
         $screens = [];
+        $manager = app(PanelManager::class);
 
         foreach (Route::getRoutes() as $route) {
             if (! in_array('GET', $route->methods(), true)) {
@@ -147,6 +148,24 @@ final class PanelScreens
              * enumerate them.
              */
             if (str_contains($uri, '{')) {
+                continue;
+            }
+
+            /*
+             * GENERATED PANEL ROUTES ARE REMOVED FROM DISK, NOT FROM
+             * Laravel's already-built route collection. A generator test can
+             * therefore leave a route whose `panel` default names a provider
+             * that has already been unregistered. Treating that orphan as a
+             * real screen makes a later test request a 404 and makes the
+             * parallel suite depend on file order. Only routes belonging to a
+             * currently registered panel are part of this inventory.
+             *
+             * Routes without a panel default are application-owned routes and
+             * remain eligible for coverage as before.
+             */
+            $panelId = $route->defaults['panel'] ?? null;
+
+            if (is_string($panelId) && $manager->panel($panelId) === null) {
                 continue;
             }
 
@@ -185,8 +204,6 @@ final class PanelScreens
          * different shape with different failure modes, and
          * `PackagedScreensRenderTest` opens one properly.
          */
-        $manager = app(PanelManager::class);
-
         foreach ($manager->resources() as $slug => $class) {
             /*
              * A NESTED RESOURCE HAS NO TOP-LEVEL URL, and asserting one exists

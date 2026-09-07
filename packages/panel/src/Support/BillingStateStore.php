@@ -36,7 +36,7 @@ final class BillingStateStore
             'period_end_at' => $row->period_end_at?->toIso8601String(),
             'grace_ends_at' => $row->grace_ends_at?->toIso8601String(),
             'provider_ref' => $row->provider_ref,
-            'updated_at' => $row->updated_at?->toIso8601String(),
+            'updated_at' => $row->updated_at->toIso8601String(),
         ];
     }
 
@@ -84,7 +84,7 @@ final class BillingStateStore
             ->first();
 
         if ($row === null || $row->status !== 'past_due' || $row->grace_ends_at === null) {
-            return self::transitionResult($type, $key, $row?->status ?? 'active', false);
+            return self::transitionResult($type, $key, $row === null ? 'active' : $row->status, false);
         }
 
         if ($row->grace_ends_at->isFuture()) {
@@ -218,4 +218,3 @@ final class BillingStateStore
         return $value === '' ? null : $value;
     }
 }
-

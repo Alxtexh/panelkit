@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Workflow;
 
+use Illuminate\Database\Eloquent\Model;
 use Alxtexh\Panel\Actions\ActionGroup;
 use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Tables\Columns\BadgeColumn;
@@ -23,7 +24,7 @@ final class Workflow
     /** @var list<Transition> */
     private array $transitions = [];
 
-    /** @var class-string|null */
+    /** @var class-string<Model>|null */
     private ?string $model = null;
 
     private string $groupLabel = 'Status';
@@ -42,7 +43,7 @@ final class Workflow
      * artifacts). States and transitions come from the DB row.
      *
      * @param  array{column: string, group_label?: string, states: array<string, array{label: string, color: string}>, transitions: list<array{key: string, label: string, to: string, from?: list<string>, ability?: string, icon?: string|null, color?: string|null, confirm?: string|null}>}  $stored
-     * @param  class-string|null  $model
+     * @param  class-string<Model>|null  $model
      */
     public static function fromStored(array $stored, ?string $model = null): self
     {
@@ -66,15 +67,15 @@ final class Workflow
                 $transition->authorize($t['ability']);
             }
 
-            if (isset($t['icon']) && $t['icon'] !== null) {
+            if (isset($t['icon'])) {
                 $transition->icon($t['icon']);
             }
 
-            if (isset($t['color']) && $t['color'] !== null) {
+            if (isset($t['color'])) {
                 $transition->color($t['color']);
             }
 
-            if (isset($t['confirm']) && $t['confirm'] !== null) {
+            if (isset($t['confirm'])) {
                 $transition->confirm($t['confirm']);
             }
 
@@ -86,7 +87,7 @@ final class Workflow
         return $workflow;
     }
 
-    /** @param class-string $model */
+    /** @param class-string<Model> $model */
     public function model(string $model): self
     {
         $this->model = $model;
@@ -132,7 +133,7 @@ final class Workflow
     /** @param list<Transition> $transitions */
     public function transitions(array $transitions): self
     {
-        $this->transitions = array_values($transitions);
+        $this->transitions = $transitions;
 
         return $this;
     }
@@ -280,11 +281,16 @@ final class Workflow
                 continue;
             }
 
-            if ($this->model !== null && class_exists($this->model)) {
-                /** @var class-string<\Alxtexh\Panel\Models\Concerns\HasStateTransitions&\Illuminate\Database\Eloquent\Model> $model */
+            if ($this->model !== null
+                && class_exists($this->model)
+                && method_exists($this->model, 'canTransitionFromAttributes')) {
                 $model = $this->model;
 
-                if (! $model::canTransitionFromAttributes($record, $transition->destination(), $this->column)) {
+                if (! $model::canTransitionFromAttributes(
+                    $record,
+                    $transition->destination(),
+                    $this->column,
+                )) {
                     continue;
                 }
             }

@@ -103,8 +103,12 @@ final class Discovery
 
             $relative = substr($file->getPathname(), strlen(rtrim($appPath, '/')) + 1);
 
-            $classes[] = rtrim($appNamespace, '\\').'\\'
+            $class = rtrim($appNamespace, '\\').'\\'
                 .str_replace('/', '\\', substr($relative, 0, -4));
+
+            if (class_exists($class)) {
+                $classes[] = $class;
+            }
         }
 
         return $classes;

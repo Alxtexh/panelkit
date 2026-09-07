@@ -155,7 +155,7 @@ trait HasAffixes
             'prefixAction' => $this->actionSchema($this->prefixAction),
             'suffixAction' => $this->actionSchema($this->suffixAction),
             'hintAction' => $this->actionSchema($this->hintAction),
-        ], static fn (mixed $v): bool => $v !== null && $v !== false && $v !== []);
+        ], static fn (mixed $v): bool => $v !== null && $v !== []);
     }
 
     /**
@@ -177,7 +177,7 @@ trait HasAffixes
             'icon' => $action['icon'] ?? null,
             'copy' => ($action['copy'] ?? false) ? true : null,
             'url' => $action['url'] ?? null,
-        ], static fn (mixed $v): bool => $v !== null && $v !== false);
+        ], static fn (mixed $v): bool => $v !== null);
 
         return $schema === [] ? null : $schema;
     }

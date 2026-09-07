@@ -49,6 +49,10 @@ final class PrefixedStore implements LockProvider, Store
         return $this->inner->get($this->key($key));
     }
 
+    /**
+     * @param list<string> $keys
+     * @return array<string, mixed>
+     */
     public function many(array $keys): array
     {
         $prefixed = array_map(fn (string $key): string => $this->key($key), $keys);
@@ -56,7 +60,13 @@ final class PrefixedStore implements LockProvider, Store
         $values = $this->inner->many($prefixed);
 
         // Callers expect their OWN keys back, not the prefixed ones.
-        return array_combine($keys, array_values($values));
+        $result = [];
+
+        foreach ($keys as $index => $key) {
+            $result[$key] = $values[$prefixed[$index]] ?? null;
+        }
+
+        return $result;
     }
 
     public function put($key, $value, $seconds): bool
@@ -64,6 +74,7 @@ final class PrefixedStore implements LockProvider, Store
         return $this->inner->put($this->key($key), $value, $seconds);
     }
 
+    /** @param array<string, mixed> $values */
     public function putMany(array $values, $seconds): bool
     {
         $prefixed = [];

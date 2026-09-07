@@ -117,7 +117,7 @@ final class MultiSelectField extends Field
      *
      * @return list<array{value: mixed, label: string}>
      */
-    public function resolveOptions(): ?array
+    public function resolveOptions(): array
     {
         $out = [];
 

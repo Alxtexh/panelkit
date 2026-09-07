@@ -14,23 +14,26 @@ import { useWidgetPoll } from '../../composables/useWidgetPoll'
 import ChartBody from './ChartBody.vue'
 import type { Chart, Series } from './types'
 
-const props = withDefaults(defineProps<{
-    chart: Chart
-    series: Series
-    periods: { value: string; label: string }[] | null
-    period?: string
-    comparison?: string
-    bodyHeight: number
-    /** Namespace used by header/page widget hosts. */
-    prefix?: string
-}>(), { prefix: '' })
+const props = withDefaults(
+    defineProps<{
+        chart: Chart
+        series: Series
+        periods: { value: string; label: string }[] | null
+        period?: string
+        comparison?: string
+        bodyHeight: number
+        /** Namespace used by header/page widget hosts. */
+        prefix?: string
+    }>(),
+    { prefix: '' },
+)
 
 const dataKey = computed(() =>
     props.prefix ? `${props.prefix}_chart_${props.chart.key}` : `chart_${props.chart.key}`,
 )
 
 function retry() {
-    router.reload({ only: [dataKey.value], preserveState: true, preserveScroll: true })
+    router.reload({ only: [dataKey.value] })
 }
 
 defineEmits<{

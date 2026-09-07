@@ -57,12 +57,12 @@ final class PaymentSettingsPage extends Page
         return 'settings/Payments';
     }
 
-    public static function heading(): ?string
+    public static function heading(): string
     {
         return 'Payment gateways';
     }
 
-    public static function description(): ?string
+    public static function description(): string
     {
         return 'How this organisation takes money. Showcase only: no live processors, no API keys stored.';
     }

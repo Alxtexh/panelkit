@@ -73,19 +73,23 @@ class ApiKeysPage extends Page
             return [];
         }
 
-        return ApiToken::query()
+        $keys = [];
+
+        foreach (ApiToken::query()
             ->where('tenant_id', $tenantId)
             ->orderByDesc('id')
-            ->get()
-            ->map(static fn (ApiToken $token): array => [
+            ->get() as $token) {
+            $keys[] = [
                 'id' => $token->id,
                 'name' => $token->name,
                 'prefix' => $token->prefix,
                 'abilities' => $token->abilities,
                 'last_used_at' => $token->last_used_at?->toIso8601String(),
                 'expires_at' => $token->expires_at?->toIso8601String(),
-            ])
-            ->all();
+            ];
+        }
+
+        return $keys;
     }
 
     /**

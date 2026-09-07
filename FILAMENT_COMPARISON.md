@@ -54,9 +54,9 @@ layout nodes** and a few minor per-component gaps.
 
 | Filament v5 | PanelKit | Verdict |
 |---|---|---|
-| `Grid` — int or per-breakpoint column map (`schemas/src/Components/Grid.php:19`) | `Schema\Grid::columns(int)` — single int only (`packages/panel/src/Schema/Grid.php:12`) | behind (minor) |
+| `Grid` — int or per-breakpoint column map (`schemas/src/Components/Grid.php:19`) | `Schema\Grid::make(int|array)` — validated responsive map with kit-owned breakpoints (`packages/panel/src/Schema/Grid.php`) | parity |
 | `Section` — heading/description/icon/collapsible, plus `aside()`/`compact()`/`divided()`/footer actions (`Section.php:45-59`) | `Schema\Section` — label/description/icon/columns/collapsible (`packages/panel/src/Schema/Section.php:13-61`) | parity on the core case |
-| `Tabs` — labels/icons/badges, `persistTabInQueryString()`, vertical/scrollable overflow (`Tabs.php:138,234,246`) | `Schema\Tabs`/`Tab` — label + icon, ✅ `persistInQueryString(string $key = 'tab')` (`packages/panel/src/Schema/Tabs.php`) | behind (minor) — badges and scrollable overflow remain, position-persistence closed |
+| `Tabs` — labels/icons/badges, `persistTabInQueryString()`, vertical/scrollable overflow (`Tabs.php:138,234,246`) | `Schema\Tabs`/`Tab` — label + icon + badge, ✅ `persistInQueryString(string $key = 'tab')`; horizontally scrollable tab strip in the kit | parity on the shared case |
 | `Wizard`/`Step` — description+icon, `skippable()`, `persistStepInQueryString()` (`Wizard.php:236-347`) | `Schema\Wizard`/`Step` — description+icon, **`stepRules()`** derives per-step validation from the step's own fields (`packages/panel/src/Schema/Wizard.php:32-86`), ✅ `persistInQueryString(string $key = 'step')` | parity, PanelKit's derived-rules touch is arguably nicer — `skippable()` remains the one gap |
 | `Fieldset` — `<fieldset>`/`<legend>`, `columns(2)` default (`Fieldset.php:18,41`) | `Schema\Fieldset` — label/description/columns (`Fieldset.php:25-66`) | parity |
 | Field visibility: arbitrary `Closure` with `Get $get` injected (`Concerns/CanBeHidden.php:11`) | `Field::hidden()` accepts a closure, evaluated on `live()` round-trips (`Forms/Fields/Field.php:134-139`); `afterStateUpdated()` is the direct analogue (`:148-153`) | parity **on fields** |
@@ -85,13 +85,11 @@ layout nodes** and a few minor per-component gaps.
    would add. Confirmed by reading Filament's live source in `temp/filament-study`
    rather than assumed.
 
-**Verdict: parity.** Core primitives, field reactivity, and the Repeater are all
-at parity now - the Repeater was the one real thin spot in this section, and
-closing `addable`/`deletable`/`cloneable`/`table()` (plus finding `simple()` was
-never actually missing) closes it. What's left in this section - `Grid` per-
-breakpoint spans, `Tabs`/`Wizard` position-in-query-string, closure-based
-layout-node visibility - are all independently small, not concentrated in one
-component the way the Repeater was.
+**Verdict: parity.** Core primitives, field reactivity, responsive `Grid`, tab
+badges, query-string position persistence, and the Repeater are all at parity
+for the shared case. The remaining differences are deliberate or presentation
+depth choices: wizard `skippable()`, vertical tab orientation, and nested
+action groups are not part of the current add-only/SPA contract.
 
 ---
 

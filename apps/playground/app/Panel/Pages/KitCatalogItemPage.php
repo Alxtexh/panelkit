@@ -31,7 +31,7 @@ final class KitCatalogItemPage extends CatalogItemPage
         return 'KitCatalogItem';
     }
 
-    public static function heading(): ?string
+    public static function heading(): string
     {
         return 'Catalog item';
     }

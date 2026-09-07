@@ -12,7 +12,6 @@ use Laravel\Ai\Contracts\Approvable;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Alxtexh\Panel\Ai\PanelTool;
-use Stringable;
 
 /**
  * Suspend a subscriber's service.
@@ -41,7 +40,7 @@ final class SuspendSubscriber extends PanelTool implements Approvable, Tool
 {
     use InteractsWithApprovals;
 
-    public function description(): Stringable|string
+    public function description(): string
     {
         return 'Suspend a subscriber, cutting off their service. Requires human approval.';
     }
@@ -72,9 +71,9 @@ final class SuspendSubscriber extends PanelTool implements Approvable, Tool
      * subscriber 91827, who does not appear to exist" is exactly the prompt
      * somebody should see before the tool reports the same thing.
      */
-    public function shouldRequestApproval(Request $request): ?Approval
+    public function shouldRequestApproval(Request $request): Approval
     {
-        $client = Client::query()->find($request['id']);
+        $client = Client::query()->whereKey($request['id'])->first();
 
         $who = $client === null
             ? "subscriber #{$request['id']} (not found in this organisation)"
@@ -83,9 +82,9 @@ final class SuspendSubscriber extends PanelTool implements Approvable, Tool
         return Approval::required("Suspend {$who}? Reason given: ".$request['reason']);
     }
 
-    public function handle(Request $request): Stringable|string
+    public function handle(Request $request): string
     {
-        $client = Client::query()->find($request['id']);
+        $client = Client::query()->whereKey($request['id'])->first();
 
         /*
          * NOT FOUND IS CHECKED BEFORE THE PERMISSION, because the scope has

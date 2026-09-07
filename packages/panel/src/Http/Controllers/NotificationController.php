@@ -63,6 +63,12 @@ final class NotificationController extends Controller
             ]);
         }
 
+        if (! method_exists($user, 'notifications')) {
+            return response()->json([
+                'alerts' => [], 'notifications' => [], 'unread' => 0, 'hasMore' => false,
+            ]);
+        }
+
         $page = max(1, $request->integer('page', 1));
 
         /*
@@ -171,7 +177,7 @@ final class NotificationController extends Controller
      */
     private function announcements(mixed $user): array
     {
-        return Announcement::activeFor($user->getKey())
+        $rows = Announcement::activeFor($user->getKey())
             ->map(fn (Announcement $announcement): array => [
                 /*
                  * PREFIXED, because an alert key is a client-side identity and
@@ -187,6 +193,13 @@ final class NotificationController extends Controller
             ])
             ->values()
             ->all();
+
+        $announcements = [];
+        foreach ($rows as $row) {
+            $announcements[] = $row;
+        }
+
+        return $announcements;
     }
 
     /**
@@ -199,7 +212,12 @@ final class NotificationController extends Controller
      */
     public function markRead(Request $request, string $id): JsonResponse
     {
-        $request->user()->notifications()->whereKey($id)->firstOrFail()->markAsRead();
+        $user = $request->user();
+        if ($user === null || ! method_exists($user, 'notifications')) {
+            abort(404);
+        }
+
+        $user->notifications()->whereKey($id)->firstOrFail()->markAsRead();
 
         return response()->json(['ok' => true]);
     }
@@ -220,14 +238,24 @@ final class NotificationController extends Controller
      */
     public function markUnread(Request $request, string $id): JsonResponse
     {
-        $request->user()->notifications()->whereKey($id)->firstOrFail()->markAsUnread();
+        $user = $request->user();
+        if ($user === null || ! method_exists($user, 'notifications')) {
+            abort(404);
+        }
+
+        $user->notifications()->whereKey($id)->firstOrFail()->markAsUnread();
 
         return response()->json(['ok' => true]);
     }
 
     public function destroy(Request $request, string $id): JsonResponse
     {
-        $request->user()->notifications()->whereKey($id)->firstOrFail()->delete();
+        $user = $request->user();
+        if ($user === null || ! method_exists($user, 'notifications')) {
+            abort(404);
+        }
+
+        $user->notifications()->whereKey($id)->firstOrFail()->delete();
 
         return response()->json(['ok' => true]);
     }
@@ -240,7 +268,12 @@ final class NotificationController extends Controller
      */
     public function clearAll(Request $request): JsonResponse
     {
-        $request->user()->notifications()->delete();
+        $user = $request->user();
+        if ($user === null || ! method_exists($user, 'notifications')) {
+            abort(404);
+        }
+
+        $user->notifications()->delete();
 
         return response()->json(['ok' => true]);
     }

@@ -38,7 +38,7 @@ final class TransparentImage
             throw new InvalidArgumentException(self::HELP);
         }
 
-        $mime = strtolower((string) ($info['mime'] ?? ''));
+        $mime = strtolower((string) $info['mime']);
 
         if ($mime === 'image/jpeg') {
             throw new InvalidArgumentException(self::JPEG);
@@ -59,7 +59,10 @@ final class TransparentImage
 
     public static function hasTransparency(string $path, ?string $mime = null): bool
     {
-        $mime ??= strtolower((string) (@getimagesize($path)['mime'] ?? ''));
+        if ($mime === null) {
+            $info = @getimagesize($path);
+            $mime = $info === false ? '' : strtolower((string) $info['mime']);
+        }
 
         $image = match ($mime) {
             'image/png' => function_exists('imagecreatefrompng') ? @imagecreatefrompng($path) : false,

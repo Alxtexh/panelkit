@@ -33,6 +33,7 @@ final class SelectField extends Field
     /** @var array<string|int, string>|Closure(): array<string|int, string> */
     private array|Closure $options = [];
 
+    /** @var array<string|int, string>|null */
     private ?array $resolved = null;
 
     private bool $searchable = false;
@@ -126,7 +127,7 @@ final class SelectField extends Field
      * query and the current form values (from `live()` / form-state).
      *
      * @param  class-string<Model>  $model
-     * @param  Closure(Builder, array<string, mixed>): void|null  $modifyQuery
+     * @param  Closure(Builder<Model>, array<string, mixed>): void|null  $modifyQuery
      */
     public function relationship(string $model, string $titleAttribute, ?Closure $modifyQuery = null): static
     {
@@ -161,7 +162,7 @@ final class SelectField extends Field
         }
 
         foreach ($types as $model => $titleAttribute) {
-            if (! is_string($model) || ! is_subclass_of($model, Model::class)) {
+            if (! is_subclass_of($model, Model::class)) {
                 throw new InvalidArgumentException("[{$model}] is not an Eloquent model.");
             }
 
@@ -174,7 +175,7 @@ final class SelectField extends Field
         $this->searchQuery = function (string $term, array $form = []): array {
             $type = data_get($form, $this->key.'.type');
 
-            if (! is_string($type) || ! isset($this->morphTypes[$type])) {
+            if (! is_string($type) || ! isset($this->morphTypes[$type]) || ! $this->isModelClass($type)) {
                 return [];
             }
 
@@ -222,18 +223,22 @@ final class SelectField extends Field
      *             TextField::make('title')->required(),
      *         ]);
      *
-     * @param  list<Field>  $fields
+     * @param  list<mixed>  $fields
      * @param  Closure(array<string, mixed>): mixed|null  $using
      */
     public function createOption(array $fields, ?Closure $using = null): static
     {
+        $validated = [];
+
         foreach ($fields as $field) {
             if (! $field instanceof Field) {
                 throw new InvalidArgumentException('createOption() fields must be Field instances.');
             }
+
+            $validated[] = $field;
         }
 
-        $this->createOptionFields = array_values($fields);
+        $this->createOptionFields = $validated;
         $this->createOptionUsing = $using;
 
         return $this;
@@ -348,7 +353,7 @@ final class SelectField extends Field
     private function labelForCreated(mixed $id): string
     {
         if ($this->relatedModel !== null && $this->titleAttribute !== null) {
-            $row = $this->relatedModel::query()->find($id);
+            $row = is_scalar($id) ? $this->relatedModel::query()->find($id) : null;
 
             if ($row !== null) {
                 return (string) $row->getAttribute($this->titleAttribute);
@@ -369,9 +374,16 @@ final class SelectField extends Field
         return $this->pickerResource;
     }
 
+    /** @phpstan-assert-if-true class-string<Model> $class */
+    private function isModelClass(string $class): bool
+    {
+        return is_a($class, Model::class, true);
+    }
+
     /**
      * @param  class-string<Model>  $model
-     * @param  Closure(Builder, array<string, mixed>): void|null  $modifyQuery
+     * @param  Closure(Builder<Model>, array<string, mixed>): void|null  $modifyQuery
+     * @param  array<string, mixed>  $form
      * @return array<string|int, string>
      */
     private function searchModel(
@@ -545,7 +557,7 @@ final class SelectField extends Field
         ];
     }
 
-    public function resolveOptions(): ?array
+    public function resolveOptions(): array
     {
         // A searchable field ships NO options; the client fetches them.
         if ($this->searchable) {

@@ -88,6 +88,23 @@ final class PageController extends Controller
             $payload['saveMethod'] = strtolower($class::actionMethods()['save'] ?? 'post');
         }
 
+        /*
+         * EVERY DECLARED ACTION GETS A STABLE URL PROP. A page with a draft
+         * and a publish button used to need a hand-built route prop even
+         * though the page registry already owned the action and its ability.
+         * Keeping this here makes publish/preview workflows reusable for any
+         * page without teaching the client a second routing convention.
+         */
+        foreach (array_keys($class::actions()) as $action) {
+            $key = $action.'Href';
+
+            if (! array_key_exists($key, $payload)) {
+                $payload[$key] = $this->pageActionUrl($class, $action);
+            }
+
+            $payload[$action.'Method'] = strtolower($class::actionMethods()[$action] ?? 'post');
+        }
+
         return Inertia::render($class::component(), $payload);
     }
 

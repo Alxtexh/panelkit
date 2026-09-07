@@ -38,12 +38,16 @@ final class TenantUserProvider extends EloquentUserProvider
     /** @param array<string, mixed> $credentials */
     public function retrieveByCredentials(array $credentials): ?Authenticatable
     {
-        return $this->withTenant(fn () => parent::retrieveByCredentials($credentials));
+        $user = $this->withTenant(fn () => parent::retrieveByCredentials($credentials));
+
+        return $user instanceof Model ? $user : null;
     }
 
     public function retrieveByToken($identifier, $token): ?Authenticatable
     {
-        return $this->withTenant(fn () => parent::retrieveByToken($identifier, $token));
+        $user = $this->withTenant(fn () => parent::retrieveByToken($identifier, $token));
+
+        return $user instanceof Model ? $user : null;
     }
 
     /**

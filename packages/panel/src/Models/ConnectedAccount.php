@@ -19,6 +19,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * THE USER MODEL IS THE APPLICATION'S. A package cannot name it, and
  * `auth.providers.users.model` is where Laravel already keeps the answer.
+ *
+ * @property int|string|null $id
+ * @property string $guard
+ * @property int|string $user_id
+ * @property string $provider
+ * @property string $provider_id
+ * @property string|null $email
+ * @property string|null $nickname
+ * @property \Illuminate\Support\Carbon|null $last_used_at
  */
 final class ConnectedAccount extends Model
 {
@@ -44,6 +53,7 @@ final class ConnectedAccount extends Model
      * customer portal resolved to an OPERATOR of the same id - and the caller
      * then signed that operator in. See the `guard` migration.
      */
+    /** @return BelongsTo<Model, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(self::modelForGuard((string) $this->guard));
@@ -55,7 +65,7 @@ final class ConnectedAccount extends Model
      * Falls back to the default guard's provider for a row written before the
      * `guard` column existed, which is what those rows meant.
      *
-     * @return class-string
+     * @return class-string<Model>
      */
     public static function modelForGuard(?string $guard): string
     {
@@ -63,9 +73,13 @@ final class ConnectedAccount extends Model
 
         $provider = (string) config("auth.guards.{$guard}.provider", 'users');
 
-        return (string) config(
+        $model = config(
             "auth.providers.{$provider}.model",
             config('auth.providers.users.model', 'App\\Models\\User'),
         );
+
+        return is_string($model) && class_exists($model) && is_a($model, Model::class, true)
+            ? $model
+            : Model::class;
     }
 }

@@ -63,7 +63,13 @@ final class VendoredCopy
              */
             $absolute = str_starts_with($url, '/') ? $url : $basePath.'/'.$url;
 
-            foreach ((array) glob($absolute) as $candidate) {
+            $candidates = glob($absolute);
+
+            if ($candidates === false) {
+                continue;
+            }
+
+            foreach ($candidates as $candidate) {
                 $manifest = $candidate.'/composer.json';
 
                 if (! is_file($manifest)) {

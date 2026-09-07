@@ -121,8 +121,8 @@ final class Ticket extends Model
          * resolved rather than to whichever one a caller remembered to pass.
          */
         self::creating(static function (self $ticket): void {
-            if ($ticket->tenant_id === null) {
-                $ticket->tenant_id = app(TenantContext::class)->currentKey();
+            if ($ticket->getAttribute('tenant_id') === null) {
+                $ticket->setAttribute('tenant_id', app(TenantContext::class)->currentKey());
             }
 
             /*
@@ -133,8 +133,8 @@ final class Ticket extends Model
              * two ticket resources exposes one, and this is what makes that
              * true rather than a habit two authors have to keep.
              */
-            if ($ticket->opened_by === null) {
-                $ticket->opened_by = Auth::id();
+            if ($ticket->getAttribute('opened_by') === null) {
+                $ticket->setAttribute('opened_by', Auth::id());
             }
         });
 
@@ -160,7 +160,10 @@ final class Ticket extends Model
                 return;
             }
 
-            $ticket->resolved_at = $ticket->status === self::RESOLVED ? now() : null;
+            $ticket->setAttribute(
+                'resolved_at',
+                $ticket->getAttribute('status') === self::RESOLVED ? now() : null,
+            );
         });
     }
 
@@ -271,12 +274,12 @@ final class Ticket extends Model
             'attachments' => $attachments === [] ? null : $attachments,
         ]);
 
-        $this->last_reply_at = $reply->created_at;
+        $this->setAttribute('last_reply_at', $reply->created_at);
 
-        if ($this->first_response_at === null
+        if ($this->getAttribute('first_response_at') === null
             && $visibility === TicketReply::PUBLIC
-            && (string) $authorId !== (string) $this->opened_by) {
-            $this->first_response_at = $reply->created_at;
+            && (string) $authorId !== (string) $this->getAttribute('opened_by')) {
+            $this->setAttribute('first_response_at', $reply->created_at);
         }
 
         $this->save();

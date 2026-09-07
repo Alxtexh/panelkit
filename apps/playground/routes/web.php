@@ -16,11 +16,25 @@ use App\Http\Controllers\Auth\OtpPasswordResetController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\LandingAssetController;
+use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\LandingImageController;
 use App\Http\Controllers\LockController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\SavedViewController;
 use App\Support\Guide;
 use App\Support\HelpArticles;
+use Alxtexh\Panel\Http\Middleware\BlockImpersonatedCredentialChanges;
+use Alxtexh\Panel\Http\Middleware\DenySuspendedAccount;
+use Alxtexh\Panel\Http\Middleware\DenySuspendedTenant;
+use Alxtexh\Panel\Http\Middleware\EnsurePanelIsUnlocked;
+use Alxtexh\Panel\Http\Middleware\InitializeTenancyForUser;
+use Alxtexh\Panel\Http\Middleware\RequirePasswordRenewal;
+use Alxtexh\Panel\Http\Middleware\ResolveTenantByHost;
+use Alxtexh\Panel\Http\Middleware\ScopeSessionToTenant;
+use Alxtexh\Panel\Http\Middleware\SetPanelLocale;
+use Alxtexh\Panel\Auth\SetPermissionsTeam;
+use Alxtexh\Panel\Http\Middleware\VerifyTurnstile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -42,9 +56,102 @@ use Inertia\Inertia;
  */
 $panelResources = array_keys(app(PanelManager::class)->resourcesFor('admin'));
 
-/* Public marketing pages belong to the host application; PanelKit does not
- | claim `/` or ship a landing template. */
-Route::redirect('/', '/dashboard');
+/*
+ | Imported landing applications are public standalone documents. Remove the
+ | application-specific web gates from these routes so an authenticated,
+ | locked, suspended, or tenant-scoped demo session cannot rewrite a landing
+ | request into an internal panel login URL.
+ */
+$publicLandingMiddleware = [
+    ResolveTenantByHost::class,
+    DenySuspendedTenant::class,
+    SetPanelLocale::class,
+    InitializeTenancyForUser::class,
+    ScopeSessionToTenant::class,
+    SetPermissionsTeam::class,
+    DenySuspendedAccount::class,
+    BlockImpersonatedCredentialChanges::class,
+    RequirePasswordRenewal::class,
+    VerifyTurnstile::class,
+    SharePanelProps::class,
+    EnsurePanelIsUnlocked::class,
+];
+
+/* The selected imported landing is public; the safe fallback is the panel home. */
+Route::get('/', LandingPageController::class)->name('public.landing');
+
+/*
+| LANDING-TO-PANEL INTEGRATION.
+|
+| Imported React bundles keep their original route prefixes in generated
+| links. These small, allow-listed aliases make the important calls to action
+| land in the host application's real authentication and dashboard flows,
+| instead of falling through to a missing React page.
+*/
+Route::get('panelkit/landings/{template}/dashboard', static fn () => redirect('/dashboard'))
+    ->where('template', '[a-z0-9-]+')
+    ->withoutMiddleware($publicLandingMiddleware)
+    ->name('panelkit.landing.dashboard');
+Route::get('panelkit/landings/{template}/dashboards/analytics', static fn () => redirect('/dashboard'))
+    ->where('template', '[a-z0-9-]+')
+    ->withoutMiddleware($publicLandingMiddleware);
+Route::get('panelkit/landings/{template}/app/dashboard', static fn () => redirect('/dashboard'))
+    ->where('template', '[a-z0-9-]+')
+    ->withoutMiddleware($publicLandingMiddleware);
+Route::get('panelkit/landings/chanseek/app/screens/locked', static fn () => redirect('/panelkit/landings/chanseek/app/landing/'))
+    ->withoutMiddleware($publicLandingMiddleware);
+Route::get('panelkit/landings/{template}/login', static fn () => redirect('/login'))
+    ->where('template', '[a-z0-9-]+')
+    ->withoutMiddleware($publicLandingMiddleware)
+    ->name('panelkit.landing.login');
+Route::get('panelkit/landings/{template}/register', static fn () => redirect('/login'))
+    ->where('template', '[a-z0-9-]+')
+    ->withoutMiddleware($publicLandingMiddleware);
+Route::get('panelkit/landings/{template}/sign-in', static fn () => redirect('/login'))
+    ->where('template', '[a-z0-9-]+')
+    ->withoutMiddleware($publicLandingMiddleware);
+Route::get('panelkit/landings/{template}/{locale}/login', static fn () => redirect('/login'))
+    ->where('template', '[a-z0-9-]+')
+    ->where('locale', 'en|ar')
+    ->withoutMiddleware($publicLandingMiddleware);
+Route::get('panelkit/landings/{template}/{locale}/register', static fn () => redirect('/login'))
+    ->where('template', '[a-z0-9-]+')
+    ->where('locale', 'en|ar')
+    ->withoutMiddleware($publicLandingMiddleware);
+Route::get('panelkit/landings/{template}/{locale}/sign-in', static fn () => redirect('/login'))
+    ->where('template', '[a-z0-9-]+')
+    ->where('locale', 'en|ar')
+    ->withoutMiddleware($publicLandingMiddleware);
+
+Route::get('panelkit/landings/{template}/_next/image', LandingImageController::class)
+    ->where('template', '[a-z0-9-]+')
+    ->withoutMiddleware($publicLandingMiddleware)
+    ->name('panelkit.landing.image');
+
+/* The CMS preview must pass through Laravel so its live DOM gets editor slots. */
+Route::get('landing-pages/preview/{template}', static fn (string $template) => app(LandingAssetController::class)->preview($template))
+    ->where('template', '[a-z0-9-]+')
+    ->withoutMiddleware($publicLandingMiddleware)
+    ->name('landing-pages.preview');
+
+/*
+| IMPORTED LANDING APPLICATIONS.
+|
+| They are static React documents with their own client-side routers. The
+| controller serves exact assets and falls back only for extensionless routes
+| such as `/app/landing`, keeping each imported app's design and runtime out of
+| Inertia while still making nested React routes work from a Laravel server.
+*/
+Route::get('panelkit/landings/{template}/app/{path?}', LandingAssetController::class)
+    ->where('template', '[a-z0-9-]+')
+    ->where('path', '.*')
+    ->withoutMiddleware($publicLandingMiddleware)
+    ->name('panelkit.landing.asset');
+Route::get('panelkit/landings/{template}/{path?}', LandingAssetController::class)
+    ->where('template', '[a-z0-9-]+')
+    ->where('path', '.*')
+    ->withoutMiddleware($publicLandingMiddleware)
+    ->name('panelkit.landing.root-asset');
 
 /*
 | PASSWORDLESS AND OTP AUTH.
@@ -137,6 +244,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
      */
     Route::get('screens/devices', fn () => Inertia::render('DevicePreview'))
         ->name('screens.devices');
+
+    /*
+     | THE FIRST IMPORTED LANDING TEMPLATE.
+     |
+     | Keep the friendly PanelKit URL as an authenticated entry point, then
+     | leave the shell completely. A landing page is a document with its own
+     | header, footer, router and viewport; an Inertia iframe makes it look like
+     | a broken widget and also traps the reference app inside dashboard chrome.
+     | The compiled React app is served from the namespaced public directory.
+     */
+    Route::get('landing/chanseek', fn () => redirect('/panelkit/landings/chanseek/app/landing/'))
+        ->name('landing.chanseek');
 
     Route::get('docs', fn () => redirect('/apps/api-docs'))->name('docs');
 

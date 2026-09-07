@@ -243,7 +243,7 @@ final class Action
                 'label' => $this->label,
                 'icon' => $this->icon,
                 'url' => $this->url,
-            ], static fn (mixed $v): bool => $v !== null && $v !== false);
+            ], static fn (mixed $v): bool => $v !== null);
         }
 
         return array_filter([
@@ -251,7 +251,7 @@ final class Action
             'label' => $this->label,
             'icon' => $this->icon,
             'post' => true,
-        ], static fn (mixed $v): bool => $v !== null && $v !== false);
+        ], static fn (mixed $v): bool => $v !== null);
     }
 
     /**
@@ -272,6 +272,6 @@ final class Action
             'href' => $this->url,
             'newTab' => $this->openUrlInNewTab ?: null,
             'method' => $this->httpMethod !== 'get' ? $this->httpMethod : null,
-        ], static fn (mixed $v): bool => $v !== null && $v !== false);
+        ], static fn (mixed $v): bool => $v !== null);
     }
 }

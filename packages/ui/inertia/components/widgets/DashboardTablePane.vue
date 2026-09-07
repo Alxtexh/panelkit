@@ -43,7 +43,7 @@ const resolved = computed(
 )
 
 function retry() {
-    router.reload({ only: [props.dataKey], preserveState: true, preserveScroll: true })
+    router.reload({ only: [props.dataKey] })
 }
 
 const schemaColumns = computed<SchemaColumn[]>(() => resolved.value?.columns ?? [])
@@ -77,13 +77,16 @@ function displayValue(column: SchemaColumn, value: unknown, row: Record<string, 
         return Boolean(value) ? (column.onLabel ?? 'Enabled') : (column.offLabel ?? 'Disabled')
     }
 
-    if (column.type === 'select' && column.options) return column.options[String(value)] ?? String(value)
+    if (column.type === 'select' && column.options)
+        return column.options[String(value)] ?? String(value)
 
     return [column.prefix, String(value), column.suffix].filter(Boolean).join(' ')
 }
 
 function shouldFormat(column: SchemaColumn): boolean {
-    return ['money', 'date', 'datetime', 'badge', 'checkbox', 'toggle', 'select'].includes(column.type)
+    return ['money', 'date', 'datetime', 'badge', 'checkbox', 'toggle', 'select'].includes(
+        column.type,
+    )
 }
 
 useWidgetPoll(
@@ -97,10 +100,7 @@ useWidgetPoll(
     <PkBoundary :label="table.label">
         <Deferred :data="dataKey">
             <template #fallback>
-                <div
-                    class="@container/table pk-surface min-w-0 rounded-lg"
-                    aria-busy="true"
-                >
+                <div class="@container/table pk-surface min-w-0 rounded-lg" aria-busy="true">
                     <div class="border-b px-4 py-3">
                         <h2 class="pk-section-heading">{{ table.label }}</h2>
                     </div>
@@ -170,10 +170,19 @@ useWidgetPoll(
                                 :variant="badgeVariant(column.key, slotProps.value) as any"
                                 class="capitalize"
                             >
-                                {{ column.options?.[String(slotProps.value)] ?? String(slotProps.value ?? 'None') }}
+                                {{
+                                    column.options?.[String(slotProps.value)] ??
+                                    String(slotProps.value ?? 'None')
+                                }}
                             </PkBadge>
                             <span v-else-if="shouldFormat(column)" class="tabular-nums">
-                                {{ displayValue(byKey[column.key] ?? column, slotProps.value, slotProps.row) }}
+                                {{
+                                    displayValue(
+                                        byKey[column.key] ?? column,
+                                        slotProps.value,
+                                        slotProps.row,
+                                    )
+                                }}
                             </span>
                             <template v-else>{{ slotProps.value }}</template>
                         </template>

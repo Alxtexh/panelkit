@@ -6,13 +6,13 @@
  * the part worth preserving: a link that underlines in the text colour reads as
  * emphasis, and one that underlines in a lighter neutral reads as a link.
  */
-import type { Method } from '@inertiajs/core'
 import { Link } from '@inertiajs/vue3'
+import type { InertiaLinkProps } from '@inertiajs/vue3'
 
 defineProps<{
     href: string
     tabindex?: number
-    method?: Method
+    method?: InertiaLinkProps['method']
     as?: string
 }>()
 </script>

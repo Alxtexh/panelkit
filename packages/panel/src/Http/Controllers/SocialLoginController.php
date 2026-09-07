@@ -75,6 +75,7 @@ final class SocialLoginController extends Controller
      * customer portal, with no password and no consent from the account that
      * was actually entered. `SocialLoginGuardTest` is that request.
      */
+    /** @return Builder<\Illuminate\Database\Eloquent\Model> */
     private function users(): Builder
     {
         $model = ConnectedAccount::modelForGuard($this->guard());
@@ -89,6 +90,7 @@ final class SocialLoginController extends Controller
      * population the id came from, or a row written on one portal answers a
      * lookup made on another.
      */
+    /** @return Builder<ConnectedAccount> */
     private function accounts(): Builder
     {
         return ConnectedAccount::query()->where('guard', $this->guardName());
@@ -214,7 +216,11 @@ final class SocialLoginController extends Controller
         if ($existing !== null) {
             $existing->forceFill(['last_used_at' => now()])->save();
 
-            return $this->authenticate($existing->user);
+            $user = $existing->user;
+
+            return $user instanceof Authenticatable
+                ? $this->authenticate($user)
+                : $this->back('login', 'The linked account no longer belongs to a valid sign-in model.');
         }
 
         $user = $this->matchByVerifiedEmail($provider, $account);
@@ -344,10 +350,12 @@ final class SocialLoginController extends Controller
          * matching against it would let the provider decide who that invitation
          * belonged to.
          */
-        return $this->users()
+        $user = $this->users()
             ->whereRaw('lower(email) = ?', [mb_strtolower($email)])
             ->whereNotNull('email_verified_at')
             ->first();
+
+        return $user instanceof Authenticatable ? $user : null;
     }
 
     private function attach(Authenticatable $user, string $provider, mixed $account): void

@@ -39,7 +39,7 @@ final class DashboardExtras
     /** @var list<Closure(): list<mixed>> */
     private static array $charts = [];
 
-    /** @var list<Closure(): list<array<string, mixed>>> */
+    /** @var list<Closure(): array<int|string, array<string, mixed>>> */
     private static array $strips = [];
 
     /** @var list<Closure(): array<string, mixed>> */
@@ -106,7 +106,7 @@ final class DashboardExtras
         self::$stripAbility = $ability;
     }
 
-    /** @param Closure(): list<array<string, mixed>> $strips */
+    /** @param Closure(): array<int|string, array<string, mixed>> $strips */
     public static function addStrips(Closure $strips): void
     {
         self::$strips[] = $strips;
@@ -125,7 +125,15 @@ final class DashboardExtras
     /** @return list<array<string, mixed>> */
     public static function allStrips(): array
     {
-        return self::resolve(self::$strips);
+        $out = [];
+
+        foreach (self::$strips as $resolve) {
+            foreach ($resolve() as $strip) {
+                $out[] = $strip;
+            }
+        }
+
+        return $out;
     }
 
     /** @return list<array<string, mixed>> */

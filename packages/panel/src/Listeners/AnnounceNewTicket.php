@@ -59,6 +59,14 @@ final class AnnounceNewTicket
     /** @return list<string> */
     private static function priorities(): array
     {
-        return (array) config('panel.ticketing.alert_priorities', ['urgent']);
+        $priorities = [];
+
+        foreach ((array) config('panel.ticketing.alert_priorities', ['urgent']) as $priority) {
+            if (is_string($priority) && $priority !== '') {
+                $priorities[] = $priority;
+            }
+        }
+
+        return $priorities;
     }
 }

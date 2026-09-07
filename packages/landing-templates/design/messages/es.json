@@ -1,0 +1,278 @@
+{
+  "meta": {
+    "title": "YourBrand — AI Workspace con Knowledge Graph Memory",
+    "description": "AI Workspace con memoria Knowledge Graph persistente. Multi-Provider (Claude, GPT, Ollama), 41 endpoints API, Telegram Bot, Workflows visuales, cifrado BYOK. Plan gratuito disponible."
+  },
+  "nav": {
+    "features": "Funciones",
+    "pricing": "Precios",
+    "team": "Equipo",
+    "about": "Nosotros",
+    "faq": "FAQ",
+    "cta": "Probar Gratis"
+  },
+  "hero": {
+    "badge": "Multi-Provider — Claude, GPT, Ollama, OpenRouter",
+    "headline": "IA que te conoce.",
+    "headlineHighlight": "AI Workspace con memoria.",
+    "subline": "Tu IA recuerda el contexto, aprende tus preferencias y mejora con cada interaccion. Knowledge Graph Memory con entidades, relaciones y puntuacion de confianza — no almacenamiento clave-valor.",
+    "ctaPrimary": "Empezar Gratis",
+    "ctaSecondary": "Telegram Bot",
+    "trustedBy": "Construido con",
+    "stats": {
+      "providers": "Proveedores IA",
+      "memoryFeatures": "Funciones Memory",
+      "apiEndpoints": "API Endpoints"
+    }
+  },
+  "logoCloud": {
+    "title": "Construido con tecnologias lideres"
+  },
+  "features": {
+    "title": "Que hace AI Workspace",
+    "subtitle": "No solo un chatbot. Un workspace completo con memoria, herramientas y API.",
+    "memory": {
+      "title": "Knowledge Graph Memory",
+      "description": "16 funciones de memoria: entidades, relaciones, decadencia de confianza, deteccion de contradicciones, surfacing proactivo. Tu IA no olvida."
+    },
+    "workflows": {
+      "title": "Visual Workflow Engine",
+      "description": "Workflows basados en DAG con constructor visual, constructor AI y drag & drop. 3 paquetes de habilidades incluidos."
+    },
+    "tools": {
+      "title": "20+ AI Tools & Agente",
+      "description": "Agente de investigacion, busqueda web, generacion de imagenes, plantillas PDF, pipeline RAG — todo integrado."
+    },
+    "api": {
+      "title": "41 API Endpoints",
+      "description": "API RESTful con autenticacion Bearer Token, limitacion de tasa y control de cuotas. Claves de desarrollador y seguimiento de uso incluidos."
+    },
+    "telegram": {
+      "title": "Telegram Bot",
+      "description": "Integracion premium de Telegram con respuestas en streaming, teclados inline, entrada de voz, carga de documentos y analisis de fotos."
+    },
+    "encryption": {
+      "title": "Cifrado BYOK",
+      "description": "Trae tu propia clave API con cifrado AES-256-GCM. Cifrado de sobre por usuario. Conforme al RGPD con eliminacion completa de cuenta."
+    }
+  },
+  "howItWorks": {
+    "title": "3 pasos para empezar",
+    "subtitle": "Registrate, chatea, listo. Tu IA aprende desde el primer mensaje.",
+    "step1": {
+      "title": "Crear cuenta",
+      "description": "Registrate gratis con Google o correo. Listo en 30 segundos."
+    },
+    "step2": {
+      "title": "Empieza a chatear",
+      "description": "Haz preguntas, investiga, crea workflows. App web, Telegram o API."
+    },
+    "step3": {
+      "title": "La IA aprende contigo",
+      "description": "El Knowledge Graph almacena contexto automaticamente. Cuanto mas lo usas, mejor se vuelve."
+    }
+  },
+  "pricing": {
+    "title": "Precios simples",
+    "subtitle": "Sin costos ocultos. Cancela cuando quieras. BYOK elimina limites de mensajes en todos los planes.",
+    "monthly": "Mensual",
+    "yearly": "Anual",
+    "yearlyDiscount": "2 meses gratis",
+    "perMonth": "/mes",
+    "popular": "Popular",
+    "cta": "Empezar",
+    "ctaEnterprise": "Contacto",
+    "customPrice": "Personalizado",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "price": "0",
+        "description": "Para probar",
+        "features": [
+          "100 mensajes / mes",
+          "Claude Haiku 4.5",
+          "Knowledge Graph Memory",
+          "5 imagenes de por vida",
+          "Telegram Bot",
+          "Soporte comunitario"
+        ]
+      },
+      "plus": {
+        "name": "Plus",
+        "price": "19",
+        "description": "Para uso regular",
+        "features": [
+          "500 mensajes / mes",
+          "Claude Sonnet 4.6",
+          "Research Agent Basic",
+          "10 imagenes / mes",
+          "3 claves API",
+          "Soporte prioritario"
+        ]
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "49",
+        "description": "Para usuarios avanzados",
+        "features": [
+          "1.500 mensajes / mes",
+          "Claude Sonnet 4.6",
+          "Research Agent Pro",
+          "30 imagenes / mes",
+          "5 claves API + MCP",
+          "Generacion Flux"
+        ]
+      },
+      "business": {
+        "name": "Business",
+        "price": "149",
+        "description": "Para equipos",
+        "features": [
+          "4.000 mensajes / mes",
+          "Claude Sonnet 4.6",
+          "Research Agent Pro (60/mes)",
+          "100 imagenes / mes",
+          "10 claves API + MCP",
+          "Documentos ilimitados",
+          "120 req/min limite"
+        ]
+      }
+    }
+  },
+  "integrations": {
+    "title": "Multi-Provider",
+    "subtitle": "Elige tu modelo de IA. Trae tu propia clave API para mensajes ilimitados."
+  },
+  "faq": {
+    "title": "Preguntas y respuestas",
+    "subtitle": "Todo lo que necesitas saber sobre AI Workspace.",
+    "items": {
+      "q1": {
+        "question": "Que es Knowledge Graph Memory?",
+        "answer": "La mayoria de chatbots IA almacenan preferencias como simples pares clave-valor. AI Workspace usa un grafo de conocimiento con entidades, relaciones y puntuacion de confianza. El sistema detecta contradicciones, vincula conocimiento entre conversaciones y construye comprension real con el tiempo."
+      },
+      "q2": {
+        "question": "Que modelos de IA se soportan?",
+        "answer": "Claude (Anthropic), GPT (OpenAI), Ollama (modelos locales) y OpenRouter (100+ modelos). Trae tu propia clave API para eliminar limites de mensajes y usar tu modelo preferido."
+      },
+      "q3": {
+        "question": "Como se protegen mis datos?",
+        "answer": "Cifrado de sobre por usuario con AES-256-GCM. Trae tu propia clave (BYOK) para maximo control sobre tus datos. Conforme al RGPD con eliminacion completa de cuenta y datos a solicitud."
+      },
+      "q4": {
+        "question": "Que hace el Research Agent?",
+        "answer": "El Research Agent busca en la web via SearXNG y Tavily, extrae contenido relevante, sintetiza hallazgos y almacena resultados en tu grafo de conocimiento. La version Pro incluye Tavily Advanced con extraccion profunda de contenido."
+      },
+      "q5": {
+        "question": "Hay una API?",
+        "answer": "Si — 41 endpoints RESTful con autenticacion Bearer Token. Gestiona chats, mensajes, conversaciones, workflows, memorias y servidores MCP programaticamente. Genera claves de desarrollador en el dashboard."
+      },
+      "q6": {
+        "question": "Puedo cancelar en cualquier momento?",
+        "answer": "Si. Sin contrato minimo, sin costos ocultos. Actualiza, reduce o cancela en cualquier momento. La exportacion de datos siempre esta disponible."
+      }
+    }
+  },
+  "team": {
+    "title": "El Equipo",
+    "subtitle": "Nuestros Agentes",
+    "description": "YourBrand esta dirigido por agentes de IA autonomos. Cada uno tiene su experiencia, memoria y autoridad para tomar decisiones. Comparten un knowledge graph — lo que uno aprende, todos lo saben.",
+    "aiPowered": "Impulsado por IA",
+    "sharedLabel": "Knowledge Graph Compartido",
+    "sharedText": "Todos los agentes comparten el mismo knowledge graph. Las decisiones se rastrean, los patrones se reconocen, el conocimiento se consolida — de forma autonoma, 24/7. Esto no es una vision. Es el estado actual.",
+    "stat1": "Agentes",
+    "stat2": "Autonomo",
+    "stat3": "Tablas DB",
+    "stat4": "Indexes",
+    "roles": {
+      "ceo": {
+        "name": "Atlas",
+        "role": "Director Ejecutivo",
+        "description": "Dirige toda la empresa. Toma decisiones estrategicas, coordina todos los agentes y es responsable de la vision y el crecimiento."
+      },
+      "cto": {
+        "name": "Cipher",
+        "role": "Director de Tecnologia",
+        "description": "Responsable de la arquitectura tecnica, calidad del codigo e infraestructura. Revisa pull requests e impulsa la innovacion."
+      },
+      "cmo": {
+        "name": "Pulse",
+        "role": "Director de Marketing",
+        "description": "Gestiona marketing, redes sociales y marca. Analiza datos de engagement y optimiza estrategia de contenido."
+      },
+      "github": {
+        "name": "GitBot",
+        "role": "GitHub Manager",
+        "description": "Gestiona repositorios, issues y pull requests. Automatiza workflows y monitorea calidad del codigo."
+      },
+      "support": {
+        "name": "Relay",
+        "role": "Agente de Soporte",
+        "description": "Primer punto de contacto para todas las consultas. Resuelve problemas, escala cuando es necesario y aprende de cada ticket."
+      },
+      "dev": {
+        "name": "Forge",
+        "role": "Agente de Desarrollo",
+        "description": "Construye features, corrige bugs y optimiza rendimiento. Entrega resultados listos para produccion de forma autonoma."
+      },
+      "revops": {
+        "name": "Ledger",
+        "role": "Agente de Revenue Ops",
+        "description": "Optimiza pipelines de ingresos y automatiza facturacion. Monitorea MRR, churn y valor de vida del cliente."
+      },
+      "apisales": {
+        "name": "Nexus",
+        "role": "Agente de Ventas API",
+        "description": "Vende acceso API y asesora clientes enterprise. Conoce cada endpoint y modelo de precios."
+      },
+      "onboarding": {
+        "name": "Guide",
+        "role": "Agente de Onboarding",
+        "description": "Guia a nuevos clientes desde el registro hasta el go-live. Configura bots, importa datos, asegura un lanzamiento exitoso."
+      }
+    }
+  },
+  "about": {
+    "label": "Sobre YourBrand",
+    "title": "AI-first. Operado por agentes.",
+    "storyTitle": "La Historia",
+    "storyText": "YourBrand esta operado por 9 agentes de IA autonomos — estrategia, tecnologia, marketing, ventas, soporte, desarrollo, ingresos y onboarding. Un fundador humano marca la direccion estrategica. Cada agente toma sus propias decisiones operativas y aprende de cada resultado.",
+    "storyText2": "La misma arquitectura que dirige la empresa impulsa el producto. Cuando usas Knowledge Graph Memory, usas el mismo sistema que nuestros agentes usan para coordinarse, aprender y mejorar.",
+    "principlesTitle": "Principios",
+    "principles": {
+      "p1": "Posicionamiento honesto — no prometemos lo que no podemos entregar",
+      "p2": "Memoria sobre amnesia — cada interaccion mejora el sistema",
+      "p3": "Tus datos, tu control — cifrado BYOK, eliminacion completa, exportacion en cualquier momento",
+      "p4": "Construir en publico — nuestros agentes, arquitectura y decisiones son transparentes"
+    },
+    "techTitle": "Stack Tecnologico"
+  },
+  "ctaSection": {
+    "title": "Listo para IA con memoria?",
+    "subtitle": "Empieza gratis. Sin tarjeta de credito.",
+    "placeholder": "Tu correo electronico",
+    "cta": "Empezar Gratis",
+    "note": "Plan Free incluye 100 mensajes / mes. Actualiza cuando quieras."
+  },
+  "footer": {
+    "tagline": "AI Workspace con Knowledge Graph Memory persistente.",
+    "product": "Producto",
+    "productLinks": {
+      "features": "Funciones",
+      "pricing": "Precios",
+      "integrations": "Integraciones"
+    },
+    "resources": "Recursos",
+    "resourcesLinks": {
+      "app": "Web App",
+      "telegram": "Telegram Bot",
+      "github": "GitHub"
+    },
+    "legalTitle": "Legal",
+    "legalLinks": {
+      "imprint": "Aviso Legal",
+      "privacy": "Politica de Privacidad"
+    },
+    "copyright": "\u00a9 {year} YourBrand. Todos los derechos reservados."
+  }
+}

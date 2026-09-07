@@ -112,7 +112,13 @@ final class Impersonation
     {
         $id = $this->request->session()->get(self::SESSION_KEY);
 
-        return $id === null ? null : $this->users()->find($id);
+        if (! is_int($id) && ! is_string($id)) {
+            return null;
+        }
+
+        $user = $this->users()->whereKey($id)->first();
+
+        return $user instanceof Authenticatable ? $user : null;
     }
 
     /**

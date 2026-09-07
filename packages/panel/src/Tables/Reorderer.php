@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Tables;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 
 /**
@@ -55,6 +56,7 @@ final class Reorderer
      * so a request naming another organisation's row reorders nothing, rather
      * than reordering something it should not be able to see.
      *
+     * @param  Builder<covariant Model>  $query
      * @param  list<int|string>  $orderedIds  The page's ids, in their new order.
      * @return int How many rows were actually written.
      */

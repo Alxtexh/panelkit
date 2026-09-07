@@ -1,0 +1,10 @@
+[
+  {
+    "regexp": "^\\/panelkit\\/landings\\/hotel\\/app(?:\\/(_next\\/data\\/[^/]{1,}))?(?:\\/(\\/?index|\\/?index\\\\.json))?[\\/#\\?]?$",
+    "originalSource": "/"
+  },
+  {
+    "regexp": "^\\/panelkit\\/landings\\/hotel\\/app(?:\\/(_next\\/data\\/[^/]{1,}))?(?:\\/(de|en|es))(?:\\/((?:[^\\/#\\?]+?)(?:\\/(?:[^\\/#\\?]+?))*))?(\\\\.json)?[\\/#\\?]?$",
+    "originalSource": "/(de|en|es)/:path*"
+  }
+]

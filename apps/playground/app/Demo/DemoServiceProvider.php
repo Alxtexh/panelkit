@@ -191,8 +191,6 @@ final class DemoServiceProvider extends ServiceProvider
             ],
         ]);
 
-        if (($strip = DemoDashboard::strip()) !== null) {
-            DashboardExtras::useStrip($strip, DemoDashboard::stripAbility());
-        }
+        DashboardExtras::useStrip(DemoDashboard::strip(), DemoDashboard::stripAbility());
     }
 }

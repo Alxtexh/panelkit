@@ -118,8 +118,8 @@ final class Announcement extends Model
         });
 
         self::creating(static function (self $announcement): void {
-            if ($announcement->tenant_id === null) {
-                $announcement->tenant_id = app(TenantContext::class)->currentKey();
+            if ($announcement->getAttribute('tenant_id') === null) {
+                $announcement->setAttribute('tenant_id', app(TenantContext::class)->currentKey());
             }
         });
     }
@@ -189,7 +189,7 @@ final class Announcement extends Model
 
         return strtr($text, [
             '@user' => $name,
-            '@organisation' => (class_exists(DocumentBranding::class) || interface_exists(DocumentBranding::class))
+            '@organisation' => app()->bound(DocumentBranding::class)
                 ? app(DocumentBranding::class)->company()
                 : (string) config('app.name', 'Panel'),
         ]);

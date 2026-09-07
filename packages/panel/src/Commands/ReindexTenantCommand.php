@@ -118,10 +118,13 @@ final class ReindexTenantCommand extends Command
     /** @return list<string> */
     private function tables(): array
     {
-        return array_map(
-            static fn (object $r): string => $r->name,
-            DB::select("select name from sqlite_master where type = 'table' and name not like 'sqlite_%'"),
-        );
+        $tables = [];
+
+        foreach (DB::select("select name from sqlite_master where type = 'table' and name not like 'sqlite_%'") as $row) {
+            $tables[] = $row->name;
+        }
+
+        return $tables;
     }
 
     /**
@@ -144,10 +147,11 @@ final class ReindexTenantCommand extends Command
                 continue;
             }
 
-            $columns = array_map(
-                static fn (object $r): string => $r->name,
-                DB::select('pragma index_info("'.$index->name.'")'),
-            );
+            $columns = [];
+
+            foreach (DB::select('pragma index_info("'.$index->name.'")') as $row) {
+                $columns[] = $row->name;
+            }
 
             if (($columns[0] ?? null) === $column) {
                 $out[$index->name] = $columns;

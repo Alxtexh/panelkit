@@ -16,6 +16,7 @@ use Alxtexh\Panel\PanelManager;
  */
 final class PanelQuickCreate
 {
+    /** @return list<array{key: string, title: string, href: string, icon: string, group: string|null}> */
     public static function build(?string $panelId = null): array
     {
         $panels = app(PanelManager::class);
@@ -30,7 +31,7 @@ final class PanelQuickCreate
         $panelId = $panel->id;
         $prefix = rtrim('/'.trim((string) $panel->getPath(), '/'), '/');
 
-        return collect($panels->resourcesFor($panelId))
+        return array_values(collect($panels->resourcesFor($panelId))
             ->filter(static fn (string $class): bool => $class::isAccessible())
             ->filter(static fn (string $class): bool => $class::isWritable())
             ->filter(static fn (string $class): bool => $class::can('create'))
@@ -47,6 +48,6 @@ final class PanelQuickCreate
                 static fn (array $item): string => $item['title'],
             ])
             ->values()
-            ->all();
+            ->all());
     }
 }

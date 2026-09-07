@@ -1,0 +1,1 @@
+import{Y as p,i as s}from"../app.js";function u(){const r=p(),e=s(()=>r.props.panel?.groupedSettingsCards===!0),o=s(()=>e.value?"space-y-6 rounded-lg border p-6":"space-y-6"),a=s(()=>e.value?"rounded-lg border p-6":"");return{grouped:e,sectionClass:o,wrapClass:a}}export{u};

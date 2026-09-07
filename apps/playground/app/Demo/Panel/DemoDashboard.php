@@ -9,6 +9,7 @@ use App\Demo\Models\ClientSession;
 use App\Models\Plan;
 use App\Demo\Models\Router;
 use DateTimeImmutable;
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use App\Panel\Pages\DashboardPage;
 use Alxtexh\Panel\Support\TenantContext;
@@ -306,7 +307,7 @@ final class DemoDashboard
             ['key' => 'cores', 'label' => 'CPU cores', 'value' => (string) ($cores ?? 'Unknown')],
         ];
 
-        if ($load !== null) {
+        if ($load !== null && $load !== false) {
             $rows[] = [
                 'key' => 'load',
                 'label' => 'Load average (1, 5, 15 min)',
@@ -360,6 +361,7 @@ final class DemoDashboard
     }
 
     /** A "5.2 GB (Free 38%)" row with a used/free bar - Memory, Swap and Disk share this shape. */
+    /** @return array<string, mixed> */
     private static function usageRow(string $label, int $totalKb, int $freeKb): array
     {
         $usedKb = max(0, $totalKb - $freeKb);
@@ -686,7 +688,8 @@ final class DemoDashboard
     private static function crossTab(string $rowColumn, string $seriesColumn, ?DashboardFilters $filters = null): array
     {
         $rows = self::scoped(Client::query(), $filters)->toBase()
-            ->selectRaw("{$rowColumn} as row_key, {$seriesColumn} as series_key, COUNT(*) as value")
+            ->select("{$rowColumn} as row_key", "{$seriesColumn} as series_key")
+            ->selectRaw('COUNT(*) as value')
             ->groupBy($rowColumn, $seriesColumn)
             ->get();
 
@@ -749,7 +752,7 @@ final class DemoDashboard
             ->whereIn('id', $rows->pluck('router_id')->filter()->all())
             ->pluck('name', 'id');
 
-        return $rows
+        return array_values($rows
             ->map(fn (object $r): array => [
                 'label' => sprintf(
                     '%s - %s%% (%d)',
@@ -762,7 +765,7 @@ final class DemoDashboard
             ->sortBy('value')
             ->take(15)
             ->values()
-            ->all();
+            ->all());
     }
 
     /**
@@ -801,13 +804,13 @@ final class DemoDashboard
                 // Every router appears in every row, zero-filled. A row missing
                 // a column would shift every cell after it, so a status would
                 // be attributed to the wrong router with nothing failing.
-                'points' => $names
+                'points' => array_values($names
                     ->map(fn (string $name, int $id): array => [
                         'label' => $name,
                         'value' => $matrix[$status][$id] ?? 0,
                     ])
                     ->values()
-                    ->all(),
+                    ->all()),
             ],
             $statuses,
         )];
@@ -834,12 +837,12 @@ final class DemoDashboard
             ->whereIn('id', $counts->pluck('router_id')->filter()->all())
             ->pluck('name', 'id');
 
-        return $counts
+        return array_values($counts
             ->map(fn (object $r): array => [
                 'label' => (string) ($names[$r->router_id] ?? "Router #{$r->router_id}"),
                 'value' => (int) $r->value,
             ])
-            ->all();
+            ->all());
     }
 
     /**
@@ -897,6 +900,7 @@ final class DemoDashboard
      * Sessions run in the hundreds and sign-ups in the tens; on a shared axis
      * the sign-up line is pressed flat against the baseline and reads as zero.
      */
+    /** @return array{series: list<array<string, mixed>>} */
     private static function multiAxisSeries(?DateTimeImmutable $now, ?DashboardFilters $filters = null): array
     {
         return ['series' => [
@@ -952,13 +956,14 @@ final class DemoDashboard
      */
     private static function groupedCount(string $column, ?DashboardFilters $filters = null): array
     {
-        return self::scoped(Client::query(), $filters)->toBase()
-            ->selectRaw("{$column} as label, COUNT(*) as value")
+        return array_values(self::scoped(Client::query(), $filters)->toBase()
+            ->select("{$column} as label")
+            ->selectRaw('COUNT(*) as value')
             ->groupBy($column)
             ->orderByDesc('value')
             ->get()
             ->map(fn (object $r): array => ['label' => (string) $r->label, 'value' => (int) $r->value])
-            ->all();
+            ->all());
     }
 
     /**
@@ -1068,16 +1073,16 @@ final class DemoDashboard
                 'placeholder' => 'All routers',
                 // Small and tenant-scoped, so the options ride with the page
                 // rather than needing a second request.
-                'options' => Router::query()->orderBy('name')->limit(200)
+                'options' => array_values(Router::query()->orderBy('name')->limit(200)
                     ->get(['id', 'name'])
                     ->map(fn (Router $r): array => ['value' => $r->id, 'label' => $r->name])
-                    ->all(),
+                    ->all()),
             ],
         ];
     }
 
     /** The four windows above the widgets. */
-    public static function strip(): ?callable
+    public static function strip(): Closure
     {
         return static fn (DashboardFilters $filters, DateTimeImmutable $now, string $tenantKey): array => self::sessionStrip($tenantKey, $now, $filters);
     }
@@ -1089,7 +1094,7 @@ final class DemoDashboard
      * by permission and leaving one prop ungated is the same as not splitting
      * it: the numbers are still on the wire.
      */
-    public static function stripAbility(): ?string
+    public static function stripAbility(): string
     {
         return self::NETWORK;
     }
@@ -1111,6 +1116,7 @@ final class DemoDashboard
      * `sensitive` COMPOSES INSIDE IT - the two halves are which figures belong
      * together and which of them are covered.
      */
+    /** @return array<string, array{label: string, ability: string, resolve: callable}> */
     public static function strips(): array
     {
         return [

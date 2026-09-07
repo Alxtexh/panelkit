@@ -373,6 +373,7 @@ final class PermissionsCommand extends Command
         return self::SUCCESS;
     }
 
+    /** @param list<string> $known */
     private function createAdministrator(?Model $tenant, array $known, string $guard, bool $dry): void
     {
         $label = $this->labelFor($tenant);

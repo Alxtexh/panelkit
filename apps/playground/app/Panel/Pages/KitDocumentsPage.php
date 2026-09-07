@@ -36,12 +36,12 @@ final class KitDocumentsPage extends SignatureStudioPage
         return 'KitDocuments';
     }
 
-    public static function heading(): ?string
+    public static function heading(): string
     {
         return 'Signatures';
     }
 
-    public static function description(): ?string
+    public static function description(): string
     {
         return 'Draw a signature, upload a logo or stamp, place them on a sample invoice or lease.';
     }

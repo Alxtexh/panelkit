@@ -22,13 +22,13 @@ namespace Alxtexh\Panel\Tables\Columns;
  */
 final class IconColumn extends Column
 {
-    /** @var array<string, string> value => icon name */
+    /** @var array<int|string, string> value => icon name */
     private array $icons = [];
 
-    /** @var array<string, string> value => semantic colour */
+    /** @var array<int|string, string> value => semantic colour */
     private array $colors = [];
 
-    /** @var array<string, string> value => tooltip/aria text */
+    /** @var array<int|string, string> value => tooltip/aria text */
     private array $labels = [];
 
     private string $defaultIcon = 'dot';
@@ -56,7 +56,7 @@ final class IconColumn extends Column
         return $this;
     }
 
-    /** @param array<string, string> $icons value => icon name */
+    /** @param array<int|string, string> $icons value => icon name */
     public function icons(array $icons): self
     {
         $this->icons = $icons;
@@ -64,7 +64,7 @@ final class IconColumn extends Column
         return $this;
     }
 
-    /** @param array<string, string> $colors value => success|danger|warning|neutral */
+    /** @param array<int|string, string> $colors value => success|danger|warning|neutral */
     public function colors(array $colors): self
     {
         $this->colors = $colors;
@@ -72,7 +72,7 @@ final class IconColumn extends Column
         return $this;
     }
 
-    /** @param array<string, string> $labels value => accessible text */
+    /** @param array<int|string, string> $labels value => accessible text */
     public function labels(array $labels): self
     {
         $this->labels = $labels;

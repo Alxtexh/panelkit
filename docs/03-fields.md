@@ -83,6 +83,46 @@ value to the clipboard in the browser. There is no Livewire.
 `visibleWhen()` is evaluated in the browser *and* on the server, so a hidden
 field cannot be submitted by a crafted request.
 
+### Responsive schema layout
+
+Use `Grid` when fields need a responsive layout without host-specific CSS. A
+single integer remains the compact form; a breakpoint map is preferred for
+production forms that should read well on phones and wide screens:
+
+```php
+use Alxtexh\Panel\Schema\Grid;
+
+Grid::make([
+    'default' => 1,
+    'sm' => 2,
+    'lg' => 4,
+])->schema([
+    TextField::make('first_name'),
+    TextField::make('last_name'),
+]);
+```
+
+Supported breakpoints are `default`, `sm`, `md`, `lg`, `xl`, and `2xl`; each
+value must be between 1 and 12. The same semantic schema is used by form and
+infolist rendering, while the kit owns the responsive CSS.
+
+Tabs can carry a small count or status badge without putting presentation
+markup in the page. Resolve the value while building the schema so the
+serialized contract remains cacheable:
+
+```php
+use Alxtexh\Panel\Schema\Tab;
+use Alxtexh\Panel\Schema\Tabs;
+
+Tabs::make()->tabs([
+    Tab::make('Open')->badge($openCount)->schema([...]),
+    Tab::make('Closed')->badge($closedCount)->schema([...]),
+]);
+```
+
+The badge is rendered consistently in both editable forms and read-only
+infolists, and tab-level errors remain visible when the tab is inactive.
+
 `live()` is the Inertia equivalent of Filament's live fields. After the field
 changes, the page POSTs `{ field, values }` to `{resource}/form-state`. The
 server returns `{ options, schema, values }` so `afterStateUpdated` can hide,

@@ -1,0 +1,4 @@
+:HL["/panelkit/landings/hotel/app/_next/static/chunks/2f53b00873d06f46.css","style"]
+:HL["/panelkit/landings/hotel/app/_next/static/media/01e4147cff8141ee-s.p.7787e134.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/panelkit/landings/hotel/app/_next/static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+0:{"buildId":"l-EYMdx0JaCc09EDet9fP","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"locale","paramType":"d","paramKey":"de","hasRuntimePrefetch":false,"slots":{"children":{"name":"dining","paramType":null,"paramKey":"dining","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"staleTime":300}

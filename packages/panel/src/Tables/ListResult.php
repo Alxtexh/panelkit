@@ -25,7 +25,7 @@ final readonly class ListResult
      * @param  list<array{key: string, label: string, removable: bool}>  $indicators
      * @param  array<string, mixed>|null  $groupBy
      * @param  (Closure(): array<string, int>)|null  $tabCounts
-     * @param  Closure(): int  $total
+     * @param  Closure(): (int|null)  $total
      */
     public function __construct(
         public array $records,

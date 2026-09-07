@@ -75,7 +75,7 @@ final class Panel
      */
     private array $plugins = [];
 
-    /** See `widgets()`. Concatenated with whatever the dashboard page declares. */
+    /** @var list<Widgets\StatWidget|Widgets\ChartWidget|Widgets\TableWidget> See `widgets()`. */
     private array $widgets = [];
 
     /**
@@ -93,7 +93,7 @@ final class Panel
     /**
      * Product modules this portal sells access to. See `modules()`.
      *
-     * @var list<array{key: string, label: string, description?: string|null}>
+     * @var list<array{key: string, label: string, description?: string|null, children?: list<string>, requires?: list<string>}>
      */
     private array $modules = [];
 
@@ -322,6 +322,7 @@ final class Panel
      *
      * @var bool|list<string>
      */
+    /** @var bool|list<string> */
     private bool|array $socialite = true;
 
     /**
@@ -392,6 +393,7 @@ final class Panel
      * Patterns are reimplemented in AuthLayout against kit tokens. Hosts do not
      * run `npx shadcn-vue add` into the monorepo for these screens.
      */
+    /** @var 'centered'|'muted'|'split'|'showcase'|'card' */
     private string $authLayout = 'centered';
 
     /** @var list<string> */
@@ -443,6 +445,7 @@ final class Panel
      * Patterns are reimplemented in AppSidebar / PanelShell against kit tokens.
      * Hosts do not run `npx shadcn-vue add` into the monorepo for these.
      */
+    /** @var 'inset'|'sidebar'|'floating'|'icon'|'header'|'accordion'|'file-tree'|'calendar'|'dialog' */
     private string $sidebarLayout = 'inset';
 
     /** @var list<string> */
@@ -633,7 +636,7 @@ final class Panel
      *         ['key' => 'storage', 'label' => 'Storage'],
      *     ]);
      *
-     * @param  list<Support\Module|array{key: string, label: string, description?: string|null}>  $modules
+     * @param  list<Support\Module|array{key: string, label: string, description?: string|null, children?: list<string>, requires?: list<string>}>  $modules
      */
     public function modules(array $modules): self
     {
@@ -644,7 +647,7 @@ final class Panel
         foreach ($modules as $module) {
             $key = $module instanceof Support\Module
                 ? $module->key()
-                : (string) ($module['key'] ?? '');
+                : $module['key'];
 
             if ($key !== '') {
                 $keys[] = $key;
@@ -661,7 +664,7 @@ final class Panel
     }
 
     /**
-     * @return list<array{key: string, label: string, description: string|null}>
+     * @return list<array{key: string, label: string, description?: string|null, children?: list<string>, requires?: list<string>}>
      */
     public function getModules(): array
     {
@@ -723,7 +726,7 @@ final class Panel
 
     private function appNamespace(): string
     {
-        return function_exists('app') && method_exists(app(), 'getNamespace')
+        return function_exists('app')
             ? app()->getNamespace()
             : 'App\\';
     }
@@ -1145,7 +1148,7 @@ final class Panel
 
         return array_values(array_filter(
             $this->socialite,
-            static fn (mixed $key): bool => is_string($key) && $key !== '',
+            static fn (string $key): bool => $key !== '',
         ));
     }
 
@@ -1546,12 +1549,14 @@ final class Panel
     }
 
     /** @return 'centered'|'muted'|'split'|'showcase'|'card' */
+    /** @phpstan-return 'centered'|'muted'|'split'|'showcase'|'card' */
     public function getAuthLayout(): string
     {
         return $this->authLayout;
     }
 
     /** @return 'centered'|'muted'|'split'|'showcase'|'card' */
+    /** @phpstan-return 'centered'|'muted'|'split'|'showcase'|'card' */
     public function getAuthFamily(): string
     {
         return $this->authLayout;
@@ -1639,12 +1644,14 @@ final class Panel
     }
 
     /** @return 'inset'|'sidebar'|'floating'|'icon'|'header'|'accordion'|'file-tree'|'calendar'|'dialog' */
+    /** @phpstan-return 'inset'|'sidebar'|'floating'|'icon'|'header'|'accordion'|'file-tree'|'calendar'|'dialog' */
     public function getSidebarLayout(): string
     {
         return $this->sidebarLayout;
     }
 
     /** @return 'inset'|'sidebar'|'floating'|'icon'|'header'|'accordion'|'file-tree'|'calendar'|'dialog' */
+    /** @phpstan-return 'inset'|'sidebar'|'floating'|'icon'|'header'|'accordion'|'file-tree'|'calendar'|'dialog' */
     public function getSidebarVariant(): string
     {
         return $this->sidebarLayout;
@@ -2068,15 +2075,15 @@ final class Panel
     {
         $this->apps(['logs']);
 
-        if (is_string($defaultFile) && $defaultFile !== '') {
+        if ($defaultFile !== null && $defaultFile !== '') {
             $this->logTailDefault = basename($defaultFile);
         }
 
         if ($allowlist !== null) {
-            $this->logTailAllowlist = array_values(array_map(
+            $this->logTailAllowlist = array_map(
                 static fn (string $name): string => basename($name),
                 $allowlist,
-            ));
+            );
         }
 
         return $this;

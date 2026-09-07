@@ -643,8 +643,8 @@ const job = useBulkJob(props.schema.key, props.schema.routes.index)
  * refuse just avoids offering a guaranteed 403.
  */
 const allowedBulkActions = computed(() =>
-    props.schema.table.bulkActions.filter((action) =>
-        (props.can as Record<string, boolean | undefined>)[action.ability] !== false,
+    props.schema.table.bulkActions.filter(
+        (action) => (props.can as Record<string, boolean | undefined>)[action.ability] !== false,
     ),
 )
 

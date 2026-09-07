@@ -18,6 +18,7 @@ use Alxtexh\Panel\Support\PanelHome;
 use Alxtexh\Panel\Support\PanelIdleActivity;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -124,7 +125,7 @@ final class PanelAuthController extends Controller
         $panel = $this->panel($request);
         $model = $this->userModel($panel);
 
-        abort_if($model === '', 404);
+        abort_unless($model !== '' && is_subclass_of($model, Model::class), 404);
 
         $table = (new $model)->getTable();
 
@@ -157,6 +158,7 @@ final class PanelAuthController extends Controller
         }
 
         $user = $model::query()->create($attributes);
+        abort_unless($user instanceof Authenticatable, 500, 'The configured auth model is not authenticatable.');
 
         RateLimiter::clear($key);
 
@@ -165,7 +167,7 @@ final class PanelAuthController extends Controller
         $request->session()->put('auth.password_confirmed_at', time());
 
         if ($panel->hasEmailVerification()) {
-            Notification::route('mail', $user->email)->notify(new PanelVerifyEmail($panel));
+            Notification::route('mail', (string) $user->getAttribute('email'))->notify(new PanelVerifyEmail($panel));
 
             return redirect($this->url($panel, 'email/verify'));
         }
@@ -645,6 +647,7 @@ final class PanelAuthController extends Controller
      * the bug this method exists to avoid. Fortify's login pipeline does the
      * same split: credentials first, then either a challenge or a login.
      */
+    /** @param array<string, mixed> $credentials */
     private function userFromCredentials(Panel $panel, array $credentials): ?Authenticatable
     {
         $provider = Auth::guard($panel->getGuard())->getProvider();
@@ -654,7 +657,7 @@ final class PanelAuthController extends Controller
             return null;
         }
 
-        if (config('hashing.rehash_on_login', true) && method_exists($provider, 'rehashPasswordIfRequired')) {
+        if (config('hashing.rehash_on_login', true)) {
             $provider->rehashPasswordIfRequired($user, ['password' => $credentials['password']]);
         }
 

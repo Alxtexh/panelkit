@@ -19,6 +19,7 @@
 import { computed, ref, watch } from 'vue'
 import PkStepIndicator from '../Layout/PkStepIndicator.vue'
 import { iconPath } from '../primitives/icons'
+import PkBadge from '../primitives/PkBadge.vue'
 import FormFieldControl from './FormFieldControl.vue'
 import type { UploadedFileValue } from './PkFileUpload.vue'
 import type { FormField } from './types'
@@ -40,9 +41,10 @@ export interface SchemaNode {
         | 'step'
     children?: SchemaNode[]
     label?: string
+    badge?: string | number | null
     title?: string
     description?: string
-    columns?: number
+    columns?: number | ResponsiveColumns
     span?: number
     collapsible?: boolean
     collapsed?: boolean
@@ -59,6 +61,10 @@ export interface SchemaNode {
     persistInQueryString?: string | null
     [key: string]: any
 }
+
+export type ResponsiveColumns = Partial<
+    Record<'default' | 'sm' | 'md' | 'lg' | 'xl' | '2xl', number>
+>
 
 const props = withDefaults(
     defineProps<{
@@ -200,7 +206,11 @@ const calloutClass = computed(() => {
 })
 
 const gridClass = computed(() => {
-    const columns = props.node.columns ?? 1
+    const configured = props.node.columns
+    const columns =
+        typeof configured === 'number'
+            ? configured
+            : (configured?.default ?? configured?.sm ?? configured?.md ?? 1)
 
     return columns >= 3 ? 'sm:grid-cols-3' : columns === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-1'
 })
@@ -217,6 +227,27 @@ function columnsGridClass(node: SchemaNode): string {
     }
 
     return 'md:grid-cols-1'
+}
+
+/**
+ * Responsive Grid::make() values are carried as CSS custom properties. This
+ * keeps the server schema semantic and avoids interpolated Tailwind classes,
+ * which Tailwind cannot see at build time.
+ */
+function responsiveGridStyle(node: SchemaNode): Record<string, string> {
+    const columns = node.columns
+    const values = typeof columns === 'number' ? { default: columns } : columns
+    const style: Record<string, string> = {}
+
+    for (const breakpoint of ['default', 'sm', 'md', 'lg', 'xl', '2xl'] as const) {
+        const count = values?.[breakpoint]
+
+        if (typeof count === 'number' && count > 0) {
+            style[`--pk-grid-cols-${breakpoint}`] = String(Math.min(12, Math.max(1, count)))
+        }
+    }
+
+    return style
 }
 
 function columnSpanClass(span = 1): string {
@@ -508,8 +539,8 @@ function uploadFor(key: string) {
     <!-- Grid: layout with no heading, so it never draws a frame. -->
     <div
         v-else-if="node.component === 'grid' && conditionMet(node)"
-        class="grid grid-cols-1 gap-4"
-        :class="gridClass"
+        class="pk-responsive-grid grid gap-4"
+        :style="responsiveGridStyle(node)"
     >
         <SchemaNode
             v-for="(child, i) in node.children ?? []"
@@ -636,6 +667,9 @@ function uploadFor(key: string) {
                 @click="activeTab = i"
             >
                 {{ tab.label }}
+                <PkBadge v-if="tab.badge !== null && tab.badge !== undefined" variant="secondary">
+                    {{ tab.badge }}
+                </PkBadge>
                 <!-- An error behind an inactive tab is otherwise invisible. -->
                 <span
                     v-if="tabHasError(tab)"
@@ -765,3 +799,75 @@ function uploadFor(key: string) {
         </div>
     </div>
 </template>
+
+<style scoped>
+.pk-responsive-grid {
+    grid-template-columns: repeat(var(--pk-grid-cols-default, 1), minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+    .pk-responsive-grid {
+        grid-template-columns: repeat(
+            var(--pk-grid-cols-sm, var(--pk-grid-cols-default, 1)),
+            minmax(0, 1fr)
+        );
+    }
+}
+
+@media (min-width: 768px) {
+    .pk-responsive-grid {
+        grid-template-columns: repeat(
+            var(--pk-grid-cols-md, var(--pk-grid-cols-sm, var(--pk-grid-cols-default, 1))),
+            minmax(0, 1fr)
+        );
+    }
+}
+
+@media (min-width: 1024px) {
+    .pk-responsive-grid {
+        grid-template-columns: repeat(
+            var(
+                --pk-grid-cols-lg,
+                var(--pk-grid-cols-md, var(--pk-grid-cols-sm, var(--pk-grid-cols-default, 1)))
+            ),
+            minmax(0, 1fr)
+        );
+    }
+}
+
+@media (min-width: 1280px) {
+    .pk-responsive-grid {
+        grid-template-columns: repeat(
+            var(
+                --pk-grid-cols-xl,
+                var(
+                    --pk-grid-cols-lg,
+                    var(--pk-grid-cols-md, var(--pk-grid-cols-sm, var(--pk-grid-cols-default, 1)))
+                )
+            ),
+            minmax(0, 1fr)
+        );
+    }
+}
+
+@media (min-width: 1536px) {
+    .pk-responsive-grid {
+        grid-template-columns: repeat(
+            var(
+                --pk-grid-cols-2xl,
+                var(
+                    --pk-grid-cols-xl,
+                    var(
+                        --pk-grid-cols-lg,
+                        var(
+                            --pk-grid-cols-md,
+                            var(--pk-grid-cols-sm, var(--pk-grid-cols-default, 1))
+                        )
+                    )
+                )
+            ),
+            minmax(0, 1fr)
+        );
+    }
+}
+</style>

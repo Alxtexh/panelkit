@@ -1,0 +1,1 @@
+const g="@container min-w-0",s="grid grid-cols-1 gap-3 @lg:grid-cols-2 @3xl:grid-cols-3",l="grid grid-cols-1 gap-2 @lg:grid-cols-2 @3xl:grid-cols-3",c="grid grid-cols-1 gap-4 @lg:grid-cols-2 @lg:gap-5 @3xl:grid-cols-3";export{g as C,c as a,s as b,l as c};

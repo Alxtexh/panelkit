@@ -21,8 +21,8 @@ import { useTenantTheme } from './useTenantTheme'
  *
  * Measured in the live panel before changing it, on a probe element:
  *
-     *     before                     oklch(0.24 0.02 260)
-     *     with --color-primary set   oklch(0.24 0.02 260)   <- no effect
+ *     before                     oklch(0.24 0.02 260)
+ *     with --color-primary set   oklch(0.24 0.02 260)   <- no effect
  *     with --primary set         rgb(0, 0, 255)         <- applies
  */
 describe('useTenantTheme', () => {

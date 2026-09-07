@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Support;
 
 use Illuminate\Support\Collection;
 use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Support\Ability;
 
 /**
@@ -46,12 +47,12 @@ final class PanelNavigation
             ->filter(static fn (string $class): bool => $class::isAccessible())
             ->filter(static fn (string $class): bool => $class::can('viewAny'));
 
-        return self::resources($visible, $prefix)
+        return array_values(self::resources($visible, $prefix)
             ->merge(self::clusters($visible, $prefix))
             ->merge(self::declared($panels->panel($panelId)))
             ->sortBy([['sort', 'asc'], ['title', 'asc']])
             ->values()
-            ->all();
+            ->all());
     }
 
     /**
@@ -82,34 +83,34 @@ final class PanelNavigation
             ->map(static function (array $item): array {
                 $href = $item['href'] ?? '';
 
-                return [
-                    'key' => $item['key'] ?? str($item['title'] ?? '')->slug()->value(),
-                    'title' => $item['title'] ?? '',
-                    'href' => $href instanceof \Closure ? $href() : (string) $href,
-                    'icon' => $item['icon'] ?? 'link',
-                    'group' => $item['group'] ?? null,
-                    'sort' => $item['sort'] ?? 100,
-                ];
+                return self::item(
+                    $item['key'] ?? str($item['title'] ?? '')->slug()->value(),
+                    $item['title'] ?? '',
+                    $href instanceof \Closure ? (string) $href() : (string) $href,
+                    $item['icon'] ?? 'link',
+                    $item['group'] ?? null,
+                    $item['sort'] ?? 100,
+                );
             })
             ->values();
     }
 
     /**
-     * @param  Collection<int|string, class-string>  $visible
+     * @param  Collection<string, class-string<Resource>>  $visible
      * @return Collection<int, array<string, mixed>>
      */
     private static function resources(Collection $visible, string $prefix): Collection
     {
         return $visible
             ->filter(static fn (string $class): bool => $class::cluster() === null)
-            ->map(static fn (string $class): array => [
-                'key' => $class::key(),
-                'title' => $class::pluralLabel(),
-                'href' => $prefix.'/'.$class::key(),
-                'icon' => $class::icon(),
-                'group' => $class::group(),
-                'sort' => $class::navigationSort(),
-            ])
+            ->map(static fn (string $class): array => self::item(
+                $class::key(),
+                $class::pluralLabel(),
+                $prefix.'/'.$class::key(),
+                $class::icon(),
+                $class::group(),
+                $class::navigationSort(),
+            ))
             ->values();
     }
 
@@ -123,7 +124,7 @@ final class PanelNavigation
      * see that a collapsed resource is still linked - through the cluster -
      * rather than lost.
      *
-     * @param  Collection<int|string, class-string>  $visible
+     * @param  Collection<string, class-string<Resource>>  $visible
      * @return Collection<int, array<string, mixed>>
      */
     private static function clusters(Collection $visible, string $prefix): Collection
@@ -141,16 +142,50 @@ final class PanelNavigation
                     ->map(static fn (string $class): string => $prefix.'/'.$class::key())
                     ->merge(array_column($cluster::pages(), 'href'));
 
-                return [
-                    'key' => $cluster::key(),
-                    'title' => $cluster::label(),
-                    'href' => $prefix.'/'.$sorted->first()::key(),
-                    'icon' => $cluster::icon(),
-                    'group' => $cluster::group(),
-                    'sort' => $cluster::navigationSort(),
-                    'members' => $hrefs->values()->all(),
-                ];
+                $members = [];
+                foreach ($hrefs->values()->all() as $href) {
+                    $members[] = $href;
+                }
+
+                return self::item(
+                    $cluster::key(),
+                    $cluster::label(),
+                    $prefix.'/'.$sorted->first()::key(),
+                    $cluster::icon(),
+                    $cluster::group(),
+                    $cluster::navigationSort(),
+                    $members,
+                );
             })
             ->values();
+    }
+
+    /**
+     * @param list<mixed>|null $members
+     * @return array<string, mixed>
+     */
+    private static function item(
+        mixed $key,
+        mixed $title,
+        string $href,
+        mixed $icon,
+        mixed $group,
+        mixed $sort,
+        ?array $members = null,
+    ): array {
+        $item = [
+            'key' => $key,
+            'title' => $title,
+            'href' => $href,
+            'icon' => $icon,
+            'group' => $group,
+            'sort' => $sort,
+        ];
+
+        if ($members !== null) {
+            $item['members'] = $members;
+        }
+
+        return $item;
     }
 }

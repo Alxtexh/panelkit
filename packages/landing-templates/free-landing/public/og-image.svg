@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0a"/>
+      <stop offset="50%" style="stop-color:#151414"/>
+      <stop offset="100%" style="stop-color:#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="cream" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f2edeb"/>
+      <stop offset="100%" style="stop-color:#e8d5c4"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="30%" cy="40%" r="60%">
+      <stop offset="0%" style="stop-color:#221f20;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#0a0a0a;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <!-- Grid lines -->
+  <line x1="80" y1="80" x2="80" y2="550" stroke="#f2edeb" stroke-opacity="0.06" stroke-width="1"/>
+  <line x1="1120" y1="80" x2="1120" y2="550" stroke="#f2edeb" stroke-opacity="0.06" stroke-width="1"/>
+  <line x1="80" y1="80" x2="1120" y2="80" stroke="#f2edeb" stroke-opacity="0.06" stroke-width="1"/>
+  <line x1="80" y1="550" x2="1120" y2="550" stroke="#f2edeb" stroke-opacity="0.06" stroke-width="1"/>
+  <!-- Brand -->
+  <text x="80" y="180" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="400" fill="#f2edeb" opacity="0.5" letter-spacing="8">AGENCY</text>
+  <!-- Main headline -->
+  <text x="80" y="310" font-family="Georgia, 'Times New Roman', serif" font-size="72" font-weight="700" fill="url(#cream)" letter-spacing="-2">We craft digital</text>
+  <text x="80" y="390" font-family="Georgia, 'Times New Roman', serif" font-size="72" font-weight="700" fill="url(#cream)" letter-spacing="-2">experiences.</text>
+  <!-- Accent line -->
+  <rect x="80" y="420" width="160" height="2" rx="1" fill="url(#cream)" opacity="0.4"/>
+  <!-- Tagline -->
+  <text x="80" y="490" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#f2edeb" opacity="0.5" letter-spacing="1">Digital Creative Agency</text>
+  <!-- Corner accents -->
+  <rect x="60" y="60" width="24" height="2" fill="#f2edeb" opacity="0.15"/>
+  <rect x="60" y="60" width="2" height="24" fill="#f2edeb" opacity="0.15"/>
+  <rect x="1116" y="60" width="24" height="2" fill="#f2edeb" opacity="0.15"/>
+  <rect x="1138" y="60" width="2" height="24" fill="#f2edeb" opacity="0.15"/>
+  <rect x="60" y="568" width="24" height="2" fill="#f2edeb" opacity="0.15"/>
+  <rect x="60" y="546" width="2" height="24" fill="#f2edeb" opacity="0.15"/>
+  <rect x="1116" y="568" width="24" height="2" fill="#f2edeb" opacity="0.15"/>
+  <rect x="1138" y="546" width="2" height="24" fill="#f2edeb" opacity="0.15"/>
+</svg>

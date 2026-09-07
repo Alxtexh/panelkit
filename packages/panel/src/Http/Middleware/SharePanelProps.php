@@ -218,7 +218,9 @@ final class SharePanelProps
             'appearance' => Inertia::getShared('appearance')
                 ?? static function () use ($request): ?array {
                     $user = $request->user();
-                    $value = $user?->appearance ?? null;
+                    $value = $user instanceof \Illuminate\Database\Eloquent\Model
+                        ? $user->getAttribute('appearance')
+                        : null;
 
                     return is_array($value) ? $value : null;
                 },
@@ -229,7 +231,7 @@ final class SharePanelProps
              */
             'shellHooks' => $chrome(static fn (): array => array_values(array_filter(
                 app(PanelManager::class)->renderHooks(null),
-                static fn (array $hook): bool => str_starts_with((string) ($hook['position'] ?? ''), 'shell.'),
+                static fn (array $hook): bool => str_starts_with($hook['position'], 'shell.'),
             )), 'shellHooks'),
 
             'panelEmptyGrants' => static function () use ($panels): bool {
@@ -823,8 +825,7 @@ final class SharePanelProps
             return $resolve;
         }
 
-        $guard = $panel->getGuard();
-        $user = $guard === null ? $request->user() : $request->user($guard);
+        $user = $request->user($panel->getGuard());
         $tenant = Tenants::current($request);
         $tenantKey = $tenant === null ? 'central' : (string) $tenant->getKey();
 
@@ -853,20 +854,27 @@ final class SharePanelProps
         /** @var \Illuminate\Support\ViewErrorBag $viewErrorBag */
         $viewErrorBag = $request->session()->get('errors');
 
-        $bags = collect($viewErrorBag->getBags())
-            ->map(static fn ($bag): object => (object) collect($bag->messages())
-                ->map(static fn (array $messages): string => $messages[0])
-                ->toArray());
+        $bags = [];
 
-        if ($bags->has('default') && $request->header('X-Inertia-Error-Bag')) {
-            return (object) [(string) $request->header('X-Inertia-Error-Bag') => $bags->get('default')];
+        foreach ($viewErrorBag->getBags() as $name => $bag) {
+            $messages = [];
+
+            foreach ($bag->getMessages() as $field => $fieldMessages) {
+                $messages[$field] = $fieldMessages[0];
+            }
+
+            $bags[$name] = (object) $messages;
         }
 
-        if ($bags->has('default')) {
-            return $bags->get('default');
+        if (isset($bags['default']) && $request->header('X-Inertia-Error-Bag')) {
+            return (object) [(string) $request->header('X-Inertia-Error-Bag') => $bags['default']];
         }
 
-        return (object) $bags->toArray();
+        if (isset($bags['default'])) {
+            return $bags['default'];
+        }
+
+        return (object) $bags;
     }
 
     /**

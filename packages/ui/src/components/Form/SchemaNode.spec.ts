@@ -69,6 +69,23 @@ describe('SchemaNode - conditional sections', () => {
     })
 })
 
+describe('SchemaNode - responsive grids', () => {
+    it('serializes breakpoint columns as CSS variables instead of dynamic Tailwind classes', () => {
+        const node: SchemaNodeType = {
+            component: 'grid',
+            columns: { default: 1, sm: 2, lg: 4 },
+            children: [{ component: 'field', key: 'name', label: 'Name', type: 'text' }],
+        }
+
+        const wrapper = mount(SchemaNode, { props: { node, values: {} } })
+        const grid = wrapper.get('.pk-responsive-grid')
+
+        expect(grid.attributes('style')).toContain('--pk-grid-cols-default: 1')
+        expect(grid.attributes('style')).toContain('--pk-grid-cols-sm: 2')
+        expect(grid.attributes('style')).toContain('--pk-grid-cols-lg: 4')
+    })
+})
+
 /**
  * `conditionMet()` used to run on `field`, `section`, `card`, `columns` and
  * `column` only - the other six node kinds (`fieldset`, `tabs`, `grid`,
@@ -334,6 +351,26 @@ describe('SchemaNode - position persisted in the query string', () => {
             ?.trigger('click')
 
         expect(new URLSearchParams(window.location.search).get('step')).toBe('0')
+    })
+})
+
+describe('SchemaNode - tab badges', () => {
+    it('renders a tab badge without changing the tab interaction', () => {
+        const wrapper = mount(SchemaNode, {
+            props: {
+                node: {
+                    component: 'tabs',
+                    children: [
+                        { component: 'tab', label: 'Invoices', badge: 7, children: [] },
+                        { component: 'tab', label: 'Paid', children: [] },
+                    ],
+                },
+                values: {},
+            },
+        })
+
+        expect(wrapper.find('[data-slot="badge"]').text()).toBe('7')
+        expect(wrapper.findAll('button')).toHaveLength(2)
     })
 })
 

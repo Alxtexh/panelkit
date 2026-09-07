@@ -16,10 +16,7 @@ use Alxtexh\Panel\Panel;
  */
 final class EnvironmentBanner
 {
-    /**
-     * @return array{label: string, tone: string}|null
-     */
-    public static function for(?Panel $panel = null): ?array
+    public static function for(?Panel $panel = null): null
     {
         unset($panel);
 

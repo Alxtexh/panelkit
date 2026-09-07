@@ -104,6 +104,9 @@ const countIsZero = computed(() => countKnown.value && effectiveCount.value === 
 /** Same split and the same tones as the row menu - see RecordActions.vue. */
 const ordinary = computed(() => props.actions.filter((a) => !a.destructive))
 const destructive = computed(() => props.actions.filter((a) => a.destructive))
+const actionCount = computed(
+    () => ordinary.value.length + destructive.value.length + (props.canExport ? 1 : 0),
+)
 
 const TONES: Record<string, string> = {
     primary: 'text-primary',
@@ -149,13 +152,47 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
         <template #trigger>
             <button
                 type="button"
-                class="bg-background hover:bg-accent inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
+                class="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-sm font-medium shadow-sm transition-colors disabled:pointer-events-none disabled:opacity-60"
                 :disabled="busy"
                 aria-haspopup="menu"
+                :aria-label="busy ? 'Bulk actions are running' : 'Open bulk actions'"
+                :aria-busy="busy"
             >
-                Bulk actions
                 <svg
-                    class="size-3.5"
+                    v-if="busy"
+                    class="size-4 animate-spin"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                >
+                    <path d="M12 3a9 9 0 1 0 9 9" />
+                </svg>
+                <svg
+                    v-else
+                    class="size-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <path d="M4 6h16M7 12h10M10 18h4" />
+                </svg>
+                <span>{{ busy ? 'Working…' : 'Bulk actions' }}</span>
+                <span
+                    v-if="!busy && actionCount"
+                    class="bg-primary-foreground/15 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-semibold tabular-nums"
+                >
+                    {{ actionCount }}
+                </span>
+                <svg
+                    v-if="!busy"
+                    class="size-4 opacity-80"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -170,13 +207,19 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
         </template>
 
         <template #panel>
-            <div class="py-0.5">
+            <div class="min-w-[14rem] p-1.5">
+                <div
+                    v-if="ordinary.length || canExport"
+                    class="text-muted-foreground px-2.5 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-[0.08em]"
+                >
+                    Actions
+                </div>
                 <button
                     v-for="action in ordinary"
                     :key="action.key"
                     type="button"
                     role="menuitem"
-                    class="hover:bg-accent focus:bg-accent flex w-full items-center gap-2.5 rounded px-2.5 py-2 text-left text-sm focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                    class="hover:bg-accent focus:bg-accent flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm focus:outline-none disabled:pointer-events-none disabled:opacity-50"
                     :class="tone(action)"
                     :disabled="busy"
                     @click="attempt(action)"
@@ -206,7 +249,7 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
                     v-if="canExport"
                     type="button"
                     role="menuitem"
-                    class="text-foreground hover:bg-accent focus:bg-accent flex w-full items-center gap-2.5 rounded px-2.5 py-2 text-left text-sm focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                    class="text-foreground hover:bg-accent focus:bg-accent flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm focus:outline-none disabled:pointer-events-none disabled:opacity-50"
                     :disabled="busy"
                     @click="exportPending = true"
                 >
@@ -226,13 +269,18 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
                 </button>
 
                 <!-- Always last, always separated. -->
-                <div v-if="destructive.length" class="mt-0.5 border-t pt-0.5">
+                <div v-if="destructive.length" class="mt-1 border-t px-0 pt-1">
+                    <div
+                        class="text-destructive/80 px-2.5 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-[0.08em]"
+                    >
+                        Destructive
+                    </div>
                     <button
                         v-for="action in destructive"
                         :key="action.key"
                         type="button"
                         role="menuitem"
-                        class="text-destructive hover:bg-destructive/10 focus:bg-destructive/10 flex w-full items-center gap-2.5 rounded px-2.5 py-2 text-left text-sm focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                        class="text-destructive hover:bg-destructive/10 focus:bg-destructive/10 flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm focus:outline-none disabled:pointer-events-none disabled:opacity-50"
                         :disabled="busy"
                         @click="attempt(action)"
                     >

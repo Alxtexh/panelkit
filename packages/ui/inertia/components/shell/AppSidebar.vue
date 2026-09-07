@@ -16,7 +16,7 @@ import {
     Sparkles,
 } from '@lucide/vue'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { PkBoundary, PkDropdown, useAppearance } from '@alxtexh-enterprise/panel'
+import { PkBoundary, PkDropdown, toUrl, useAppearance } from '@alxtexh-enterprise/panel'
 import {
     Sidebar,
     SidebarContent,
@@ -244,9 +244,9 @@ const toPath = (url: string): string => url.replace(/^https?:\/\/[^/]+/, '') || 
 const supportNavItems = computed<NavItem[]>(() => {
     const panel = page.props.panel as
         | {
-            help?: string | null
-            faq?: string | null
-            whatsNew?: string | null
+              help?: string | null
+              faq?: string | null
+              whatsNew?: string | null
           }
         | null
         | undefined
@@ -689,52 +689,35 @@ watch(
                             </p>
 
                             <div class="ml-4 border-l border-border">
-                                <Link
-                                    v-for="item in group.items"
-                                    :key="item.title"
-                                    :href="item.href"
-                                    prefetch="hover"
-                                    cache-for="30s"
-                                    class="group/flyout relative flex items-center py-1.5 pl-4 text-sm transition-colors hover:text-foreground"
-                                    :class="
-                                        isCurrentUrl(item.href)
-                                            ? 'font-medium text-foreground'
-                                            : 'text-muted-foreground'
-                                    "
-                                    @click="close()"
-                                >
-                                    <span
-                                        class="absolute -left-[3px] flex size-1.5 items-center justify-center rounded-full bg-popover"
-                                        aria-hidden="true"
+                                <template v-for="item in group.items" :key="item.title">
+                                    <a
+                                        v-if="item.external"
+                                        :href="toUrl(item.href)"
+                                        class="group/flyout relative flex items-center py-1.5 pl-4 text-sm transition-colors hover:text-foreground"
+                                        :class="
+                                            isCurrentUrl(item.href)
+                                                ? 'font-medium text-foreground'
+                                                : 'text-muted-foreground'
+                                        "
+                                        @click="close()"
                                     >
                                         <span
-                                            class="size-1.5 rounded-full transition-colors"
-                                            :class="
-                                                isCurrentUrl(item.href)
-                                                    ? 'bg-primary'
-                                                    : 'bg-muted-foreground/40 group-hover/flyout:bg-muted-foreground'
-                                            "
-                                        />
-                                    </span>
-                                    {{ item.title }}
-                                </Link>
-                            </div>
-
-                            <!--
-                                NESTED DROPDOWNS, FLATTENED. A flyout is already
-                                a compact popover with nowhere to drill further
-                                into - so a subgroup's items appear here under
-                                their own small heading rather than behind a
-                                second click the rail has no room to explain.
-                            -->
-                            <div v-for="sub in group.groups" :key="sub.name" class="mt-2">
-                                <p class="px-2 py-1 text-xs font-medium text-muted-foreground">
-                                    {{ sub.name }}
-                                </p>
-                                <div class="ml-4 border-l border-border">
+                                            class="absolute -left-[3px] flex size-1.5 items-center justify-center rounded-full bg-popover"
+                                            aria-hidden="true"
+                                        >
+                                            <span
+                                                class="size-1.5 rounded-full transition-colors"
+                                                :class="
+                                                    isCurrentUrl(item.href)
+                                                        ? 'bg-primary'
+                                                        : 'bg-muted-foreground/40 group-hover/flyout:bg-muted-foreground'
+                                                "
+                                            />
+                                        </span>
+                                        {{ item.title }}
+                                    </a>
                                     <Link
-                                        v-for="item in sub.items"
-                                        :key="item.title"
+                                        v-else
                                         :href="item.href"
                                         prefetch="hover"
                                         cache-for="30s"
@@ -761,6 +744,77 @@ watch(
                                         </span>
                                         {{ item.title }}
                                     </Link>
+                                </template>
+                            </div>
+
+                            <!--
+                                NESTED DROPDOWNS, FLATTENED. A flyout is already
+                                a compact popover with nowhere to drill further
+                                into - so a subgroup's items appear here under
+                                their own small heading rather than behind a
+                                second click the rail has no room to explain.
+                            -->
+                            <div v-for="sub in group.groups" :key="sub.name" class="mt-2">
+                                <p class="px-2 py-1 text-xs font-medium text-muted-foreground">
+                                    {{ sub.name }}
+                                </p>
+                                <div class="ml-4 border-l border-border">
+                                    <template v-for="item in sub.items" :key="item.title">
+                                        <a
+                                            v-if="item.external"
+                                            :href="toUrl(item.href)"
+                                            class="group/flyout relative flex items-center py-1.5 pl-4 text-sm transition-colors hover:text-foreground"
+                                            :class="
+                                                isCurrentUrl(item.href)
+                                                    ? 'font-medium text-foreground'
+                                                    : 'text-muted-foreground'
+                                            "
+                                            @click="close()"
+                                        >
+                                            <span
+                                                class="absolute -left-[3px] flex size-1.5 items-center justify-center rounded-full bg-popover"
+                                                aria-hidden="true"
+                                            >
+                                                <span
+                                                    class="size-1.5 rounded-full transition-colors"
+                                                    :class="
+                                                        isCurrentUrl(item.href)
+                                                            ? 'bg-primary'
+                                                            : 'bg-muted-foreground/40 group-hover/flyout:bg-muted-foreground'
+                                                    "
+                                                />
+                                            </span>
+                                            {{ item.title }}
+                                        </a>
+                                        <Link
+                                            v-else
+                                            :href="item.href"
+                                            prefetch="hover"
+                                            cache-for="30s"
+                                            class="group/flyout relative flex items-center py-1.5 pl-4 text-sm transition-colors hover:text-foreground"
+                                            :class="
+                                                isCurrentUrl(item.href)
+                                                    ? 'font-medium text-foreground'
+                                                    : 'text-muted-foreground'
+                                            "
+                                            @click="close()"
+                                        >
+                                            <span
+                                                class="absolute -left-[3px] flex size-1.5 items-center justify-center rounded-full bg-popover"
+                                                aria-hidden="true"
+                                            >
+                                                <span
+                                                    class="size-1.5 rounded-full transition-colors"
+                                                    :class="
+                                                        isCurrentUrl(item.href)
+                                                            ? 'bg-primary'
+                                                            : 'bg-muted-foreground/40 group-hover/flyout:bg-muted-foreground'
+                                                    "
+                                                />
+                                            </span>
+                                            {{ item.title }}
+                                        </Link>
+                                    </template>
                                 </div>
                             </div>
                         </template>

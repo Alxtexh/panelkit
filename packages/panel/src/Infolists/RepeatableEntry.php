@@ -25,9 +25,11 @@ final class RepeatableEntry extends Entry
         return 'repeatable';
     }
 
-    /** @param  list<Entry>  $entries */
+    /** @param  list<mixed>  $entries */
     public function schema(array $entries): static
     {
+        $normalised = [];
+
         foreach ($entries as $entry) {
             if (! $entry instanceof Entry) {
                 throw new InvalidArgumentException('A repeatable infolist may only contain entries.');
@@ -39,9 +41,11 @@ final class RepeatableEntry extends Entry
                     .'group of repeating groups is a related table. Use nested HasMany pages.'
                 );
             }
+
+            $normalised[] = $entry;
         }
 
-        $this->entries = array_values($entries);
+        $this->entries = $normalised;
 
         return $this;
     }

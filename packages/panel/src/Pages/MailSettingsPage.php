@@ -155,7 +155,7 @@ class MailSettingsPage extends Page
     /**
      * @return array{host: string, port: int, encryption: string|null, username: string|null, password: string, from_address: string, from_name: string}
      */
-    private static function validated(Request $request): array
+    protected static function validated(Request $request): array
     {
         $data = $request->validate([
             'host' => ['required', 'string', 'max:255'],

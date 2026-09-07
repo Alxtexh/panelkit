@@ -96,37 +96,37 @@ class LogsPage extends Page
      */
     public static function data(Request $request): array
     {
-        $reader = static::reader();
-        $file = static::requestedFile($request);
+        $reader = self::reader();
+        $file = self::requestedFile($request);
 
         return [
             'routes' => [
-                'logs' => static::pageHref(),
-                'tail' => static::pageHref().'/tail',
+                'logs' => self::pageHref(),
+                'tail' => self::pageHref().'/tail',
             ],
             'files' => $reader->files(),
             'tail' => $reader->tail(
                 $file,
                 lines: max(50, min(2000, (int) $request->query('lines', 300))),
                 needle: (string) $request->query('q', ''),
-                tier: static::requestedTier($request),
+                tier: self::requestedTier($request),
             ),
             'query' => (string) $request->query('q', ''),
-            'tier' => static::requestedTier($request),
+            'tier' => self::requestedTier($request),
             'pollSeconds' => 5,
         ];
     }
 
     public static function tail(Request $request): JsonResponse
     {
-        $reader = static::reader();
-        $file = static::requestedFile($request);
+        $reader = self::reader();
+        $file = self::requestedFile($request);
 
         return response()->json($reader->tail(
             $file,
             lines: max(50, min(2000, (int) $request->query('lines', 300))),
             needle: (string) $request->query('q', ''),
-            tier: static::requestedTier($request),
+            tier: self::requestedTier($request),
         ));
     }
 

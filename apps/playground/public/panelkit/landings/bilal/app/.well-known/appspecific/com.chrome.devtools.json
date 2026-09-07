@@ -1,0 +1,9 @@
+{
+  "protocol_version": "1.1",
+  "app_version": "1.0.0",
+  "name": "SaaSify",
+  "description": "Modern SaaS Solution for Your Business",
+  "icons": {
+    "192": "/icon-192x192.png"
+  }
+}

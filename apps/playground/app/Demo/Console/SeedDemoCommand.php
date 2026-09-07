@@ -75,7 +75,7 @@ final class SeedDemoCommand extends Command
          * stays in one place and can be re-run for the part that is missing.
          */
         if ($this->option('only') === 'inbox') {
-            $tenantIds = DB::table('tenants')->pluck('id')->all();
+            $tenantIds = $this->tenantIds();
 
             if ($tenantIds === []) {
                 $this->components->error('No tenants exist. Run a full seed first.');
@@ -159,6 +159,18 @@ final class SeedDemoCommand extends Command
     }
 
     /** @return list<int> */
+    private function tenantIds(): array
+    {
+        $tenantIds = [];
+
+        foreach (DB::table('tenants')->orderBy('id')->pluck('id') as $tenantId) {
+            $tenantIds[] = (int) $tenantId;
+        }
+
+        return $tenantIds;
+    }
+
+    /** @return list<int> */
     private function seedTenants(int $count): array
     {
         $names = ['Nairobi Fibre', 'Coastline ISP', 'Rift Valley Net', 'Lakeside Broadband', 'Highland Connect'];
@@ -181,10 +193,19 @@ final class SeedDemoCommand extends Command
         DB::table('tenants')->insert($rows);
         $this->components->task("  {$count} tenants", fn () => true);
 
-        return DB::table('tenants')->orderBy('id')->pluck('id')->all();
+        $ids = [];
+
+        foreach (DB::table('tenants')->orderBy('id')->pluck('id') as $id) {
+            $ids[] = (int) $id;
+        }
+
+        return $ids;
     }
 
-    /** @return array<int, list<int>> tenantId => planIds */
+    /**
+     * @param list<int> $tenantIds
+     * @return array<int, list<int>> tenantId => planIds
+     */
     private function seedPlans(array $tenantIds, int $total): array
     {
         $now = now();
@@ -212,11 +233,21 @@ final class SeedDemoCommand extends Command
 
         $this->components->task('  '.count($rows).' plans', fn () => true);
 
-        return DB::table('plans')->orderBy('id')->get(['id', 'tenant_id'])
-            ->groupBy('tenant_id')->map->pluck('id')->map->all()->all();
+        $planIds = [];
+
+        foreach (DB::table('plans')->orderBy('id')->get(['id', 'tenant_id']) as $plan) {
+            $tenantId = (int) $plan->tenant_id;
+            $planIds[$tenantId] ??= [];
+            $planIds[$tenantId][] = (int) $plan->id;
+        }
+
+        return $planIds;
     }
 
-    /** @return array<int, list<int>> tenantId => routerIds */
+    /**
+     * @param list<int> $tenantIds
+     * @return array<int, list<int>> tenantId => routerIds
+     */
     private function seedRouters(array $tenantIds, int $total): array
     {
         $now = now();
@@ -244,10 +275,22 @@ final class SeedDemoCommand extends Command
 
         $this->components->task('  '.count($rows).' routers', fn () => true);
 
-        return DB::table('routers')->orderBy('id')->get(['id', 'tenant_id'])
-            ->groupBy('tenant_id')->map->pluck('id')->map->all()->all();
+        $routerIds = [];
+
+        foreach (DB::table('routers')->orderBy('id')->get(['id', 'tenant_id']) as $router) {
+            $tenantId = (int) $router->tenant_id;
+            $routerIds[$tenantId] ??= [];
+            $routerIds[$tenantId][] = (int) $router->id;
+        }
+
+        return $routerIds;
     }
 
+    /**
+     * @param list<int> $tenantIds
+     * @param array<int, list<int>> $planIds
+     * @param array<int, list<int>> $routerIds
+     */
     private function seedClients(array $tenantIds, array $planIds, array $routerIds, int $total): void
     {
         $bar = $this->output->createProgressBar($total);
@@ -300,6 +343,7 @@ final class SeedDemoCommand extends Command
         $this->newLine();
     }
 
+    /** @param list<int> $tenantIds */
     private function seedSessions(array $tenantIds, int $total): void
     {
         // Pull the client id range per tenant once, rather than joining per row.
@@ -388,6 +432,7 @@ final class SeedDemoCommand extends Command
      * sessions are. A million rows here would slow every reseed for no
      * additional confidence.
      */
+    /** @param list<int> $tenantIds */
     private function seedInbox(array $tenantIds): void
     {
         $users = DB::table('users')->whereIn('tenant_id', $tenantIds)->get(['id', 'tenant_id', 'name', 'email']);

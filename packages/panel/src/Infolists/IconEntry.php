@@ -6,13 +6,13 @@ namespace Alxtexh\Panel\Infolists;
 
 final class IconEntry extends Entry
 {
-    /** @var array<string, string> */
+    /** @var array<int|string, string> */
     private array $icons = [];
 
-    /** @var array<string, string> */
+    /** @var array<int|string, string> */
     private array $colors = [];
 
-    /** @var array<string, string> */
+    /** @var array<int|string, string> */
     private array $labels = [];
 
     private string $defaultIcon = 'dot';
@@ -22,7 +22,7 @@ final class IconEntry extends Entry
         return 'icon';
     }
 
-    /** @param array<string, string> $icons value => icon name */
+    /** @param array<int|string, string> $icons value => icon name */
     public function icons(array $icons): static
     {
         $this->icons = $icons;
@@ -30,7 +30,7 @@ final class IconEntry extends Entry
         return $this;
     }
 
-    /** @param array<string, string> $colors value => success|danger|warning|neutral */
+    /** @param array<int|string, string> $colors value => success|danger|warning|neutral */
     public function colors(array $colors): static
     {
         $this->colors = $colors;
@@ -38,7 +38,7 @@ final class IconEntry extends Entry
         return $this;
     }
 
-    /** @param array<string, string> $labels value => accessible text */
+    /** @param array<int|string, string> $labels value => accessible text */
     public function labels(array $labels): static
     {
         $this->labels = $labels;

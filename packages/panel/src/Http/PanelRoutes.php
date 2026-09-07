@@ -210,7 +210,15 @@ final class PanelRoutes
     /** @return list<callable(list<string>, Panel): void> */
     private static function extensions(): array
     {
-        return app()->bound(self::EXTENSIONS) ? (array) app(self::EXTENSIONS) : [];
+        $extensions = [];
+
+        foreach (app()->bound(self::EXTENSIONS) ? (array) app(self::EXTENSIONS) : [] as $extension) {
+            if (is_callable($extension)) {
+                $extensions[] = $extension;
+            }
+        }
+
+        return $extensions;
     }
 
     public static function register(Panel $panel): void

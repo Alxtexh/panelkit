@@ -434,7 +434,9 @@ final class MakeResourceCommand extends Command
                 }
 
                 $columns[] = "TextColumn::make('{$name}')->from('{$qualified}')->muted()";
-                $fields[] = "// TODO: point this at the related model\n            "
+                $fields[] = "/* No model matching this foreign key was discovered. "
+                    ."Replace the empty options with a scoped query, or use "
+                    ."->relationship(RelatedModel::class, 'title'). */\n            "
                     ."SelectField::make('{$name}'){$required}->options([])";
                 $imports['TextColumn'] = 'Columns\TextColumn';
                 $imports['SelectField'] = 'Fields\SelectField';
@@ -506,10 +508,10 @@ final class MakeResourceCommand extends Command
         }
 
         return [
-            'columns' => $columns,
-            'fields' => $fields,
-            'filters' => $filters,
-            'imports' => array_values($imports),
+            'columns' => $this->stringList($columns),
+            'fields' => $this->stringList($fields),
+            'filters' => $this->stringList($filters),
+            'imports' => $this->stringList($imports),
             'softDeletes' => $softDeletes,
             'hasMany' => $this->detectChildModels($table),
         ];
@@ -521,8 +523,8 @@ final class MakeResourceCommand extends Command
      */
     private function enumOptions(string $name, string $rawType, array $casts): array
     {
-        if (preg_match_all("/'([^']+)'/", $rawType, $matches) && ($matches[1] ?? []) !== []) {
-            return array_values($matches[1]);
+        if (preg_match_all("/'([^']+)'/", $rawType, $matches) > 0) {
+            return $matches[1];
         }
 
         $cast = $casts[$name] ?? null;
@@ -538,7 +540,13 @@ final class MakeResourceCommand extends Command
         return array_map(static fn (\UnitEnum $case): string => $case->name, $cast::cases());
     }
 
-    /** @param list<string> $enumOptions */
+    /**
+     * @param array<int|string, mixed> $columns
+     * @param array<int|string, mixed> $fields
+     * @param array<int|string, mixed> $filters
+     * @param array<int|string, mixed> $imports
+     * @param list<string> $enumOptions
+     */
     private function appendEnumColumn(
         array &$columns,
         array &$fields,
@@ -566,6 +574,23 @@ final class MakeResourceCommand extends Command
         $imports['BadgeColumn'] = 'Columns\BadgeColumn';
         $imports['SelectField'] = 'Fields\SelectField';
         $imports['SelectFilter'] = 'Filters\SelectFilter';
+    }
+
+    /**
+     * @param array<int|string, mixed> $values
+     * @return list<string>
+     */
+    private function stringList(array $values): array
+    {
+        $result = [];
+
+        foreach ($values as $value) {
+            if (is_string($value)) {
+                $result[] = $value;
+            }
+        }
+
+        return $result;
     }
 
     private function isLikelyEnumColumn(string $name, string $type): bool

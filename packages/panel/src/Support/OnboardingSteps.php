@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Support;
 
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use Alxtexh\Panel\Pages\ApiKeysPage;
 use Alxtexh\Panel\Pages\BillingPortalPage;
@@ -116,7 +117,10 @@ final class OnboardingSteps
         $request ??= request();
 
         $user = $request->user();
-        $appearance = is_array($user?->appearance ?? null) ? $user->appearance : [];
+        $appearanceValue = $user instanceof Model ? $user->getAttribute('appearance') : null;
+        $appearance = is_array($appearanceValue) ? $appearanceValue : [];
+        $cookieValue = $request->cookie(self::COOKIE);
+        $cookieDone = is_string($cookieValue) && $cookieValue === '1';
 
         /*
          * THE ACCOUNT WINS WHEN IT HAS AN OPINION. A skipped guide writes both
@@ -128,14 +132,14 @@ final class OnboardingSteps
         if (array_key_exists(self::APPEARANCE_KEY, $appearance)) {
             $done = $appearance[self::APPEARANCE_KEY] === true;
 
-            if (! $done && (string) $request->cookie(self::COOKIE) === '1') {
+            if (! $done && $cookieDone) {
                 cookie()->queue(self::doneCookie(false));
             }
 
             return $done;
         }
 
-        return (string) $request->cookie(self::COOKIE) === '1';
+        return $cookieDone;
     }
 
     public static function persistDone(?Request $request = null): void
@@ -143,12 +147,13 @@ final class OnboardingSteps
         $request ??= request();
         $user = $request->user();
 
-        if ($user === null) {
+        if (! $user instanceof Model) {
             return;
         }
 
-        $current = is_array($user->appearance ?? null) ? $user->appearance : [];
-        $user->appearance = [...$current, self::APPEARANCE_KEY => true];
+        $currentValue = $user->getAttribute('appearance');
+        $current = is_array($currentValue) ? $currentValue : [];
+        $user->setAttribute('appearance', [...$current, self::APPEARANCE_KEY => true]);
         $user->save();
     }
 
@@ -157,12 +162,13 @@ final class OnboardingSteps
         $request ??= request();
         $user = $request->user();
 
-        if ($user === null) {
+        if (! $user instanceof Model) {
             return;
         }
 
-        $current = is_array($user->appearance ?? null) ? $user->appearance : [];
-        $user->appearance = [...$current, self::APPEARANCE_KEY => false];
+        $currentValue = $user->getAttribute('appearance');
+        $current = is_array($currentValue) ? $currentValue : [];
+        $user->setAttribute('appearance', [...$current, self::APPEARANCE_KEY => false]);
         $user->save();
     }
 
@@ -307,29 +313,25 @@ final class OnboardingSteps
         if ($panel->offersApp('api-keys')) {
             $href = self::url($panel, 'pages.api-keys') ?? self::path($panel, ApiKeysPage::uri());
 
-            if ($href !== null) {
-                $steps[] = self::step(
-                    'api-keys',
-                    __('panel::onboarding.steps.api_keys.label'),
-                    __('panel::onboarding.steps.api_keys.description'),
-                    $href,
-                    $open,
-                );
-            }
+            $steps[] = self::step(
+                'api-keys',
+                __('panel::onboarding.steps.api_keys.label'),
+                __('panel::onboarding.steps.api_keys.description'),
+                $href,
+                $open,
+            );
         }
 
         if ($panel->offersApp('billing-portal')) {
             $href = self::url($panel, 'pages.billing-portal') ?? self::path($panel, BillingPortalPage::uri());
 
-            if ($href !== null) {
-                $steps[] = self::step(
-                    'billing-portal',
-                    __('panel::onboarding.steps.billing.label'),
-                    __('panel::onboarding.steps.billing.description'),
-                    $href,
-                    $open,
-                );
-            }
+            $steps[] = self::step(
+                'billing-portal',
+                __('panel::onboarding.steps.billing.label'),
+                __('panel::onboarding.steps.billing.description'),
+                $href,
+                $open,
+            );
         }
 
         return $steps;

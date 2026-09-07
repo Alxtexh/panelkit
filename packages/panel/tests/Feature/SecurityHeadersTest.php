@@ -53,6 +53,49 @@ final class SecurityHeadersTest extends TestCase
             ->assertHeader('Content-Security-Policy', "default-src 'self'");
     }
 
+    public function test_panel_responses_echo_a_safe_incoming_request_id(): void
+    {
+        $tenant = Tenant::create(['name' => 'Mine', 'slug' => 'mine']);
+        $user = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Operator',
+            'email' => 'operator@example.test',
+            'password' => 'password',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->withHeader('X-Request-ID', 'edge-2026.09.06:abc_123')
+            ->get('/articles')
+            ->assertOk()
+            ->assertHeader('X-Request-ID', 'edge-2026.09.06:abc_123');
+    }
+
+    public function test_unsafe_request_ids_are_replaced_before_they_reach_the_response(): void
+    {
+        $tenant = Tenant::create(['name' => 'Mine', 'slug' => 'mine']);
+        $user = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Operator',
+            'email' => 'operator@example.test',
+            'password' => 'password',
+            'email_verified_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)
+            ->withHeader('X-Request-ID', str_repeat('x', 129))
+            ->get('/articles')
+            ->assertOk();
+
+        $requestId = (string) $response->headers->get('X-Request-ID');
+
+        $this->assertMatchesRegularExpression(
+            '/\A[0-9a-f-]{36}\z/',
+            $requestId,
+            'An unsafe request ID must be replaced with a UUID before reflection.',
+        );
+    }
+
     public function test_an_oversized_panel_payload_is_rejected_before_controller_work(): void
     {
         if (! class_exists(Importer::class)) {

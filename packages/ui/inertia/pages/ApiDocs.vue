@@ -6,12 +6,16 @@
  * host-configured absolute URL). Missing URL shows an empty state instead of
  * mounting Scalar with nothing to fetch.
  */
-import '@scalar/api-reference/style.css'
-
 import { Head } from '@inertiajs/vue3'
-import { ApiReference } from '@scalar/api-reference'
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { useAppearance } from '@alxtexh-enterprise/panel'
+
+/** Keep the optional API explorer out of the initial panel shell bundle. */
+const ApiReference = defineAsyncComponent(async () => {
+    await import('@scalar/api-reference/style.css')
+
+    return (await import('@scalar/api-reference')).ApiReference
+})
 
 defineOptions({ inheritAttrs: false })
 

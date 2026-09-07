@@ -27,10 +27,6 @@ final class MentionParser
 
         $tokens = array_values(array_unique($matches[1]));
 
-        if ($tokens === []) {
-            return [];
-        }
-
         /** @var class-string<Model> $model */
         $model = (string) config('auth.providers.users.model');
 

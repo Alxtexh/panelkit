@@ -14,6 +14,10 @@ actions, bulk actions and trash; and one release gate checks the package, its
 published mirror, a real consumer and a real browser. A change is not complete
 until its source, consumer mirror and relevant browser journey agree.
 
+All validation described here is intentionally local and explicit through the
+Makefile. No GitHub Actions workflow or recurring automation is part of the
+PanelKit release surface.
+
 | Track | Scope | Status | Proof gate |
 |---|---|---:|---|
 | Visual system | Tailwind tokens, 14px body baseline, density/radius, widget hierarchy, combined stat strips, responsive packing | DONE | UI suite, CSS parity, browser shell screenshots |
@@ -24,7 +28,7 @@ until its source, consumer mirror and relevant browser journey agree.
 | Operations | Queue thresholds, checkpoints, cancellation, idempotency, unified job status, upload limits/scanning, safe private URLs | DONE | package and playground feature gates |
 | Security and accessibility | Panel guard isolation, tenant boundaries, headers/CSP, payload limits, auth throttling, absolute session lifetime, contrast/ARIA sweep | DONE | security suite and 7-screen axe sweep |
 | Distribution | Client mirror sync, consumer install/build, typecheck, CSS/page-shell parity, browser runner URL isolation | DONE | `make check-client check-css-parity check-page-shell`, build and Dusk |
-| Release tooling | Repair the bounded Playground feature-suite hang and promote a working PHP static-analysis invocation into the release gate | OPEN | timed full feature suite and PHPStan/Psalm gate |
+| Release tooling | Keep the Playground feature suite isolated and make dependency/static-analysis debt visible without weakening release gates | DONE | sharded feature run, dependency gate, PHPStan gate, release/full checks |
 
 ### Current acceptance record
 
@@ -38,18 +42,50 @@ until its source, consumer mirror and relevant browser journey agree.
 - Browser shell journey: 6 tests / 13 assertions pass.
 - Isolated performance suite: 22 tests / 84 assertions pass in about 6 seconds.
 - Package build, published client mirror, typecheck, CSS parity and page-shell
-  checks pass.
+  checks pass; the final package suite is 1,083 passed / 44 skipped with 4,208
+  assertions.
 - Chromium contrast sweep passes after darkening the shared muted-copy and
   default action tokens; the change is mirrored into the shipped kit stylesheet
   and pre-paint variables.
+- Package formatting now passes across `src/` and `inertia/`.
+- Tagged package metadata now agrees with `v1.4.71`; the check is part of
+  `make release-check`.
+- A 1 MiB initial JavaScript and 512 KiB total CSS budget is now enforced by the
+  release check. The initial kit entry is now lazy-route split and is about
+  606 KiB JavaScript; the shell CSS is about 16 KiB, with route-only CSS emitted
+  as separate chunks.
+- `make release-check-full` now provides one command for the extended feature,
+  performance, consumer-install, broadcast, and browser journeys.
+- Existing screenshot sets compare successfully by count, but 12 screens have
+  visual drift between the historical `after-phase1` and `playground` sets.
+- The screenshot comparator now treats missing screenshots and empty captures as
+  failures, so a partial browser run cannot report a false visual pass.
+  Those differences need an intentional design review before either set becomes
+  the canonical baseline.
+- The kit resolver now lazy-loads page components, keeping API documentation and
+  other infrequently used screens out of the first download.
+- The application UI duplicate sweep is complete; application UI shims now
+  re-export the package contract where a shim is still useful.
+- Generator output no longer emits TODO placeholders for unknown relationships,
+  custom pages, or dashboards; it now gives direct next-step guidance.
+- The four-shard feature runner is now the standard local
+  `test-playground-feature` target. Its route inventory ignores orphaned
+  generated-panel routes left in Laravel's in-memory route collection after a
+  provider is removed, so the formerly order-dependent run passes in four
+  isolated processes.
+- `make check-dependencies` validates both Composer manifests, installed
+  production platform requirements, and lockfiles locally. Setting
+  `PANELKIT_AUDIT_NETWORK=1` additionally runs Composer and pnpm advisories;
+  the network audit is intentionally opt-in so an offline release check stays
+  deterministic.
 
-The two items marked OPEN are release-tooling improvements, not a reason to
-weaken the application gates. The static analyser now runs and reports 622
-existing findings instead of silently exiting; those findings need an owned
-pay-down pass before that gate can be promoted. The broad serial feature suite
-also remains over its 180-second bound even after benchmarks were separated,
-so the focused release gate and the benchmark gate remain the reliable checks
-until that suite is parallelised or split further.
+The static-analysis gate now runs with the same non-interactive environment as
+the test gates. The package/application scan has no outstanding code findings;
+the two retained `trait.unused` records are the consumer-only `HasSeo` and
+`InteractsWithPanels` extension traits, whose usage lives in host models and
+consumer test suites outside the shipped source paths. They remain explicitly
+recorded in the existing package baseline rather than being hidden by a new
+baseline.
 
 ## Completed in this pass
 
@@ -60,7 +96,7 @@ until that suite is parallelised or split further.
 - Made lifecycle composables safe when called outside component setup, which is
   useful to consumers and removes misleading test warnings.
 - Added a repository-level modernization roadmap with acceptance criteria.
-- Added `panel:validate` as a CI/operator-facing alias for the full doctor
+- Added `panel:validate` as an operator-facing alias for the full doctor
   report, including JSON output and production checks.
 - Added resource validation and persistence lifecycle hooks with transaction
   boundaries, and verified their ordering through package HTTP tests.
@@ -105,28 +141,33 @@ until that suite is parallelised or split further.
   routes with an explicit 413 response and configurable limit.
 - Added tenant-bound temporary private-file URL issuance that delegates signing
   to storage adapters and refuses paths outside the active tenant.
+- Added a validated X-Request-ID correlation contract to every Panel-managed
+  response, replacing unsafe or overlong incoming values with a fresh UUID.
+- Added production doctor checks for APP_KEY strength, APP_DEBUG, Secure and
+  HttpOnly cookies, SameSite validity, and partitioned-cookie compatibility.
+- Added a local locked-dependency/platform gate with optional network advisory
+  audits, and tightened internal Playground package constraints from unbounded
+  @dev to exact dev-main references.
 
 ## Phase 1 — reliability and release quality
 
 Priority: immediate. These are release blockers for a framework.
 
-- [~] Diagnose and fix the Playground PHP feature-suite hang (the suite is now
-  bounded and benchmark-heavy work is excluded from the fast gate; profiling
-  the remaining performance cause is still outstanding).
+ [x] Diagnose and fix the Playground PHP feature-suite hang (benchmark-heavy
+ work is excluded from the fast gate, and the remaining screen-inventory
+ order dependency is removed by ignoring orphaned generated-panel routes).
 - [x] Split test commands into unit, package feature, playground feature, browser,
   security, integration, and release checks.
 - [x] Make `panel:doctor` and the release check fail on stale client mirrors,
   missing policies, invalid routes, missing indexes, and unsafe configuration.
 - [x] Add a clean distribution-install job that uses the Composer archive and
   the mirrored client rather than the local path repository.
-- Make `SetupWizard.vue` and all package sources pass formatting checks.
-- Add PHPStan/Psalm checks and a public-API compatibility check. PHPStan now
-  runs with diagnostics after stale baseline entries were made non-fatal; the
-  remaining 622 findings are tracked debt and are not yet promoted as a clean
-  release gate.
+- [x] Make `SetupWizard.vue` and all package sources pass formatting checks.
+- [x] Add PHPStan/Psalm checks and a public-API compatibility check. The public
+  API, dependency, and PHPStan gates are active; current analysis is clean
+  apart from the two documented consumer-only trait notices.
 - [x] Add a dependency-free public API manifest check for the package's core
-  extension surfaces; static-analysis gating remains separate until PHPStan's
-  silent failure is repaired.
+  extension surfaces and include static analysis in `make release-check`.
 
 Acceptance: a clean checkout can run the fast suite in under two minutes, the
 full suite has a bounded timeout, and the published artifact is tested exactly
@@ -139,7 +180,7 @@ as a consumer receives it.
 - [x] Generate a policy, feature test, factory, and resource scaffold together.
 - [x] Add stable public API compatibility checks and centrally configurable
   deprecation reporting for backwards-compatible aliases.
-- Standardize resource lifecycle hooks:
+- [x] Standardize resource lifecycle hooks:
   `beforeValidate`, `afterValidate`, `beforeCreate`, `afterCreate`,
   `beforeUpdate`, `afterUpdate`, `beforeDelete`, and `afterDelete`.
 - [x] Lifecycle hooks are implemented for record requests and writes.

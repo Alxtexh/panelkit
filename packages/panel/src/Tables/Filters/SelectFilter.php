@@ -22,7 +22,7 @@ use InvalidArgumentException;
 final class SelectFilter extends Filter implements HasOptions
 {
     /**
-     * @var list<string|array{value: string, label: string}>|Closure(): list<string|array{value: string, label: string}>
+     * @var array<int|string, string|array{value: string, label: string}>|Closure(): array<int|string, string|array{value: string, label: string}>
      */
     private array|Closure $options = [];
 
@@ -44,7 +44,7 @@ final class SelectFilter extends Filter implements HasOptions
     private ?array $resolved = null;
 
     /**
-     * @param  list<string|array{value: string, label: string}>|Closure(): list<string|array{value: string, label: string}>  $options
+     * @param  array<int|string, string|array{value: string, label: string}>|Closure(): array<int|string, string|array{value: string, label: string}>  $options
      */
     public function options(array|Closure $options): static
     {
@@ -64,7 +64,7 @@ final class SelectFilter extends Filter implements HasOptions
      *         ->relationship(Article::class, 'title');
      *
      * @param  class-string<Model>  $model
-     * @param  Closure(EloquentBuilder): void|null  $modifyQuery
+     * @param  Closure(EloquentBuilder<Model>): void|null  $modifyQuery
      */
     public function relationship(string $model, string $titleAttribute, ?Closure $modifyQuery = null): static
     {
@@ -83,13 +83,13 @@ final class SelectFilter extends Filter implements HasOptions
                 $modifyQuery($query);
             }
 
-            return $query
+            return array_values($query
                 ->get([$keyName, $titleAttribute])
                 ->map(static fn (Model $row): array => [
                     'value' => (string) $row->getKey(),
                     'label' => (string) $row->getAttribute($titleAttribute),
                 ])
-                ->all();
+                ->all());
         });
     }
 
@@ -135,7 +135,7 @@ final class SelectFilter extends Filter implements HasOptions
 
         foreach ($this->resolvedOptions() as $option) {
             $values[] = is_array($option)
-                ? (string) ($option['value'] ?? '')
+                ? (string) $option['value']
                 : (string) $option;
         }
 
@@ -168,8 +168,8 @@ final class SelectFilter extends Filter implements HasOptions
     protected function displayValue(mixed $value): string
     {
         foreach ($this->resolvedOptions() as $option) {
-            if (is_array($option) && (string) ($option['value'] ?? '') === (string) $value) {
-                return (string) ($option['label'] ?? $value);
+            if (is_array($option) && (string) $option['value'] === (string) $value) {
+                return $option['label'];
             }
         }
 

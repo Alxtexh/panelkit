@@ -91,10 +91,22 @@ final class ResourceConfigurator
             $declared = self::$lenses[$resourceClass];
         }
 
-        return array_values(array_map(
-            static fn (string|Lens $lens): Lens => self::normalizeLens($lens),
-            $declared,
-        ));
+        $lenses = [];
+
+        foreach ($declared as $lens) {
+            if ($lens instanceof Lens) {
+                $lenses[] = $lens;
+                continue;
+            }
+
+            if (! class_exists($lens)) {
+                throw new InvalidArgumentException("Lens class [{$lens}] does not exist.");
+            }
+
+            $lenses[] = self::normalizeLens($lens);
+        }
+
+        return $lenses;
     }
 
     public static function findLens(string $resourceClass, ?string $key): ?Lens

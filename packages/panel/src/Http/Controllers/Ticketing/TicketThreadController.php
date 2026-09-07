@@ -78,19 +78,22 @@ final class TicketThreadController extends Controller
             ->reverse()
             ->values();
 
-        return [
-            'capped' => $total > self::MAX_REPLIES,
-            'total' => $total,
-            'replies' => $replies->map(static fn (TicketReply $reply): array => [
+        $replyRows = [];
+        foreach ($replies as $reply) {
+            $replyRows[] = [
                 'id' => $reply->id,
                 'body' => $reply->body,
                 'internal' => $reply->isInternal(),
                 'author' => $reply->author?->name ?? 'Removed user',
-                // Whose side of the conversation, for which way the bubble
-                // faces - derived server-side so the client needs no rule.
                 'fromOpener' => (string) $reply->author_id === (string) $ticket->opened_by,
                 'at' => $reply->created_at?->toDayDateTimeString(),
-            ])->all(),
+            ];
+        }
+
+        return [
+            'capped' => $total > self::MAX_REPLIES,
+            'total' => $total,
+            'replies' => $replyRows,
 
             'canReply' => Gate::allows('reply', $ticket),
             'canNote' => $seesInternal,

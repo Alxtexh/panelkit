@@ -1,0 +1,45 @@
+# YourBrand
+
+> AI Workspace — AI Workspace with persistent memory. Your AI remembers context, learns preferences, and gets better over time.
+
+YourBrand is an all-in-one business automation platform. Automate workflows, scale operations, and grow your business with intelligent tools.
+
+## Contact
+- Phone: 
+- Email: hello@example.com
+- Address: ,  Germany, Germany
+- Website: https://example.com
+
+## Business Hours
+- Mo-Su 00:00-23:59
+
+## Platform Features
+- Workflow automation
+- Team collaboration
+- Analytics and reporting
+- API integrations
+- Multi-language support (DE/EN/ES)
+
+## Pricing
+- Starter, Professional, and Enterprise tiers available
+- Custom plans for large teams
+- Free trial available
+
+## Features
+- Modern SaaS architecture
+- Enterprise-grade security
+- 99.9% uptime SLA
+- AI-Ready with agents.json support
+
+## API for AI Agents
+- [Contact Form](https://example.com/api/v1/contact) — POST with name, email, message
+- [Company Info](https://example.com/api/v1/company) — GET
+- [Agent Discovery](https://example.com/.well-known/agents.json)
+- [A2A Agent Card](https://example.com/.well-known/agent-card.json)
+
+## Legal
+- [Imprint](https://example.com/de/impressum)
+- [Privacy](https://example.com/de/datenschutz)
+
+---
+Template by [StudioMeyer](https://studiomeyer.io)

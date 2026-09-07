@@ -24,10 +24,10 @@ use InvalidArgumentException;
  */
 final class SelectColumn extends EditableColumn
 {
-    /** @var array<string, string> value => label */
+    /** @var array<string|int, string> value => label */
     private array $options = [];
 
-    /** @var array<string, string> value => semantic colour */
+    /** @var array<string|int, string> value => semantic colour */
     private array $colors = [];
 
     public function type(): string
@@ -52,7 +52,7 @@ final class SelectColumn extends EditableColumn
         return $this;
     }
 
-    /** @param array<string, string> $colors */
+    /** @param array<string|int, string> $colors */
     public function colors(array $colors): self
     {
         $this->colors = $colors;

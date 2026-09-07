@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
 use Alxtexh\Panel\Alerts;
 use Alxtexh\Panel\Documents;
 use Alxtexh\Panel\Knowledge;
@@ -18,22 +13,27 @@ use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Plugins\PanelPlugin;
 use Alxtexh\Panel\Plugins\Plugin;
 use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Support\AppearancePrepaintWiring;
 use Alxtexh\Panel\Support\BackupStatus;
 use Alxtexh\Panel\Support\Contrast;
-use Alxtexh\Panel\Support\Discovery;
-use Alxtexh\Panel\Support\AppearancePrepaintWiring;
 use Alxtexh\Panel\Support\CriticalStylesheetBlocks;
-use Alxtexh\Panel\Support\SemanticStatusTokens;
-use Alxtexh\Panel\Support\ThemeChromeTokens;
+use Alxtexh\Panel\Support\Discovery;
 use Alxtexh\Panel\Support\InertiaLayoutWiring;
 use Alxtexh\Panel\Support\KitAssets;
 use Alxtexh\Panel\Support\PanelLayoutShell;
 use Alxtexh\Panel\Support\PanelPages;
+use Alxtexh\Panel\Support\SemanticStatusTokens;
 use Alxtexh\Panel\Support\TenantContext;
-use Alxtexh\Panel\Support\WebSharePanelProps;
+use Alxtexh\Panel\Support\ThemeChromeTokens;
 use Alxtexh\Panel\Support\TicketTables;
 use Alxtexh\Panel\Support\VendoredCopy;
+use Alxtexh\Panel\Support\WebSharePanelProps;
 use Alxtexh\Panel\Ticketing\TicketingPlugin;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\PermissionRegistrar;
 /**
  * Check for the configurations that are wrong in ways nothing else reports.
@@ -71,7 +71,7 @@ final class DoctorCommand extends Command
 
     public function handle(PanelManager $panels, TenantContext $context): int
     {
-        $profile = (string) $this->option('profile', 'default');
+        $profile = (string) ($this->option('profile') ?? 'default');
 
         /*
          * EMPTIED FIRST, because the console kernel keeps command INSTANCES.
@@ -97,6 +97,7 @@ final class DoctorCommand extends Command
             $this->checkStorageLink();
             $this->checkNotificationTable();
             $this->checkMailDefaults();
+            $this->checkProductionSecurityBaseline();
             $this->checkTrustedProxyAndHttps();
         } else {
             $this->checkPolicies($panels);
@@ -165,7 +166,7 @@ final class DoctorCommand extends Command
 
         if ($queue === 'sync') {
             $this->problem(
-                "Queue worker is disabled because QUEUE_CONNECTION is [sync]",
+                'Queue worker is disabled because QUEUE_CONNECTION is [sync]',
                 'Bulk actions and exports run inline in the web request. Under load this makes timeouts look like successful jobs, because the panel returns a token for work that has already finished inline.',
                 'Set QUEUE_CONNECTION=database or QUEUE_CONNECTION=redis, then run a worker with php artisan queue:work.'
             );
@@ -278,6 +279,93 @@ final class DoctorCommand extends Command
                 'APP_URL uses http:// in production',
                 'When the panel is behind a TLS-terminating proxy, incorrect scheme detection can break secure cookies and redirects.',
                 'Set APP_URL=https://..., and ensure your trusted proxy configuration forwards X-Forwarded-Proto. Then run php artisan config:cache.'
+            );
+        }
+    }
+
+    /**
+     * Check the secrets and cookie flags that turn a correctly routed panel
+     * into a safely deployable one.
+     *
+     * Laravel's defaults are deliberately friendly to local development:
+     * debug output is useful, an unset session secure flag works over HTTP,
+     * and a missing key is only noticed when encryption is first used. Those
+     * defaults must not silently cross the production boundary.
+     */
+    private function checkProductionSecurityBaseline(): void
+    {
+        $key = config('app.key');
+        $keyIsValid = false;
+
+        if (is_string($key) && trim($key) !== '') {
+            if (str_starts_with($key, 'base64:')) {
+                $decoded = base64_decode(substr($key, 7), true);
+                $keyIsValid = is_string($decoded) && strlen($decoded) >= 32;
+            } else {
+                $keyIsValid = in_array(strlen($key), [16, 24, 32], true);
+            }
+        }
+
+        if (! $keyIsValid) {
+            $this->problem(
+                'APP_KEY is missing or too weak for production',
+                'Laravel encryption protects sessions, signed values, and panel secrets. A missing or short key can make authentication and stored credentials fail or become unrecoverable.',
+                'Run php artisan key:generate --show, set APP_KEY in the production environment, and run php artisan config:cache. Never print the key in logs.',
+            );
+        }
+
+        if ((bool) config('app.debug', false)) {
+            $this->problem(
+                'Debug mode is on in production',
+                'Laravel error pages can expose stack traces, environment details, database names, and other sensitive diagnostics to an unauthenticated visitor.',
+                'Set APP_DEBUG=false, then run php artisan config:cache.',
+            );
+        }
+
+        $secure = config('session.secure');
+        $httpOnly = config('session.http_only', true);
+        $sameSite = strtolower((string) config('session.same_site', 'lax'));
+        $url = (string) config('app.url', '');
+
+        if (filter_var($url, FILTER_VALIDATE_URL) === false || ! str_starts_with($url, 'https://')) {
+            return;
+        }
+
+        if ($secure !== true) {
+            $this->problem(
+                'Session cookies are not marked Secure',
+                'The panel is configured for HTTPS but the session cookie may still be sent over an insecure connection after a proxy or browser downgrade.',
+                'Set SESSION_SECURE_COOKIE=true and make sure trusted proxy headers are configured.',
+            );
+        }
+
+        if ($httpOnly !== true) {
+            $this->problem(
+                'Session cookies are not HttpOnly',
+                'Browser JavaScript can read the session cookie, increasing the impact of an XSS defect.',
+                'Set SESSION_HTTP_ONLY=true.',
+            );
+        }
+
+        if (! in_array($sameSite, ['lax', 'strict', 'none'], true)) {
+            $this->problem(
+                'SESSION_SAME_SITE is invalid',
+                "The configured SameSite value [{$sameSite}] is not one of lax, strict, or none, so browser cookie behaviour is undefined across deployments.",
+                'Set SESSION_SAME_SITE=lax (or strict where cross-site sign-in is not required).',
+            );
+        } elseif ($sameSite === 'none' && $secure !== true) {
+            $this->problem(
+                'SameSite=None is configured without Secure cookies',
+                'Browsers reject SameSite=None cookies unless Secure is also set, which can silently log every operator out.',
+                'Set SESSION_SECURE_COOKIE=true or use SESSION_SAME_SITE=lax.',
+            );
+        }
+
+        if ((bool) config('session.partitioned', false) && ($sameSite !== 'none' || $secure !== true)) {
+            $this->problem(
+                'Partitioned cookies are configured with incompatible flags',
+                'Partitioned cookies require SameSite=None and Secure. The current combination will be ignored by modern browsers.',
+                'Set SESSION_SAME_SITE=none and SESSION_SECURE_COOKIE=true, or disable SESSION_PARTITIONED_COOKIE.',
             );
         }
     }
@@ -601,7 +689,7 @@ final class DoctorCommand extends Command
         foreach ($panels->resources() as $class) {
             try {
                 $searchable = $class::definition()->searchableColumns();
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 continue;
             }
 
@@ -611,7 +699,7 @@ final class DoctorCommand extends Command
 
             try {
                 $table = (new ($class::model()))->getTable();
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 continue;
             }
 
@@ -672,7 +760,7 @@ final class DoctorCommand extends Command
             return $row !== null && $row->estimate !== null
                 ? max(0, (int) $row->estimate)
                 : null;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return null;
         }
     }
@@ -1162,7 +1250,6 @@ final class DoctorCommand extends Command
         );
     }
 
-
     private function checkInertiaLayoutWiring(): void
     {
         $path = resource_path('js/app.ts');
@@ -1172,7 +1259,7 @@ final class DoctorCommand extends Command
         }
 
         foreach (InertiaLayoutWiring::inspect((string) file_get_contents($path)) as $finding) {
-            if (($finding['level'] ?? '') === 'note') {
+            if ($finding['level'] === 'note') {
                 $this->note($finding['title'], $finding['detail']);
 
                 continue;
@@ -1508,7 +1595,7 @@ final class DoctorCommand extends Command
         }
 
         foreach (SemanticStatusTokens::inspect($css) as $finding) {
-            if (($finding['level'] ?? '') === 'problem') {
+            if ($finding['level'] === 'problem') {
                 $this->problem(
                     $finding['title'],
                     $finding['detail'],
@@ -1518,7 +1605,7 @@ final class DoctorCommand extends Command
         }
 
         foreach (CriticalStylesheetBlocks::inspect($css) as $finding) {
-            if (($finding['level'] ?? '') === 'problem') {
+            if ($finding['level'] === 'problem') {
                 $this->problem(
                     $finding['title'],
                     $finding['detail'],
@@ -1528,7 +1615,7 @@ final class DoctorCommand extends Command
         }
 
         foreach (ThemeChromeTokens::inspect($css) as $finding) {
-            if (($finding['level'] ?? '') === 'problem') {
+            if ($finding['level'] === 'problem') {
                 $this->problem(
                     $finding['title'],
                     $finding['detail'],
@@ -1546,6 +1633,7 @@ final class DoctorCommand extends Command
      * node_modules is not a white page on that path.
      *
      * VITE PATH: public/build/manifest.json exists, so the root view uses
+     *
      * @vite and then node_modules/@alxtexh-enterprise/panel must exist.
      */
     private function checkClientHalf(): void
@@ -1905,7 +1993,7 @@ final class DoctorCommand extends Command
         ];
 
         foreach ($panels->panels() as $panel) {
-            $registered = [...$registered, ...array_values($panel->getPlugins())];
+            $registered = [...$registered, ...$panel->getPlugins()];
         }
 
         return array_any(
@@ -1981,7 +2069,7 @@ final class DoctorCommand extends Command
 
         $this->note(
             "Many plugins configured ({$count})",
-            "Each plugin adds registration work the first time its panel is used. "
+            'Each plugin adds registration work the first time its panel is used. '
             ."Only register plugins you need in config('panel.plugins') or Panel::plugins(). "
             .'Host Vue components in your app; plugins add routes only when configured.',
         );
@@ -2005,6 +2093,7 @@ final class DoctorCommand extends Command
                             'Plugin dependencies must be non-empty class or interface names.',
                             'Return class-string values from dependencies().',
                         );
+
                         continue;
                     }
 
@@ -2048,6 +2137,7 @@ final class DoctorCommand extends Command
                     $exception->getMessage(),
                     'Fix the plugin health check before deploying it.',
                 );
+
                 continue;
             }
 
@@ -2058,16 +2148,22 @@ final class DoctorCommand extends Command
                         'Each health finding must contain title and detail strings.',
                         'Return arrays shaped like ["level" => "problem", "title" => ..., "detail" => ...].',
                     );
+
                     continue;
                 }
 
-                $level = ($finding['level'] ?? 'problem') === 'note' ? 'note' : 'problem';
-                $method = $level === 'note' ? 'note' : 'problem';
-                $this->{$method}(
-                    "Plugin [{$id}]: {$finding['title']}",
-                    (string) $finding['detail'],
-                    isset($finding['suggested']) ? (string) $finding['suggested'] : null,
-                );
+                $title = "Plugin [{$id}]: {$finding['title']}";
+                $detail = (string) $finding['detail'];
+
+                if ($finding['level'] === 'note') {
+                    $this->note($title, $detail);
+                } else {
+                    $this->problem(
+                        $title,
+                        $detail,
+                        isset($finding['suggested']) ? (string) $finding['suggested'] : null,
+                    );
+                }
             }
         }
     }
@@ -2245,7 +2341,7 @@ final class DoctorCommand extends Command
                 : $this->components->warn($finding['title']);
 
             $detail = $finding['detail'];
-            if (isset($finding['suggested']) && is_string($finding['suggested']) && $finding['suggested'] !== '') {
+            if (isset($finding['suggested']) && $finding['suggested'] !== '') {
                 $detail = $detail.' Suggested: '.$finding['suggested'];
             }
 
@@ -2277,7 +2373,7 @@ final class DoctorCommand extends Command
             $severity = $finding['level'] === 'problem' ? 'ERROR' : 'WARN';
             $this->line('- '.$severity.': '.$finding['title']);
 
-            if (isset($finding['suggested']) && is_string($finding['suggested']) && $finding['suggested'] !== '') {
+            if (isset($finding['suggested']) && $finding['suggested'] !== '') {
                 $this->line('  Suggested: '.$finding['suggested']);
             }
 

@@ -145,7 +145,7 @@ final class Abilities
         $out = [];
 
         foreach (self::PANEL as $name) {
-            $out[$name] = self::PANEL_LABELS[$name] ?? ucfirst(str_replace('_', ' ', $name));
+            $out[$name] = self::PANEL_LABELS[$name];
         }
 
         return [...$out, ...self::extra()];

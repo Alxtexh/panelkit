@@ -43,6 +43,7 @@ use Alxtexh\Panel\Support\TenantContext;
  * `withoutGlobalScope(TenantScope::class)`, which is greppable. An implicit
  * ambient exemption is not.
  */
+/** @implements Scope<Model> */
 final class TenantScope implements Scope
 {
     /**
@@ -51,7 +52,7 @@ final class TenantScope implements Scope
      * is unconstrained here - narrowing it would be a claim about a caller
      * this class never sees.
      *
-     * @param  Builder<Model>  $builder
+     * @param  Builder<covariant Model>  $builder
      */
     public function apply(Builder $builder, Model $model): void
     {
@@ -101,6 +102,7 @@ final class TenantScope implements Scope
      * whereRaw('1 = 0') would be marginally cheaper, but this reads unambiguously
      * in a query log and does not depend on driver boolean handling.
      */
+    /** @param Builder<covariant Model> $builder */
     private function deny(Builder $builder, Model $model): void
     {
         $builder->whereNull($model->qualifyColumn($model->getKeyName()));

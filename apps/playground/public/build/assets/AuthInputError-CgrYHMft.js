@@ -1,1 +1,0 @@
-import{M as e,R as t,et as n,gt as r,k as i,x as a,zt as o}from"./api-docs-D-YQgOc6.js";var s={class:`text-sm text-red-600 dark:text-red-500`},c=t({__name:`AuthInputError`,props:{message:{}},setup(t){return(c,l)=>r((n(),e(`div`,null,[i(`p`,s,o(t.message),1)],512)),[[a,t.message]])}});export{c as t};

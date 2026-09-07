@@ -36,7 +36,7 @@ final class EnvironmentPage extends Page
         return 'Environment';
     }
 
-    public static function ability(): ?string
+    public static function ability(): string
     {
         return 'view_environment';
     }
@@ -71,12 +71,12 @@ final class EnvironmentPage extends Page
         return 'Environment';
     }
 
-    public static function heading(): ?string
+    public static function heading(): string
     {
         return 'Environment';
     }
 
-    public static function description(): ?string
+    public static function description(): string
     {
         return 'Settings that live in .env. Secrets are never shown; leave one blank to keep it.';
     }

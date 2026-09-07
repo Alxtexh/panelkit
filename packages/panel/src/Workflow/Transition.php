@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Workflow;
 
+use Illuminate\Database\Eloquent\Model;
 use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Models\Concerns\HasStateTransitions;
 
@@ -45,7 +46,7 @@ final class Transition
     /** @param list<string> $states */
     public function from(array $states): self
     {
-        $this->from = array_values($states);
+        $this->from = $states;
 
         return $this;
     }
@@ -103,6 +104,7 @@ final class Transition
         return in_array((string) $state, $this->from, true);
     }
 
+    /** @param class-string<Model>|null $model */
     public function toRecordAction(string $column, ?string $model): RecordAction
     {
         $action = RecordAction::make($this->key, $this->label)
@@ -121,10 +123,11 @@ final class Transition
             $action->confirm($this->confirm);
         }
 
-        if ($model !== null && in_array(HasStateTransitions::class, class_uses_recursive($model), true)) {
+        if ($model !== null
+            && in_array(HasStateTransitions::class, class_uses_recursive($model), true)
+            && method_exists($model, 'canTransitionFromAttributes')) {
             $to = $this->to;
             $action->visible(static function (array $row) use ($model, $column, $to): bool {
-                /** @var class-string<\Illuminate\Database\Eloquent\Model&HasStateTransitions> $model */
                 return $model::canTransitionFromAttributes($row, $to, $column);
             });
         } elseif ($this->from !== []) {

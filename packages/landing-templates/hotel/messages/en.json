@@ -1,0 +1,263 @@
+{
+  "meta": {
+    "title": "Can Serena | Boutique Hotel Mallorca",
+    "description": "A sanctuary of Mediterranean elegance nestled in the heart of Mallorca. Experience timeless luxury, authentic culture, and breathtaking landscapes."
+  },
+  "nav": {
+    "home": "Home",
+    "rooms": "Rooms & Suites",
+    "wellness": "Wellness & Spa",
+    "dining": "Dining",
+    "experiences": "Experiences",
+    "contact": "Contact",
+    "book": "Book Now"
+  },
+  "hero": {
+    "tagline": "Where Mediterranean Dreams Come Alive",
+    "subtitle": "A sanctuary of timeless elegance in the heart of Mallorca",
+    "cta": "Discover Your Escape"
+  },
+  "booking": {
+    "title": "Begin Your Journey",
+    "checkIn": "Arrival",
+    "checkOut": "Departure",
+    "guests": "Guests",
+    "adults": "Adults",
+    "children": "Children",
+    "rooms": "Rooms",
+    "search": "Check Availability",
+    "specialCode": "Promo Code"
+  },
+  "about": {
+    "title": "Our Story",
+    "subtitle": "A Legacy of Mediterranean Hospitality",
+    "description": "Can Serena was born from a dream — to create a place where the soul of Mallorca meets the art of hospitality. Our 16th-century finca, lovingly restored over three years, now stands as a testament to the island's rich heritage and our commitment to sustainable luxury.",
+    "history": "What began as a noble family's countryside retreat has evolved into one of Mallorca's most intimate boutique hotels. Every stone wall whispers centuries of stories; every olive tree in our gardens has witnessed generations of island life.",
+    "philosophy": "We believe true luxury lies in authenticity. From our organic gardens that supply our kitchen to our partnerships with local artisans, every detail at Can Serena celebrates the genuine spirit of the Mediterranean.",
+    "values": {
+      "title": "Our Values",
+      "sustainability": {
+        "title": "Sustainability",
+        "description": "Carbon-neutral operations, solar-powered facilities, and a commitment to preserving Mallorca's natural beauty."
+      },
+      "authenticity": {
+        "title": "Authenticity",
+        "description": "Celebrating local traditions, supporting Mallorcan artisans, and serving cuisine from our organic gardens."
+      },
+      "wellness": {
+        "title": "Holistic Wellness",
+        "description": "A sanctuary for mind, body, and soul — from ancient Mediterranean rituals to modern wellness innovations."
+      }
+    }
+  },
+  "mallorca": {
+    "title": "Discover Mallorca",
+    "subtitle": "An Island of Endless Wonders",
+    "description": "Beyond the turquoise waters and golden beaches lies an island of extraordinary depth — ancient villages perched on hilltops, secret coves accessible only by boat, and a culinary renaissance that's putting Mallorca on the world's gastronomic map.",
+    "highlights": {
+      "serra": {
+        "title": "Serra de Tramuntana",
+        "description": "UNESCO World Heritage mountain range with breathtaking hiking trails and medieval villages."
+      },
+      "beaches": {
+        "title": "Hidden Coves",
+        "description": "Crystal-clear waters and secluded beaches that feel like your own private paradise."
+      },
+      "culture": {
+        "title": "Living Heritage",
+        "description": "From Palma's Gothic cathedral to artisan workshops preserving centuries-old crafts."
+      },
+      "gastronomy": {
+        "title": "Culinary Excellence",
+        "description": "Michelin-starred restaurants, traditional sobrasada, and world-renowned wines."
+      }
+    }
+  },
+  "rooms": {
+    "title": "Rooms & Suites",
+    "subtitle": "Where Comfort Meets Character",
+    "description": "Each of our 18 rooms tells its own story — hand-selected antiques meet contemporary comforts, original stone walls embrace modern amenities, and private terraces open to views that have inspired poets for centuries.",
+    "viewAll": "View All Accommodations",
+    "inEveryRoom": "In Every Room",
+    "from": "From",
+    "perNight": "/night",
+    "bookNow": "Book Now",
+    "types": {
+      "garden": {
+        "title": "Garden Room",
+        "description": "Intimate retreats overlooking our organic gardens, featuring original terracotta floors and rainfall showers.",
+        "size": "35 m²"
+      },
+      "terrace": {
+        "title": "Terrace Suite",
+        "description": "Spacious sanctuaries with private terraces, freestanding bathtubs, and panoramic mountain views.",
+        "size": "55 m²"
+      },
+      "master": {
+        "title": "Master Suite",
+        "description": "Our most exclusive accommodations with private pools, outdoor dining areas, and dedicated butler service.",
+        "size": "85 m²"
+      }
+    },
+    "amenities": "All rooms include organic bath amenities, Nespresso machines, complimentary minibar, and 24-hour room service.",
+    "amenityList": {
+      "gardenView": "Garden view",
+      "rainfallShower": "Rainfall shower",
+      "kingBed": "King bed",
+      "terracottaFloors": "Terracotta floors",
+      "privateTerrace": "Private terrace",
+      "freestandingBathtub": "Freestanding bathtub",
+      "mountainViews": "Mountain views",
+      "sittingArea": "Sitting area",
+      "privatePool": "Private pool",
+      "butlerService": "Butler service",
+      "outdoorDining": "Outdoor dining",
+      "separateLivingRoom": "Separate living room"
+    }
+  },
+  "wellness": {
+    "title": "Wellness & Spa",
+    "subtitle": "Ancient Wisdom, Modern Serenity",
+    "description": "Our 800 m² spa draws inspiration from centuries of Mediterranean healing traditions. Here, the island's aromatic herbs, mineral-rich sea salts, and ancient olive oils become instruments of transformation.",
+    "signatureTreatments": "Signature Treatments",
+    "spaFacilities": "Spa Facilities",
+    "beginWellnessJourney": "Begin Your Wellness Journey",
+    "wellnessCta": "Contact our spa concierge to customize your perfect retreat.",
+    "bookTreatment": "Book a Treatment",
+    "complimentary": "Complimentary",
+    "treatments": {
+      "signature": {
+        "title": "Tramuntana Journey",
+        "description": "Our signature 90-minute treatment combining hot stone therapy with locally-sourced essential oils."
+      },
+      "hammam": {
+        "title": "Mediterranean Hammam",
+        "description": "Traditional steam ritual followed by black soap exfoliation and argan oil massage."
+      },
+      "yoga": {
+        "title": "Sunrise Yoga",
+        "description": "Daily sessions on our rooftop terrace, overlooking the mountains as dawn breaks."
+      }
+    },
+    "facilities": {
+      "pool": "25m heated infinity pool",
+      "sauna": "Finnish sauna & steam room",
+      "gym": "State-of-the-art fitness center",
+      "garden": "Meditation gardens"
+    }
+  },
+  "dining": {
+    "title": "Culinary Journey",
+    "subtitle": "From Our Gardens to Your Table",
+    "description": "At Can Serena, dining is a celebration of Mallorca's abundant harvests. Our executive chef transforms ingredients from our organic gardens and partnerships with local fishermen into dishes that honor tradition while embracing innovation.",
+    "reserveTable": "Reserve Your Table",
+    "reserveDescription": "For reservations and private dining inquiries, please contact our restaurant team.",
+    "makeReservation": "Make a Reservation",
+    "gastronomy": "Gastronomy",
+    "restaurants": {
+      "main": {
+        "title": "Sa Taula",
+        "description": "Our main restaurant serving contemporary Mediterranean cuisine with a Mallorcan soul.",
+        "hours": "Breakfast 7:30-10:30 | Dinner 19:00-22:30"
+      },
+      "terrace": {
+        "title": "El Jardí",
+        "description": "Al fresco dining under ancient olive trees, perfect for long summer evenings.",
+        "hours": "Lunch 12:30-15:00 | Tapas 16:00-19:00"
+      },
+      "bar": {
+        "title": "La Bodega",
+        "description": "Our wine cellar bar featuring over 200 Mallorcan and Spanish wines.",
+        "hours": "18:00-00:00"
+      }
+    }
+  },
+  "experiences": {
+    "title": "Curated Experiences",
+    "subtitle": "Discover the Soul of Mallorca",
+    "description": "Beyond our walls lies an island waiting to be discovered. Let our concierge craft unforgettable journeys — from private yacht excursions to truffle hunting in the Tramuntana.",
+    "viewAll": "Explore All Experiences",
+    "signatureExperiences": "Signature Experiences",
+    "moreToExplore": "More to Explore",
+    "designPerfectDay": "Design Your Perfect Day",
+    "conciergeDescription": "Our concierge team is ready to curate bespoke experiences tailored to your interests.",
+    "contactConcierge": "Contact Concierge",
+    "activities": {
+      "sailing": {
+        "title": "Private Sailing",
+        "description": "Explore hidden coves and swim in crystal waters aboard our traditional llaut boat."
+      },
+      "wine": {
+        "title": "Wine Routes",
+        "description": "Private tours of Mallorca's finest vineyards with exclusive tastings."
+      },
+      "cooking": {
+        "title": "Culinary Workshops",
+        "description": "Learn the secrets of Mallorcan cuisine with our executive chef."
+      },
+      "hiking": {
+        "title": "Guided Hikes",
+        "description": "Discover the UNESCO-protected Serra de Tramuntana with expert local guides."
+      }
+    },
+    "additional": {
+      "helicopter": "Private Helicopter Tours",
+      "golf": "Golf at Son Vida",
+      "truffle": "Truffle Hunting",
+      "artGallery": "Art Gallery Tours",
+      "catamaran": "Sunset Catamaran",
+      "photography": "Photography Sessions"
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "We'd Love to Hear From You",
+    "sendMessage": "Send us a Message",
+    "getInTouch": "Get in Touch",
+    "addressLabel": "Address",
+    "phoneLabel": "Phone",
+    "emailLabel": "Email",
+    "viewOnMap": "View on Google Maps",
+    "departments": "Departments",
+    "deptReservations": "Reservations",
+    "deptSpa": "Spa & Wellness",
+    "deptEvents": "Events",
+    "deptPress": "Press",
+    "address": "Sample Road 1, 12345 Sample City, Germany",
+    "phone": "+49 123 456 7890",
+    "email": "reservations@demo-hotel.de",
+    "form": {
+      "name": "Your Name",
+      "email": "Email Address",
+      "subject": "Subject",
+      "message": "Your Message",
+      "send": "Send Message"
+    },
+    "subjects": {
+      "general": "General Inquiry",
+      "reservations": "Reservations",
+      "spa": "Spa & Wellness",
+      "events": "Events & Weddings",
+      "press": "Press & Media"
+    }
+  },
+  "footer": {
+    "tagline": "A Sanctuary of Mediterranean Elegance",
+    "contact": "CONTACT",
+    "legal": "LEGAL",
+    "newsletter": {
+      "title": "Stay Inspired",
+      "description": "Subscribe for exclusive offers and Mallorcan stories.",
+      "placeholder": "Enter your email",
+      "button": "Subscribe"
+    },
+    "links": {
+      "legal": "Legal Notice",
+      "privacy": "Privacy Policy",
+      "cookies": "Cookie Settings",
+      "careers": "Careers"
+    },
+    "social": "Follow Our Journey",
+    "copyright": "© 2026 Can Serena. All rights reserved."
+  }
+}

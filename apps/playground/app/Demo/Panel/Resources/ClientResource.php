@@ -9,6 +9,7 @@ use App\Demo\Models\ClientSession;
 use App\Models\Plan;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Alxtexh\Panel\Actions\ActionGroup;
 use Alxtexh\Panel\Actions\BulkAction;
 use Alxtexh\Panel\Actions\ModalFooterAction;
@@ -595,8 +596,12 @@ final class ClientResource extends Resource
                             ->rule('max:280')
                             ->help('Recorded on the subscriber\'s activity log.'),
                     ]))
-                    ->handle(function (Client $client, array $data): void {
-                        $client->forceFill(['plan_id' => $data['plan_id']])->save();
+                    ->handle(function (Model $record, array $data): void {
+                        if (! $record instanceof Client) {
+                            throw new \UnexpectedValueException('Change plan requires a client record.');
+                        }
+
+                        $record->forceFill(['plan_id' => $data['plan_id']])->save();
                     }),
 
                 ActionGroup::make('Status')->actions([
@@ -625,7 +630,11 @@ final class ClientResource extends Resource
                         ->label('Duplicate')
                         // Unique in the tenant, so it cannot be copied.
                         ->except(['access_code'])
-                        ->then(function ($copy, $original): void {
+                        ->then(function (Model $copy, Model $original): void {
+                            if (! $copy instanceof Client || ! $original instanceof Client) {
+                                throw new \UnexpectedValueException('Client duplication requires client records.');
+                            }
+
                             $copy->name = 'Copy of '.$original->name;
                             $copy->access_code = 'AC-'.strtoupper(bin2hex(random_bytes(4)));
                             // A copy starts fresh rather than inheriting a

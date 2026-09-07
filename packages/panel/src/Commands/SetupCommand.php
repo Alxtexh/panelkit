@@ -21,7 +21,6 @@ final class SetupCommand extends Command
 
     protected $description = 'Print a post-install setup checklist (mail, MFA, tenancy, Turnstile)';
 
-    /** @return list<array{key: string, title: string, detail: string, done: bool}> */
     public function handle(TenantContext $context): int
     {
         $items = [

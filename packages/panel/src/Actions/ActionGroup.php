@@ -40,16 +40,20 @@ final class ActionGroup
         return new self($label);
     }
 
-    /** @param list<RecordAction> $actions */
+    /** @param list<mixed> $actions */
     public function actions(array $actions): self
     {
+        $validated = [];
+
         foreach ($actions as $action) {
             if (! $action instanceof RecordAction) {
                 throw new InvalidArgumentException('An action group may only contain record actions.');
             }
+
+            $validated[] = $action;
         }
 
-        $this->actions = array_values($actions);
+        $this->actions = $validated;
 
         return $this;
     }

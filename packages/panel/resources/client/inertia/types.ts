@@ -51,6 +51,8 @@ export interface NavItem {
     items?: NavItem[]
     group?: string | null
     badge?: string | number | null
+    /** True when the destination owns the whole document, outside Inertia. */
+    external?: boolean
 }
 
 /** The signed-in person, as the account menu and avatar read them. */

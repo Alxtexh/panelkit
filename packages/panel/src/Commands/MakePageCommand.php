@@ -246,7 +246,8 @@ final class MakePageCommand extends Command
         use Alxtexh\\Panel\\Pages\\Page;
 
         /**
-         * TODO: say what this screen is for, and why it is not a resource.
+         * A custom panel screen for {$name}. Add its purpose and data contract
+         * here when the screen is introduced to the application.
          */
         final class {$class} extends Page
         {
@@ -301,7 +302,8 @@ final class MakePageCommand extends Command
         use Alxtexh\\Panel\\Widgets\\StatWidget;
 
         /**
-         * TODO: say what this dashboard answers.
+         * A dashboard for {$name}. Document the operational question it answers
+         * before adding widgets so the first screen remains intentionally small.
          *
          * The Vue file is an empty canvas. Import StatCard / ChartCard, or
          * return 'PanelDashboard' from component() to use the packaged screen.

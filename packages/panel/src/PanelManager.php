@@ -39,8 +39,9 @@ final class PanelManager
      * user is not, which is why resolved SCHEMAS live in the cache keyed by
      * permissions rather than here.
      *
-     * @var array<string, class-string>
+     * @var array<string, class-string<Resources\Resource>>
      */
+    /** @var array<string, class-string<Resources\Resource>> */
     private array $resources = [];
 
     /**
@@ -100,7 +101,7 @@ final class PanelManager
 
     private bool $discovered = false;
 
-    /** @var array<string, array<string, class-string>> panelId => [key => class] — populated alongside $resources */
+    /** @var array<string, array<string, class-string<Resources\Resource>>> panelId => [key => class] — populated alongside */
     private array $panelResourceMap = [];
 
     /**
@@ -201,6 +202,7 @@ final class PanelManager
      *
      * A flag must live wherever the state it protects lives.
      */
+    /** @var array<string, bool> */
     private array $pluginsApplied = [];
 
     /**
@@ -227,6 +229,20 @@ final class PanelManager
     public function registerPanel(Panel $panel): void
     {
         self::$panels[$panel->id] = $panel;
+    }
+
+    /**
+     * Remove a panel from the process-wide boot registry.
+     *
+     * This is primarily for dynamic test fixtures and long-running hosts that
+     * unload a tenant portal. Removing the provider file does not rewind
+     * Laravel's already-booted service container, so leaving the object here
+     * makes a deleted portal appear in route-derived inventories until the
+     * worker restarts.
+     */
+    public function unregisterPanel(string $id): void
+    {
+        unset(self::$panels[$id]);
     }
 
     /** @return array<string, Panel> */
@@ -396,7 +412,7 @@ final class PanelManager
         }
 
         foreach ((array) config('panel.plugins', []) as $class) {
-            if (is_string($class) && $class !== '') {
+            if (is_string($class) && $class !== '' && is_a($class, Plugins\PanelPlugin::class, true)) {
                 $sources[] = $class;
             }
         }
@@ -448,7 +464,7 @@ final class PanelManager
     /**
      * Whether a config plugin class might apply to `$panel` without constructing it.
      *
-     * @param  class-string<Plugins\PanelPlugin>  $class
+     * @param  class-string  $class
      */
     private function configPluginMayApply(string $class, Panel $panel): bool
     {
@@ -773,6 +789,7 @@ final class PanelManager
             return;
         }
 
+        /** @var list<class-string<Resources\Resource>> $classes */
         $classes = [];
 
         foreach (glob(rtrim($directory, '/').'/*.php') ?: [] as $file) {
@@ -786,7 +803,7 @@ final class PanelManager
 
             $reflection = new \ReflectionClass($class);
 
-            if ($reflection->isAbstract() || ! $reflection->isSubclassOf(Resources\Resource::class)) {
+            if ($reflection->isAbstract() || ! $this->isResourceClass($class)) {
                 continue;
             }
 
@@ -797,7 +814,7 @@ final class PanelManager
     }
 
     /**
-     * @param  list<class-string>  $classes
+     * @param  list<class-string<Resources\Resource>>  $classes
      * @param  string|null  $panelId  Overrides the class's own `panel()`.
      */
     public function registerResources(array $classes, ?string $panelId = null): void
@@ -922,6 +939,7 @@ final class PanelManager
      * panel even with no active panel — so this method checks `$this->currentPanel`
      * (the field) to distinguish "explicitly set" from "defaulted".
      */
+    /** @return class-string<Resources\Resource>|null */
     public function resource(string $key): ?string
     {
         $this->resources(); // ensure discovery and panelResourceMap are populated
@@ -934,7 +952,9 @@ final class PanelManager
             }
         }
 
-        return $this->resources[$key] ?? null;
+        $result = $this->resources[$key] ?? null;
+
+        return $result;
     }
 
     /**
@@ -1045,7 +1065,7 @@ final class PanelManager
      * route segment would let a tenant-panel URL resolve a central-panel
      * resource, which is a central-context query reached from a tenant request.
      *
-     * @return array<string, class-string>
+     * @return array<string, class-string<Resources\Resource>>
      */
     public function resourcesFor(string $panelId): array
     {
@@ -1195,6 +1215,7 @@ final class PanelManager
             return;
         }
 
+        /** @var list<class-string<Pages\Page>> $classes */
         $classes = [];
 
         foreach (glob(rtrim($directory, '/').'/*.php') ?: [] as $file) {
@@ -1208,7 +1229,7 @@ final class PanelManager
 
             // An abstract base or a helper sitting in the folder must not
             // become a route, for the same reason it must not become a resource.
-            if ($reflection->isAbstract() || ! $reflection->isSubclassOf(Pages\Page::class)) {
+            if ($reflection->isAbstract() || ! $this->isPageClass($class)) {
                 continue;
             }
 
@@ -1218,9 +1239,6 @@ final class PanelManager
         $this->registerPages($classes);
     }
 
-    /**
-     * @param  list<class-string<Pages\Page>>  $classes
-     */
     /**
      * @param  list<class-string<Pages\Page>>  $classes
      * @param  string|null  $panelIdOverride  Overrides the class `panel()` declaration.
@@ -1270,6 +1288,19 @@ final class PanelManager
         }
     }
 
+    /** @phpstan-assert-if-true class-string<Resources\Resource> $class */
+    private function isResourceClass(string $class): bool
+    {
+        return is_a($class, Resources\Resource::class, true);
+    }
+
+    /** @phpstan-assert-if-true class-string<Pages\Page> $class */
+    private function isPageClass(string $class): bool
+    {
+        return is_a($class, Pages\Page::class, true);
+    }
+
+    /** @return array<string, class-string<Resources\Resource>> */
     public function resources(): array
     {
         if (! $this->discovered) {

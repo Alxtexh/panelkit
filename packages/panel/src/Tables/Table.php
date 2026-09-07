@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Tables;
 
 use Closure;
 use Illuminate\Database\Query\Expression;
+use Illuminate\Contracts\Database\Query\Expression as QueryExpression;
 use InvalidArgumentException;
 use Alxtexh\Panel\Actions\ActionGroup;
 use Alxtexh\Panel\Actions\BulkAction;
@@ -159,7 +160,7 @@ final class Table
 
     private ?string $keyColumn = null;
 
-    /** @var list<string|Expression> extra database columns to select that no column declares */
+    /** @var list<string|QueryExpression> extra database columns to select that no column declares */
     private array $additionalSelect = [];
 
     public static function make(): self
@@ -422,7 +423,7 @@ final class Table
     {
         $this->groups = array_map(
             static fn (string|Group $group): Group => $group instanceof Group ? $group : Group::make($group),
-            array_values($groups),
+            $groups,
         );
 
         return $this;
@@ -511,7 +512,7 @@ final class Table
      */
     public function recordActions(array $actions): self
     {
-        $this->recordActions = array_values($actions);
+        $this->recordActions = $actions;
 
         return $this;
     }
@@ -715,7 +716,7 @@ final class Table
         return $this;
     }
 
-    /** @param list<string> $columns */
+    /** @param list<string|QueryExpression> $columns */
     public function alsoSelect(array $columns): self
     {
         $this->additionalSelect = $columns;
@@ -732,7 +733,7 @@ final class Table
      * see `UserResource`'s `role_names`), and a second, unrelated caller
      * appending here must not silently discard that.
      *
-     * @param  list<string|Expression>  $columns
+     * @param  list<string|Expression|QueryExpression>  $columns
      */
     public function appendSelect(array $columns): self
     {
@@ -827,7 +828,7 @@ final class Table
      * `['table', 'cards']` (or cards first) to opt in. Unknown values are
      * dropped so a typo does not invent a mode the client cannot draw.
      *
-     * @param  list<'table'|'cards'|string>  $layouts
+     * @param  list<mixed>  $layouts
      */
     public function layouts(array $layouts): self
     {
@@ -840,6 +841,7 @@ final class Table
         return $this;
     }
 
+    /** @return array<string, mixed> */
     public function toSchema(): array
     {
         $columns = [];
@@ -966,6 +968,7 @@ final class Table
      * `toListQuery()` - the table itself never needed to know. A workspace
      * table has no resource behind it, so it has to carry its own.
      */
+    /** @param class-string $model */
     public function model(string $model): self
     {
         $this->model = $model;
@@ -973,6 +976,7 @@ final class Table
         return $this;
     }
 
+    /** @return class-string */
     public function getModel(): string
     {
         if ($this->model === null) {
@@ -985,6 +989,7 @@ final class Table
         return $this->model;
     }
 
+    /** @param class-string $model */
     public function toListQuery(string $model): ListQuery
     {
         $query = ListQuery::for($model);
@@ -1052,6 +1057,7 @@ final class Table
      *
      * @return list<string>
      */
+    /** @return list<string|QueryExpression> */
     private function resolveSelect(): array
     {
         /*
@@ -1221,6 +1227,7 @@ final class Table
         return $this->resolveSearchable();
     }
 
+    /** @return list<string> */
     private function resolveSearchable(): array
     {
         $columns = [];

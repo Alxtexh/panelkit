@@ -1,0 +1,1 @@
+import{A as e,Bt as t,N as n,S as r,_t as i,tt as a,z as o}from"./api-docs-BN78F1L2.js";var s={class:`text-sm text-red-600 dark:text-red-500`},c=o({__name:`AuthInputError`,props:{message:{}},setup(o){return(c,l)=>i((a(),n(`div`,null,[e(`p`,s,t(o.message),1)],512)),[[r,o.message]])}});export{c as t};

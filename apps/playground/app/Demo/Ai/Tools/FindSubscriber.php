@@ -9,7 +9,6 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Alxtexh\Panel\Ai\PanelTool;
-use Stringable;
 
 /**
  * Look a subscriber up by access code, phone or name.
@@ -26,7 +25,7 @@ use Stringable;
  */
 final class FindSubscriber extends PanelTool implements Tool
 {
-    public function description(): Stringable|string
+    public function description(): string
     {
         return 'Find a subscriber in this organisation by access code, phone number, or name. '
             .'Returns their current status and plan.';
@@ -41,7 +40,7 @@ final class FindSubscriber extends PanelTool implements Tool
         ];
     }
 
-    public function handle(Request $request): Stringable|string
+    public function handle(Request $request): string
     {
         if ($refusal = $this->authorise('viewAny', 'clients')) {
             return $refusal;

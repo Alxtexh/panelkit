@@ -345,6 +345,24 @@ final class SettingsIndex
     /** @return list<array<string, mixed>> */
     private static function registered(): array
     {
-        return app()->bound(self::KEY) ? (array) app(self::KEY) : [];
+        $entries = [];
+
+        foreach (app()->bound(self::KEY) ? (array) app(self::KEY) : [] as $entry) {
+            if (! is_array($entry)) {
+                continue;
+            }
+
+            $normalised = [];
+
+            foreach ($entry as $key => $value) {
+                if (is_string($key)) {
+                    $normalised[$key] = $value;
+                }
+            }
+
+            $entries[] = $normalised;
+        }
+
+        return $entries;
     }
 }

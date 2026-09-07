@@ -36,17 +36,17 @@ final class KitLeasesPage extends CatalogRegisterPage
         return 'KitLeases';
     }
 
-    public static function heading(): ?string
+    public static function heading(): string
     {
         return 'Leases';
     }
 
-    public static function description(): ?string
+    public static function description(): string
     {
         return 'Lease cards and a table. CatalogCard facts, DataTable, PkStatusBadge. Not a lease engine.';
     }
 
-    public static function itemPath(): ?string
+    public static function itemPath(): string
     {
         return '/kit-catalog';
     }

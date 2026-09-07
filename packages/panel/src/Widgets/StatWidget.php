@@ -91,7 +91,7 @@ final class StatWidget
     /**
      * The miniature series drawn behind the number.
      *
-     * @param  Closure(): (array{points: list<array{label: string, value: int|float}>}|list<array{label: string, value: int|float}>)  $sparkline
+     * @param  Closure  $sparkline
      */
     public function sparkline(Closure $sparkline): self
     {
@@ -164,6 +164,7 @@ final class StatWidget
         return Ability::allows($user, $this->ability);
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [

@@ -29,8 +29,9 @@ export interface InfoNode {
     children?: InfoNode[]
     key?: string
     label?: string
+    badge?: string | number | null
     description?: string
-    columns?: number
+    columns?: number | ResponsiveColumns
     collapsible?: boolean
     collapsed?: boolean
     icon?: string | null
@@ -46,6 +47,8 @@ export interface InfoNode {
     defaultColor?: string
     [key: string]: any
 }
+
+type ResponsiveColumns = Partial<Record<'default' | 'sm' | 'md' | 'lg' | 'xl' | '2xl', number>>
 
 const props = withDefaults(
     defineProps<{
@@ -72,10 +75,33 @@ const isRoot = computed(() => props.depth === 0)
  * sections and let short fields scan side by side.
  */
 const gridClass = computed(() => {
-    const columns = props.node.columns ?? (props.node.component === 'section' ? 2 : 1)
+    const configured = props.node.columns
+    const columns =
+        typeof configured === 'number'
+            ? configured
+            : (configured?.default ??
+              configured?.sm ??
+              configured?.md ??
+              (props.node.component === 'section' ? 2 : 1))
 
     return columns >= 3 ? 'sm:grid-cols-3' : columns === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-1'
 })
+
+function responsiveGridStyle(node: InfoNode): Record<string, string> {
+    const columns = node.columns
+    const values = typeof columns === 'number' ? { default: columns } : columns
+    const style: Record<string, string> = {}
+
+    for (const breakpoint of ['default', 'sm', 'md', 'lg', 'xl', '2xl'] as const) {
+        const count = values?.[breakpoint]
+
+        if (typeof count === 'number' && count > 0) {
+            style[`--pk-grid-cols-${breakpoint}`] = String(Math.min(12, Math.max(1, count)))
+        }
+    }
+
+    return style
+}
 
 const dateFormats: Record<string, Intl.DateTimeFormatOptions> = {
     date: { year: 'numeric', month: 'long', day: 'numeric' },
@@ -381,8 +407,8 @@ const missingViewMessage = computed(() => {
     <!-- Grid. -->
     <dl
         v-else-if="node.component === 'grid'"
-        class="grid grid-cols-1 gap-x-6 gap-y-4"
-        :class="gridClass"
+        class="pk-responsive-grid grid gap-x-6 gap-y-4"
+        :style="responsiveGridStyle(node)"
     >
         <InfoNode
             v-for="(child, i) in node.children ?? []"
@@ -420,6 +446,9 @@ const missingViewMessage = computed(() => {
                 @click="activeTab = i"
             >
                 {{ tab.label }}
+                <PkBadge v-if="tab.badge !== null && tab.badge !== undefined" variant="secondary">
+                    {{ tab.badge }}
+                </PkBadge>
             </button>
         </div>
 
@@ -441,3 +470,75 @@ const missingViewMessage = computed(() => {
         </div>
     </div>
 </template>
+
+<style scoped>
+.pk-responsive-grid {
+    grid-template-columns: repeat(var(--pk-grid-cols-default, 1), minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+    .pk-responsive-grid {
+        grid-template-columns: repeat(
+            var(--pk-grid-cols-sm, var(--pk-grid-cols-default, 1)),
+            minmax(0, 1fr)
+        );
+    }
+}
+
+@media (min-width: 768px) {
+    .pk-responsive-grid {
+        grid-template-columns: repeat(
+            var(--pk-grid-cols-md, var(--pk-grid-cols-sm, var(--pk-grid-cols-default, 1))),
+            minmax(0, 1fr)
+        );
+    }
+}
+
+@media (min-width: 1024px) {
+    .pk-responsive-grid {
+        grid-template-columns: repeat(
+            var(
+                --pk-grid-cols-lg,
+                var(--pk-grid-cols-md, var(--pk-grid-cols-sm, var(--pk-grid-cols-default, 1)))
+            ),
+            minmax(0, 1fr)
+        );
+    }
+}
+
+@media (min-width: 1280px) {
+    .pk-responsive-grid {
+        grid-template-columns: repeat(
+            var(
+                --pk-grid-cols-xl,
+                var(
+                    --pk-grid-cols-lg,
+                    var(--pk-grid-cols-md, var(--pk-grid-cols-sm, var(--pk-grid-cols-default, 1)))
+                )
+            ),
+            minmax(0, 1fr)
+        );
+    }
+}
+
+@media (min-width: 1536px) {
+    .pk-responsive-grid {
+        grid-template-columns: repeat(
+            var(
+                --pk-grid-cols-2xl,
+                var(
+                    --pk-grid-cols-xl,
+                    var(
+                        --pk-grid-cols-lg,
+                        var(
+                            --pk-grid-cols-md,
+                            var(--pk-grid-cols-sm, var(--pk-grid-cols-default, 1))
+                        )
+                    )
+                )
+            ),
+            minmax(0, 1fr)
+        );
+    }
+}
+</style>

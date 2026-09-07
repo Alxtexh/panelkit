@@ -74,7 +74,7 @@ final class SupportEditing
     public static function entries(string $kind): array
     {
         try {
-            return ContentEntry::query()
+            $rows = ContentEntry::query()
                 ->where('kind', $kind)
                 ->orderBy('sort')
                 ->orderBy('id')
@@ -89,6 +89,13 @@ final class SupportEditing
                     'published' => (bool) $entry->published,
                 ])
                 ->all();
+
+            $entries = [];
+            foreach ($rows as $row) {
+                $entries[] = $row;
+            }
+
+            return $entries;
         } catch (Throwable) {
             return [];
         }
@@ -113,14 +120,23 @@ final class SupportEditing
             return [];
         }
 
-        return $rows->map(static function (ContentEntry $row): array {
+        $extras = [];
+        foreach ($rows as $row) {
             $meta = (array) ($row->meta ?? []);
+            $links = [];
+            foreach ((array) ($meta['links'] ?? []) as $link) {
+                if (is_array($link)) {
+                    $links[] = $link;
+                }
+            }
 
-            return [
+            $extras[] = [
                 'title' => $row->title,
                 'body' => (string) ($row->body ?? ''),
-                'links' => array_values((array) ($meta['links'] ?? [])),
+                'links' => $links,
             ];
-        })->all();
+        }
+
+        return $extras;
     }
 }

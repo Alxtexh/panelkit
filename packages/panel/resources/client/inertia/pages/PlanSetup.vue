@@ -4,7 +4,13 @@
  */
 import { Head, router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
-import { PAGE_SHELL, PkButton as Button, PkModal, PlanEditor, PlanGrid } from '@alxtexh-enterprise/panel'
+import {
+    PAGE_SHELL,
+    PkButton as Button,
+    PkModal,
+    PlanEditor,
+    PlanGrid,
+} from '@alxtexh-enterprise/panel'
 import type { PlanLimitField, PlanModuleOption, PlanRecord } from '@alxtexh-enterprise/panel'
 
 defineOptions({
@@ -101,7 +107,8 @@ function destroy() {
             @close="pendingDestroy = null"
         >
             <p class="text-sm">
-                Delete plan <strong>#{{ pendingDestroy }}</strong>?
+                Delete plan <strong>#{{ pendingDestroy }}</strong
+                >?
             </p>
             <template #footer>
                 <Button variant="outline" @click="pendingDestroy = null">Cancel</Button>

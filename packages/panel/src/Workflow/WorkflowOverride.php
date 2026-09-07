@@ -12,6 +12,10 @@ use Illuminate\Database\Eloquent\Model;
  * One row per resource key. States, transitions, and optional canvas
  * positions are stored as JSON. States/transitions rebuild into a Workflow
  * via `Workflow::fromStored()`; positions are board-only layout metadata.
+ *
+ * @property array<string, array{label: string, color: string}> $states
+ * @property list<array{key: string, label: string, to: string, from?: list<string>, ability?: string, icon?: string|null, color?: string|null, confirm?: string|null}> $transitions
+ * @property array<string, array{x: int|float, y: int|float}>|null $positions
  */
 final class WorkflowOverride extends Model
 {

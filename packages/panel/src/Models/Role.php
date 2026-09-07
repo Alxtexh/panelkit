@@ -83,7 +83,7 @@ class Role extends SpatieRole
     public function isProtected(): bool
     {
         return $this->getKey() === self::query()
-            ->where('tenant_id', $this->tenant_id)
+            ->where('tenant_id', $this->getAttribute('tenant_id'))
             ->orderBy('id')
             ->value('id');
     }

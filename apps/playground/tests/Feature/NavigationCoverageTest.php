@@ -372,6 +372,20 @@ final class NavigationCoverageTest extends TestCase
                 continue;
             }
 
+            // Imported landing pages intentionally do not render an Inertia
+            // component. They own the complete document, so coverage checks
+            // their real HTTP response instead of treating that ownership as
+            // an orphaned PanelKit screen.
+            if (($page['external'] ?? false) === true) {
+                $this->assertSame(
+                    200,
+                    $this->actingAs($this->admin)->get($page['href'])->getStatusCode(),
+                    "The navigation offers “{$page['title']}” at {$page['href']}, which does not return its standalone document.",
+                );
+
+                continue;
+            }
+
             $this->assertNotNull(
                 $this->componentAt($page['href']),
                 "The navigation offers “{$page['title']}” at {$page['href']}, which does not render a screen.",
@@ -619,6 +633,21 @@ final class NavigationCoverageTest extends TestCase
         $this->assertContains('/apps/mail', $hrefs);
         $this->assertContains('/apps/api-docs', $hrefs);
         $this->assertTrue($props['panelHome']['isDefault']);
+    }
+
+    /** The public site is one active landing, not a gallery of sidebar links. */
+    public function test_the_sidebar_exposes_one_landing_page_cms_entry(): void
+    {
+        $props = $this->actingAs($this->admin)->get('/dashboard')->assertOk()
+            ->viewData('page')['props'];
+
+        $landingEntries = array_values(array_filter(
+            $props['panelPages'],
+            static fn (array $entry): bool => ($entry['href'] ?? null) === '/landing-pages',
+        ));
+
+        $this->assertCount(1, $landingEntries);
+        $this->assertSame('Landing page', $landingEntries[0]['title']);
     }
 
     /**

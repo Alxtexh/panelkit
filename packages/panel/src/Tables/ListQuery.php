@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Tables;
 
 use Closure;
+use Illuminate\Database\Connection;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Contracts\Database\Query\Expression as QueryExpression;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
@@ -18,6 +22,7 @@ use Alxtexh\Panel\Tables\Filters\QueryBuilderFilter;
 use Alxtexh\Panel\Tables\Filters\TrashedFilter;
 use Alxtexh\Panel\Tables\Grouping\Group;
 use Alxtexh\Panel\Support\Deprecation;
+use Alxtexh\Panel\Support\AllowListedQueryExpression;
 
 /**
  * The shared list query, extracted in Phase 3 from three hardcoded controllers.
@@ -43,12 +48,13 @@ use Alxtexh\Panel\Support\Deprecation;
  *                                     key can differ from the ORDER BY column)
  *   - data-derived filter options    (SelectFilter::options(Closure))
  */
+/** @phpstan-type TableState array{tab: string|null, search: string, sort: string, direction: string, cursor: string|null, page: int, filters: array<string, mixed>, group: mixed} */
 final class ListQuery
 {
     /** @var class-string */
     private string $model;
 
-    /** @var list<string> */
+    /** @var list<string|QueryExpression> */
     private array $select = ['*'];
 
     /** @var array<string, string> display key => qualified ORDER BY column */
@@ -172,6 +178,7 @@ final class ListQuery
      */
     private string $countStrategy = 'deferred';
 
+    /** @param class-string $model */
     private function __construct(string $model)
     {
         $this->model = $model;
@@ -183,10 +190,22 @@ final class ListQuery
         return new self($model);
     }
 
-    /** @param list<string> $columns */
+    /** @param list<string|QueryExpression> $columns */
     public function select(array $columns): self
     {
-        $this->select = $columns;
+        $normalised = [];
+
+        foreach ($columns as $column) {
+            if (is_string($column)) {
+                $normalised[] = $column;
+            } elseif ($column instanceof QueryExpression) {
+                $normalised[] = $column;
+            } else {
+                throw new InvalidArgumentException('List select expressions must be Laravel query expressions.');
+            }
+        }
+
+        $this->select = $normalised;
 
         return $this;
     }
@@ -462,6 +481,7 @@ final class ListQuery
         return $this->namespace;
     }
 
+    /** @param list<RecordAction|ActionGroup> $actions */
     public function recordActions(array $actions): self
     {
         $this->recordActions = $actions;
@@ -653,7 +673,7 @@ final class ListQuery
             ->map(static fn (object $r): array => (array) $r)
             ->all();
 
-        return $this->transform === null ? $rows : array_map($this->transform, $rows);
+        return $this->transform === null ? array_values($rows) : array_values(array_map($this->transform, $rows));
     }
 
     /**
@@ -683,7 +703,7 @@ final class ListQuery
      * Conservative by construction: if this cannot prove the join is
      * unnecessary it keeps it, so the worst case is the cost it has today.
      *
-     * @param  array<string, mixed>  $state
+     * @param  TableState  $state
      */
     private function joinRequired(array $state): bool
     {
@@ -693,7 +713,7 @@ final class ListQuery
             && ! str_starts_with($column, $table.'.');
 
         // A search touches every searchable column, so any joined one counts.
-        if (($state['search'] ?? '') !== '') {
+        if ($state['search'] !== '') {
             foreach ($this->searchable as $column) {
                 if ($isJoined($column)) {
                     return true;
@@ -734,7 +754,7 @@ final class ListQuery
      * Aliases are derived from the column KEY and sanitised, because they are
      * interpolated into the SELECT alongside the aggregate.
      *
-     * @param  array<string, mixed>  $state
+     * @param  TableState  $state
      * @return array<string, int|float|null>
      */
     private function summarise(array $state): array
@@ -1040,7 +1060,7 @@ final class ListQuery
         return $suffix === $bare ? $column : "{$column} as {$bare}";
     }
 
-    /** @return list<string> The columns the list selects, for an export header. */
+    /** @return list<string|QueryExpression> The columns the list selects. */
     public function selectedColumns(): array
     {
         $this->ensureKeyIsSelected();
@@ -1078,7 +1098,7 @@ final class ListQuery
                 nextCursor: $provided->hasMore ? $provided->nextCursor : null,
                 perPage: $perPage,
                 perPageOptions: $this->perPageOptions,
-                tabs: $this->tabs?->values ?? [],
+                tabs: $this->tabs === null ? [] : $this->tabs->values,
                 tabCounts: null,
                 summary: null,
                 total: static fn (): int => $provided->total,
@@ -1135,7 +1155,7 @@ final class ListQuery
             nextCursor: $nextCursor,
             perPage: $perPage,
             perPageOptions: $this->perPageOptions,
-            tabs: $this->tabs?->values ?? [],
+            tabs: $this->tabs === null ? [] : $this->tabs->values,
             // Counts come from the query WITHOUT the tab constraint - with it,
             // every tab except the active one would read zero, which looks like
             // real data rather than a bug. Deferred so they never block rows.
@@ -1147,7 +1167,8 @@ final class ListQuery
                 : fn (): array => $this->tabs->counts($this->base($state, applyTab: false, forCount: true)),
             // A closure, not a number. The caller wraps it in Inertia::defer()
             // so the rows paint before any COUNT runs (§10).
-            total: fn (): int => $this->base($state, forCount: true)->count(),
+            total: $this->totalResolver($state),
+            countStrategy: $this->countStrategy,
             indicators: $this->indicatorsFor($state['filters']),
             groupBy: $this->activeGroup?->toSchema(),
         );
@@ -1156,7 +1177,7 @@ final class ListQuery
     /**
      * How the total is produced, per the declared strategy.
      *
-     * @param  array<string, mixed>  $state
+     * @param  TableState  $state
      * @return Closure(): ?int
      */
     private function totalResolver(array $state): Closure
@@ -1180,14 +1201,14 @@ final class ListQuery
         };
     }
 
-    /** @param array<string, mixed> $state */
+    /** @param TableState $state */
     private function isUnfiltered(array $state): bool
     {
-        if (($state['search'] ?? '') !== '' || ($state['tab'] ?? null) !== null) {
+        if ($state['search'] !== '' || $state['tab'] !== null) {
             return false;
         }
 
-        foreach ((array) ($state['filters'] ?? []) as $value) {
+        foreach ($state['filters'] as $value) {
             if ($value !== null) {
                 return false;
             }
@@ -1207,8 +1228,17 @@ final class ListQuery
     {
         $connection = $this->model::query()->getConnection();
 
-        if ($connection->getDriverName() !== 'pgsql') {
-            return $this->base(['search' => '', 'filters' => [], 'sort' => $this->defaultSort, 'direction' => 'desc', 'cursor' => null], forCount: true)->count();
+        if ($this->driverName($connection) !== 'pgsql') {
+            return $this->base([
+                'tab' => null,
+                'search' => '',
+                'filters' => [],
+                'sort' => $this->defaultSort,
+                'direction' => 'desc',
+                'cursor' => null,
+                'page' => 1,
+                'group' => null,
+            ], forCount: true)->count();
         }
 
         $table = (new $this->model)->getTable();
@@ -1222,7 +1252,7 @@ final class ListQuery
     }
 
     /**
-     * @return array{search: string, sort: string, direction: string, cursor: string|null, filters: array<string, mixed>}
+     * @return TableState
      */
     private function readState(Request $request): array
     {
@@ -1282,7 +1312,7 @@ final class ListQuery
     }
 
     /**
-     * @param  array{search: string, sort: string, direction: string, cursor: string|null, filters: array<string, mixed>}  $state
+     * @param  TableState  $state
      * @return list<array<string, mixed>>
      */
     private function fetch(array $state, int $perPage): array
@@ -1299,21 +1329,24 @@ final class ListQuery
         $limit = $perPage + 1;
 
         $column = $this->sortable[$state['sort']];
-        $direction = $state['direction'];
+        $direction = $this->sqlDirection($state['direction']);
 
         $terms = $this->orderingTerms($state['sort'], $column);
 
         $query = $this->base($state)->select($this->selectedColumns());
 
         if ($this->searchMode === 'relevance' && $state['search'] !== '') {
-            $driver = $query->getConnection()->getDriverName();
+            $driver = $this->driverName($query->getConnection());
             [$expression, $bindings] = $this->relevanceOrdering(
                 (string) $state['search'],
                 $driver === 'pgsql' ? 'ilike' : 'like',
             );
 
             if ($expression !== null) {
-                $query->orderByRaw($expression.' DESC', $bindings);
+                $query->orderBy(AllowListedQueryExpression::fromValidated($expression), 'desc');
+                foreach ($bindings as $binding) {
+                    $query->addBinding($binding, 'order');
+                }
             }
         }
 
@@ -1324,7 +1357,7 @@ final class ListQuery
          */
         foreach ($terms as $term) {
             if ($term['raw']) {
-                $query->orderByRaw($term['sql'].' '.$direction);
+                $query->orderBy(AllowListedQueryExpression::fromValidated($term['sql']), $direction);
             } else {
                 $query->orderBy($term['sql'], $direction);
             }
@@ -1347,22 +1380,22 @@ final class ListQuery
         if ($this->paginationStrategy === 'offset') {
             // Explicitly opt-in. Fine on a small table, and the reason page
             // 2,000 is slow on a large one.
-            $page = max(1, (int) ($state['page'] ?? 1));
+            $page = max(1, $state['page']);
             $query->forPage($page, $perPage);
         } else {
             $this->applyCursor($query, $state, $terms, $direction);
         }
 
-        $rows = array_map(
+        $rows = array_values(array_map(
             static fn (object $row): array => (array) $row,
             $query->limit($limit)->get()->all(),
-        );
+        ));
 
         return $this->decorate($rows);
     }
 
     /**
-     * @param  array{search: string, sort: string, direction: string, cursor: string|null, filters: array<string, mixed>}  $state
+     * @param  TableState  $state
      */
     private function base(array $state, bool $applyTab = true, bool $forCount = false): Builder
     {
@@ -1506,6 +1539,7 @@ final class ListQuery
      * this method rather than beside it: "Amina Gold" must be one client on
      * one plan, not every Amina plus every gold plan.
      */
+    /** @param EloquentBuilder<\Illuminate\Database\Eloquent\Model> $eloquent */
     private function applySearch(EloquentBuilder $eloquent, string $term): void
     {
         if ($term === '' || ($this->searchable === [] && $this->searchableRelations === [])) {
@@ -1520,7 +1554,7 @@ final class ListQuery
          * wrapping - which matters, because wrapping the column in `lower()`
          * would also put it beyond any index that names the column plainly.
          */
-        $like = $eloquent->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+        $like = $this->driverName($eloquent->getConnection()) === 'pgsql' ? 'ilike' : 'like';
 
         /*
          * A QUOTED PHRASE IS ONE TERM, and invisible characters are not terms
@@ -1778,6 +1812,7 @@ final class ListQuery
      * one column ungrouped, two grouped, and hardcoding either would silently
      * paginate wrongly in the other case.
      *
+     * @param  TableState  $state
      * @param  list<array{rowKey: string, sql: string, raw: bool}>  $terms
      */
     private function applyCursor(Builder $query, array $state, array $terms, string $direction): void
@@ -1841,12 +1876,27 @@ final class ListQuery
     }
 
     /**
-     * @param  array{rowKey: string, sql: string, raw: bool}  $term
+     * Return the driver only for Laravel's concrete connection implementation.
+     * The public Eloquent/query contract intentionally exposes no driver method,
+     * so non-standard connection implementations fail closed to the portable
+     * SQL branch.
      */
+    private function driverName(ConnectionInterface $connection): string
+    {
+        return $connection instanceof Connection ? $connection->getDriverName() : '';
+    }
+
+    /** @return 'asc'|'desc' */
+    private function sqlDirection(string $direction): string
+    {
+        return $direction === 'asc' ? 'asc' : 'desc';
+    }
+
+    /** @param array{rowKey: string, sql: string, raw: bool} $term */
     private function constrainTerm(Builder $query, array $term, string $operator, mixed $value): void
     {
         if ($term['raw']) {
-            $query->whereRaw($term['sql'].' '.$operator.' ?', [$value]);
+            $query->where(AllowListedQueryExpression::fromValidated($term['sql']), $operator, $value);
 
             return;
         }

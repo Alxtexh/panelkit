@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Support;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Alxtexh\Panel\Models\Ticket;
+use Alxtexh\Panel\Support\AllowListedQueryExpression;
 
 /**
  * What the queue looks like, in numbers - roadmap H.3.
@@ -113,7 +114,7 @@ final class TicketStats
         $odd = $total % 2 === 1;
 
         $values = (clone $base)
-            ->orderByRaw($expression)
+            ->orderBy(AllowListedQueryExpression::fromValidated($expression))
             ->offset($odd ? intdiv($total, 2) : intdiv($total, 2) - 1)
             ->limit($odd ? 1 : 2)
             ->pluck(DB::raw($expression.' as minutes'))

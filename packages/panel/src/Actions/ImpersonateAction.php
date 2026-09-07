@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Actions;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Validation\ValidationException;
 use Alxtexh\Panel\Auth\Impersonation;
 use RuntimeException;
@@ -89,9 +90,10 @@ final class ImpersonateAction
                     return false;
                 }
 
-                $target = $this->targetModel()::find($row['id'] ?? null);
+                $target = $this->targetModel()::query()->whereKey($row['id'] ?? null)->first();
 
-                return $target !== null && app(Impersonation::class)->allows($actor, $target);
+                return $target instanceof Authenticatable
+                    && app(Impersonation::class)->allows($actor, $target);
             })
             /*
              * A POST, NEVER A LINK. A record action is a POST with a session,
@@ -106,7 +108,11 @@ final class ImpersonateAction
              * from firing on the common path; this is the backstop for a
              * request that skipped the menu.
              */
-            ->handle(function (Model $record): void {
+            ->handle(function (Model $record, array $data): void {
+                if (! $record instanceof Authenticatable) {
+                    throw new RuntimeException('Impersonation requires an authenticatable user record.');
+                }
+
                 try {
                     app(Impersonation::class)->start(auth()->user(), $record);
                 } catch (RuntimeException $e) {

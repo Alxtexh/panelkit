@@ -58,11 +58,11 @@ final class NumberField extends Field
 
     protected function typeRules(): array
     {
-        return array_filter([
+        return array_values(array_filter([
             'integer',
             $this->min !== null ? "min:{$this->min}" : null,
             $this->max !== null ? "max:{$this->max}" : null,
-        ]);
+        ]));
     }
 
     public function toSchema(): array

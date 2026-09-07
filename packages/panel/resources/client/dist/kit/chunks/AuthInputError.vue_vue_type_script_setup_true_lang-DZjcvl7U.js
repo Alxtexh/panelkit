@@ -1,0 +1,1 @@
+import{d as t,D as s,E as a,o as r,c as o,a as n,t as c}from"../app.js";const i={class:"text-sm text-red-600 dark:text-red-500"},l=t({__name:"AuthInputError",props:{message:{}},setup(e){return(m,d)=>s((r(),o("div",null,[n("p",i,c(e.message),1)],512)),[[a,e.message]])}});export{l as _};
