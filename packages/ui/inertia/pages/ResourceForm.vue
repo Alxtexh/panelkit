@@ -25,7 +25,7 @@ defineOptions({ inheritAttrs: false })
 import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
-import { PkButton as Button, PkModal } from '@alxtexh-enterprise/panel'
+import { PkButton as Button } from '@alxtexh-enterprise/panel'
 import {
     CreateOptionError,
     FORM_MEASURE,
@@ -955,19 +955,6 @@ onBeforeUnmount(() => {
             </template>
         </PkPageHeader>
 
-        <PkModal
-            :open="pendingNavigation !== null"
-            title="Leave without saving?"
-            description="Your changes are still on this form and will be discarded if you leave."
-            @close="pendingNavigation = null"
-        >
-            <p class="text-sm">Continue to the next page without saving this form?</p>
-            <template #footer>
-                <Button variant="outline" @click="pendingNavigation = null">Stay</Button>
-                <Button variant="destructive" @click="leaveWithoutSaving">Leave page</Button>
-            </template>
-        </PkModal>
-
         <!--
             Full-bleed PAGE_SHELL_COMPACT for the page; FORM_MEASURE (max-w-7xl,
             Filament-default content width) keeps fields left-aligned without an
@@ -1058,6 +1045,7 @@ onBeforeUnmount(() => {
             broken for exactly one keystroke too long.
         -->
         <UnsavedBar
+            v-if="pendingNavigation === null"
             :show="isEdit ? form.isDirty : true"
             :processing="form.processing"
             :message="isEdit ? 'Unsaved changes' : `New ${schema.label.toLowerCase()}`"
@@ -1068,6 +1056,27 @@ onBeforeUnmount(() => {
             @cancel="cancel"
             @discard="discard"
             @extra="submit(true)"
+        />
+
+        <!--
+            THE SAME BAR, NOT A MODAL. A centred dialog with a dimmed backdrop
+            answers a question this isn't: nothing about leaving an unsaved
+            form needs the rest of the page blocked out from under it, and a
+            full-screen scrim over a "did you mean to click Back" prompt reads
+            as far more alarming than the situation is. The bar this replaces
+            a moment ago is the right register for the same reason it was
+            already on screen - this is that same save-or-leave decision, one
+            click further along.
+        -->
+        <UnsavedBar
+            v-else
+            show
+            message="Leave without saving?"
+            cancel-label="Stay"
+            save-label="Leave page"
+            destructive
+            @cancel="pendingNavigation = null"
+            @save="leaveWithoutSaving"
         />
 
         <DefineFieldDialog

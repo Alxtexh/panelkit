@@ -45,12 +45,20 @@ withDefaults(
          * action rather than anything creation-specific.
          */
         extraLabel?: string
+        /**
+         * The primary button reads as a warning, not a recommendation - for a
+         * bar whose main action is "leave and lose this" rather than "save
+         * this", where a brand-coloured button would read as the endorsed
+         * choice.
+         */
+        destructive?: boolean
     }>(),
     {
         processing: false,
         message: 'Unsaved changes',
         saveLabel: 'Save',
         cancelLabel: 'Cancel',
+        destructive: false,
     },
 )
 
@@ -177,7 +185,12 @@ function onLeave(el: Element, done: () => void): void {
 
                     <button
                         type="button"
-                        class="bg-primary text-primary-foreground inline-flex min-h-9 items-center rounded-lg px-4 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
+                        class="inline-flex min-h-9 items-center rounded-lg px-4 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
+                        :class="
+                            destructive
+                                ? 'bg-destructive text-white'
+                                : 'bg-primary text-primary-foreground'
+                        "
                         :disabled="processing"
                         @click="$emit('save')"
                     >

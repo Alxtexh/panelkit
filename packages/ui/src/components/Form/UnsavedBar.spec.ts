@@ -75,6 +75,25 @@ describe('UnsavedBar', () => {
         shell.remove()
     })
 
+    it('renders the primary button as destructive when the bar warns rather than saves', () => {
+        const wrapper = mount(UnsavedBar, {
+            props: { show: true, saveLabel: 'Leave page', destructive: true },
+        })
+
+        const save = wrapper.findAll('button').at(-1)!
+        expect(save.text()).toBe('Leave page')
+        expect(save.classes()).toContain('bg-destructive')
+        expect(save.classes()).not.toContain('bg-primary')
+    })
+
+    it('keeps the primary button on the brand colour by default', () => {
+        const wrapper = mount(UnsavedBar, { props: { show: true } })
+
+        const save = wrapper.findAll('button').at(-1)!
+        expect(save.classes()).toContain('bg-primary')
+        expect(save.classes()).not.toContain('bg-destructive')
+    })
+
     it('falls back to sticky in-tree when the panel shell is absent', async () => {
         document.getElementById('pk-main')?.remove()
         const wrapper = mount(UnsavedBar, { props: { show: true }, attachTo: document.body })

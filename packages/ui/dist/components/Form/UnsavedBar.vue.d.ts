@@ -13,6 +13,13 @@ type __VLS_Props = {
      * action rather than anything creation-specific.
      */
     extraLabel?: string;
+    /**
+     * The primary button reads as a warning, not a recommendation - for a
+     * bar whose main action is "leave and lose this" rather than "save
+     * this", where a brand-coloured button would read as the endorsed
+     * choice.
+     */
+    destructive?: boolean;
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
     cancel: () => any;
@@ -26,6 +33,7 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     onSave?: (() => any) | undefined;
 }>, {
     message: string;
+    destructive: boolean;
     processing: boolean;
     saveLabel: string;
     cancelLabel: string;

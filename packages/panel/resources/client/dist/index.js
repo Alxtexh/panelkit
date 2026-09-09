@@ -17357,7 +17357,8 @@ const M2 = { class: "flex flex-col gap-6" }, B2 = {
     saveLabel: { default: "Save" },
     cancelLabel: { default: "Cancel" },
     discardLabel: {},
-    extraLabel: {}
+    extraLabel: {},
+    destructive: { type: Boolean, default: !1 }
   },
   emits: ["save", "cancel", "discard", "extra"],
   setup(e) {
@@ -17449,10 +17450,13 @@ const M2 = { class: "flex flex-col gap-6" }, B2 = {
               }, f(e.extraLabel), 9, Mw)) : b("", !0),
               l("button", {
                 type: "button",
-                class: "bg-primary text-primary-foreground inline-flex min-h-9 items-center rounded-lg px-4 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50",
+                class: z([
+                  "inline-flex min-h-9 items-center rounded-lg px-4 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50",
+                  e.destructive ? "bg-destructive text-white" : "bg-primary text-primary-foreground"
+                ]),
                 disabled: e.processing,
                 onClick: m[3] || (m[3] = (h) => v.$emit("save"))
-              }, f(e.processing ? "Saving…" : e.saveLabel), 9, Bw)
+              }, f(e.processing ? "Saving…" : e.saveLabel), 11, Bw)
             ], 2)
           ], 2)) : b("", !0)
         ]),
