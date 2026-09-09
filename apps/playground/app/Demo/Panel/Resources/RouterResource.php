@@ -7,6 +7,7 @@ namespace App\Demo\Panel\Resources;
 use App\Demo\Models\Router;
 use App\Panel\Clusters\NetworkCluster;
 use Alxtexh\Panel\Actions\RecordAction;
+use Alxtexh\Panel\Forms\Fields\MapField;
 use Alxtexh\Panel\Forms\Fields\SelectField;
 use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Forms\Form;
@@ -80,9 +81,18 @@ final class RouterResource extends Resource
                          * chose to draw. Neither half can drift, because there
                          * is only one declaration.
                          */
-                        TextField::make('status')->label('Model name')->required()
+                        TextField::make('model_other')->label('Model name')->required()
                             ->visibleWhen('model', 'other')
                             ->help('Only needed when the model is not in the list.'),
+                    ]),
+
+                Step::make('Location')
+                    ->description('Where it sits, for the network coverage map')
+                    ->schema([
+                        MapField::make('location')
+                            ->defaultCenter(-1.286389, 36.817223)
+                            ->zoom(12)
+                            ->help('Click the map to drop a pin, or drag the existing one.'),
                     ]),
             ]),
         ]);

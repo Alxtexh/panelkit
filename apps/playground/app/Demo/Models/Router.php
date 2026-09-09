@@ -17,6 +17,7 @@ final class Router extends Model
     {
         return [
             'last_seen_at' => 'datetime',
+            'location' => 'array',
             'custom' => 'array',
         ];
     }

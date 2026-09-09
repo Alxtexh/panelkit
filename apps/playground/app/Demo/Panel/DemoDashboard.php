@@ -16,6 +16,7 @@ use Alxtexh\Panel\Support\TenantContext;
 use Alxtexh\Panel\Widgets\Bucket;
 use Alxtexh\Panel\Widgets\ChartWidget;
 use Alxtexh\Panel\Widgets\DashboardFilters;
+use Alxtexh\Panel\Widgets\MapWidget;
 use Alxtexh\Panel\Widgets\Period;
 use Alxtexh\Panel\Widgets\Rollup;
 use Alxtexh\Panel\Widgets\StatWidget;
@@ -88,6 +89,28 @@ final class DemoDashboard
                 ->description('This host, right now')
                 ->data(fn (): array => ['rows' => self::systemStatusRows()])
                 ->ability(self::NETWORK),
+
+            // Every router the tenant owns, plotted where it actually sits -
+            // the same read a network engineer reaches for a fault map for.
+            // Markers come straight from `routers.location`; a router
+            // onboarded before this field existed just has none yet.
+            MapWidget::make('network_coverage', 'Network coverage')
+                ->description('Where every router actually sits')
+                ->center(-1.286389, 36.817223)
+                ->zoom(11)
+                ->span(2)
+                ->markers(fn (): array => Router::query()
+                    ->whereNotNull('location')
+                    ->get(['name', 'status', 'model', 'location'])
+                    ->map(fn (Router $r): array => [
+                        'lat' => (float) ($r->location['lat'] ?? 0),
+                        'lng' => (float) ($r->location['lng'] ?? 0),
+                        'label' => (string) $r->name,
+                        'popup' => sprintf('%s &middot; %s', ucfirst((string) $r->status), $r->model ?? 'Unknown model'),
+                    ])
+                    ->all())
+                ->ability(self::NETWORK)
+                ->toChartWidget(),
 
             ChartWidget::make('customer_summary', 'Customers')
                 ->type('table')

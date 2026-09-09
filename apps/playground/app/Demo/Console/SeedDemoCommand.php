@@ -248,18 +248,50 @@ final class SeedDemoCommand extends Command
      * @param list<int> $tenantIds
      * @return array<int, list<int>> tenantId => routerIds
      */
+    /**
+     * Real Nairobi neighbourhoods, so the network coverage map lands on
+     * actual service areas instead of a null island of zeroed coordinates.
+     *
+     * @return list<array{lat: float, lng: float}>
+     */
+    private static function nairobiAreas(): array
+    {
+        return [
+            ['lat' => -1.2864, 'lng' => 36.8172], // CBD
+            ['lat' => -1.2673, 'lng' => 36.8055], // Westlands
+            ['lat' => -1.3193, 'lng' => 36.7076], // Karen
+            ['lat' => -1.2921, 'lng' => 36.7820], // Kilimani
+            ['lat' => -1.2789, 'lng' => 36.8494], // Eastleigh
+            ['lat' => -1.2270, 'lng' => 36.8963], // Kasarani
+            ['lat' => -1.3226, 'lng' => 36.8946], // Embakasi
+            ['lat' => -1.3568, 'lng' => 36.7523], // Langata
+            ['lat' => -1.3000, 'lng' => 36.7667], // Ngong Road
+            ['lat' => -1.2007, 'lng' => 36.7833], // Ruaka
+        ];
+    }
+
     private function seedRouters(array $tenantIds, int $total): array
     {
         $now = now();
         $rows = [];
         $perTenant = max(1, intdiv($total, count($tenantIds)));
+        $areas = self::nairobiAreas();
 
         foreach ($tenantIds as $t => $tenantId) {
             for ($i = 0; $i < $perTenant; $i++) {
+                $area = $areas[$i % count($areas)];
+                // A small deterministic scatter so routers sharing an area
+                // do not stack on the exact same pin.
+                $jitter = (($i % 7) - 3) * 0.006;
+
                 $rows[] = [
                     'tenant_id' => $tenantId,
                     'name' => sprintf('RTR-%02d-%03d', $t + 1, $i + 1),
                     'ip_address' => sprintf('10.%d.%d.1', $t + 1, $i + 1),
+                    'location' => json_encode([
+                        'lat' => round($area['lat'] + $jitter, 6),
+                        'lng' => round($area['lng'] - $jitter, 6),
+                    ]),
                     'model' => ['MikroTik CCR2004', 'MikroTik hEX S', 'Ubiquiti EdgeRouter'][$i % 3],
                     'status' => ['online', 'online', 'online', 'degraded', 'offline'][$i % 5],
                     'last_seen_at' => $now,

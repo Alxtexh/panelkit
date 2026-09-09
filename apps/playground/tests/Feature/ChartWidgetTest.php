@@ -371,7 +371,7 @@ final class ChartWidgetTest extends TestCase
                 ->has('widgets')
                 // The day-to-day dashboard, not the full renderer gallery -
                 // that moved to its own page (DemoDashboard::galleryCharts()).
-                ->has('charts', 7)
+                ->has('charts', 8)
                 ->has('periods')
                 // Deferred props are absent from the first response by design:
                 // the shell must paint before any aggregate runs (§10).
