@@ -18,9 +18,18 @@ const props = withDefaults(
     defineProps<{
         variant?:
             'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'info'
+        /**
+         * A tinted background with saturated text instead of a solid fill.
+         *
+         * FOR DENSE LISTS, NOT FOR A LONE BADGE. A single solid pill reads
+         * fine next to a heading; a table where every row carries one reads
+         * loud. `soft` is the calmer alternative for that case - `outline`
+         * is unaffected, since it already has no fill to soften.
+         */
+        soft?: boolean
         class?: string
     }>(),
-    { variant: 'default' },
+    { variant: 'default', soft: false },
 )
 
 const BASE =
@@ -42,9 +51,23 @@ const VARIANTS: Record<string, string> = {
     info: 'border-transparent bg-info text-info-foreground',
 }
 
-const classes = computed(() =>
-    [BASE, VARIANTS[props.variant], props.class].filter(Boolean).join(' '),
-)
+/** Same colour intents as `VARIANTS`, tinted rather than filled. No entry for `outline`. */
+const SOFT_VARIANTS: Record<string, string> = {
+    default: 'border-transparent bg-primary/12 text-primary',
+    secondary: 'border-transparent bg-secondary/70 text-secondary-foreground',
+    destructive: 'border-transparent bg-destructive/12 text-destructive',
+    success: 'border-transparent bg-success/15 text-success',
+    warning: 'border-transparent bg-warning/15 text-warning',
+    info: 'border-transparent bg-info/15 text-info',
+}
+
+const classes = computed(() => {
+    const variant = props.soft
+        ? (SOFT_VARIANTS[props.variant] ?? VARIANTS[props.variant])
+        : VARIANTS[props.variant]
+
+    return [BASE, variant, props.class].filter(Boolean).join(' ')
+})
 </script>
 
 <template>

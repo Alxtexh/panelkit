@@ -1822,6 +1822,7 @@ function badgeLabel(key: string, value: unknown): string {
                             <Badge
                                 v-else-if="hasBadgeValue(row[col.key])"
                                 :variant="badgeVariant(col.key, row[col.key]) as any"
+                                soft
                                 class="capitalize"
                             >
                                 {{ badgeLabel(col.key, row[col.key]) }}

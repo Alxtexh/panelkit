@@ -702,10 +702,10 @@ function summaryValue(key: string): string {
         only when it genuinely cannot. min-h-0 is what allows the shrink at all.
     -->
     <div
-        class="pk-scroll relative min-h-0 w-full min-w-0 shrink grow-0 overflow-auto"
-        :class="framed ? 'rounded-lg border' : ''"
+        class="pk-scroll relative min-h-0 w-full min-w-0 max-w-full shrink grow-0 overflow-x-auto overflow-y-auto overscroll-x-contain"
+        :class="framed ? 'rounded-lg border shadow-sm' : ''"
     >
-        <table class="w-full border-collapse text-sm">
+        <table class="w-max min-w-full border-collapse text-sm">
             <thead class="bg-background sticky top-0 z-10">
                 <tr v-if="hasColumnGroups" class="bg-muted/40">
                     <th v-if="reordering" class="w-8 border-b px-2 py-1.5" />
@@ -1044,19 +1044,19 @@ function summaryValue(key: string): string {
  * styling produces heavy grey bars framing the data - visual weight that
  * competes with the content and reads as chrome rather than affordance.
  *
- * Thin, transparent-tracked, tinting only on hover. Deliberately NOT
- * `scrollbar-width: none`: hiding a scrollbar outright removes the only cue
- * that there is more content sideways.
+ * A quiet thumb is visible at rest and becomes stronger on hover/focus.
+ * Deliberately NOT `scrollbar-width: none`: hiding a scrollbar outright
+ * removes the only cue that there is more content sideways.
  */
 .pk-scroll {
     scrollbar-width: thin;
-    scrollbar-color: transparent transparent;
+    scrollbar-color: color-mix(in oklch, currentColor 18%, transparent) transparent;
     transition: scrollbar-color 150ms ease;
 }
 
 .pk-scroll:hover,
 .pk-scroll:focus-within {
-    scrollbar-color: color-mix(in oklch, currentColor 25%, transparent) transparent;
+    scrollbar-color: color-mix(in oklch, currentColor 32%, transparent) transparent;
 }
 
 .pk-scroll::-webkit-scrollbar {
@@ -1069,14 +1069,14 @@ function summaryValue(key: string): string {
 }
 
 .pk-scroll::-webkit-scrollbar-thumb {
-    background: transparent;
+    background: color-mix(in oklch, currentColor 18%, transparent);
     border-radius: 9999px;
     transition: background 150ms ease;
 }
 
 .pk-scroll:hover::-webkit-scrollbar-thumb,
 .pk-scroll:focus-within::-webkit-scrollbar-thumb {
-    background: color-mix(in oklch, currentColor 22%, transparent);
+    background: color-mix(in oklch, currentColor 32%, transparent);
 }
 
 .pk-scroll::-webkit-scrollbar-corner {

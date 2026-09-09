@@ -61,4 +61,31 @@ describe('BadgeResolver', () => {
         expect(wrapper.find('button').exists()).toBe(false)
         expect(wrapper.get('[data-slot="badge"]').text()).toBe('Open')
     })
+
+    it('is soft by default, since a table repeats this pill down every row', () => {
+        const wrapper = mount(BadgeResolver, {
+            props: {
+                value: 'open',
+                disabled: true,
+                options: { open: 'Open' },
+                colors: { open: 'warning' },
+            },
+        })
+
+        expect(wrapper.get('[data-slot="badge"]').classes()).toContain('bg-warning/15')
+    })
+
+    it('renders the solid fill when a caller opts out of soft', () => {
+        const wrapper = mount(BadgeResolver, {
+            props: {
+                value: 'open',
+                disabled: true,
+                soft: false,
+                options: { open: 'Open' },
+                colors: { open: 'warning' },
+            },
+        })
+
+        expect(wrapper.get('[data-slot="badge"]').classes()).toContain('bg-warning')
+    })
 })

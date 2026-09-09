@@ -7,6 +7,11 @@
  *
  * COLOURS ARE SCHEMA INTENTS, not tenant brand. `success` / `warning` /
  * `destructive` / `info` are the dedicated tokens PkBadge already owns.
+ *
+ * SOFT BY DEFAULT, unlike a hand-placed PkBadge. This is the pill a table
+ * repeats down every row; a column of solid, saturated fills reads louder
+ * than a status column should. Pass `soft={false}` for a screen that wants
+ * the bolder single-badge look instead.
  */
 import { computed } from 'vue'
 import { BADGE_VARIANTS } from '../../composables/useSchemaColumns'
@@ -23,6 +28,7 @@ const props = withDefaults(
         label?: string
         busy?: boolean
         disabled?: boolean
+        soft?: boolean
     }>(),
     {
         options: () => ({}),
@@ -31,6 +37,7 @@ const props = withDefaults(
         label: 'value',
         busy: false,
         disabled: false,
+        soft: true,
     },
 )
 
@@ -87,7 +94,7 @@ function pick(next: string, close: () => void) {
                     :aria-label="title"
                     :aria-busy="busy"
                 >
-                    <PkBadge :variant="variant(value) as any" class="capitalize">
+                    <PkBadge :variant="variant(value) as any" :soft="soft" class="capitalize">
                         {{ optionLabel(current) || '-' }}
                     </PkBadge>
                     <svg
@@ -117,7 +124,7 @@ function pick(next: string, close: () => void) {
                     :disabled="locked"
                     @click="pick(String(key), close)"
                 >
-                    <PkBadge :variant="variant(key) as any" class="capitalize">
+                    <PkBadge :variant="variant(key) as any" :soft="soft" class="capitalize">
                         {{ option }}
                     </PkBadge>
                     <svg
@@ -137,7 +144,7 @@ function pick(next: string, close: () => void) {
                 </button>
             </template>
         </PkDropdown>
-        <PkBadge v-else :variant="variant(value) as any" class="capitalize">
+        <PkBadge v-else :variant="variant(value) as any" :soft="soft" class="capitalize">
             {{ optionLabel(current) || '-' }}
         </PkBadge>
     </div>

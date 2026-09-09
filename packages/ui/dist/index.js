@@ -333,7 +333,7 @@ const $l = {
       }, null, 6))), 128))
     ], 12, Bl));
   }
-}), Al = { class: "w-full border-collapse text-sm" }, _l = { class: "bg-background sticky top-0 z-10" }, zl = {
+}), Al = { class: "w-max min-w-full border-collapse text-sm" }, _l = { class: "bg-background sticky top-0 z-10" }, zl = {
   key: 0,
   class: "bg-muted/40"
 }, Pl = {
@@ -622,7 +622,7 @@ const $l = {
       return `${re.prefix ?? ""}${ue}${re.suffix ?? ""}`;
     }
     return (ee, re) => (t(), n("div", {
-      class: _(["pk-scroll relative min-h-0 w-full min-w-0 shrink grow-0 overflow-auto", e.framed ? "rounded-lg border" : ""])
+      class: _(["pk-scroll relative min-h-0 w-full min-w-0 max-w-full shrink grow-0 overflow-x-auto overflow-y-auto overscroll-x-contain", e.framed ? "rounded-lg border shadow-sm" : ""])
     }, [
       l("table", Al, [
         l("thead", _l, [
@@ -758,7 +758,7 @@ const $l = {
               onClick: (ue) => p(ae, ue)
             }, [
               e.reordering ? (t(), n("td", eo, [...re[3] || (re[3] = [
-                ut('<span class="text-muted-foreground/50 flex cursor-grab active:cursor-grabbing" aria-hidden="true" data-v-9654c938><svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-v-9654c938><circle cx="9" cy="6" r="1.5" data-v-9654c938></circle><circle cx="15" cy="6" r="1.5" data-v-9654c938></circle><circle cx="9" cy="12" r="1.5" data-v-9654c938></circle><circle cx="15" cy="12" r="1.5" data-v-9654c938></circle><circle cx="9" cy="18" r="1.5" data-v-9654c938></circle><circle cx="15" cy="18" r="1.5" data-v-9654c938></circle></svg></span>', 1)
+                ut('<span class="text-muted-foreground/50 flex cursor-grab active:cursor-grabbing" aria-hidden="true" data-v-33b13e51><svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-v-33b13e51><circle cx="9" cy="6" r="1.5" data-v-33b13e51></circle><circle cx="15" cy="6" r="1.5" data-v-33b13e51></circle><circle cx="9" cy="12" r="1.5" data-v-33b13e51></circle><circle cx="15" cy="12" r="1.5" data-v-33b13e51></circle><circle cx="9" cy="18" r="1.5" data-v-33b13e51></circle><circle cx="15" cy="18" r="1.5" data-v-33b13e51></circle></svg></span>', 1)
               ])])) : b("", !0),
               e.selectable && !e.reordering ? (t(), n("td", {
                 key: 1,
@@ -865,7 +865,7 @@ const $l = {
   for (const [r, s] of o)
     a[r] = s;
   return a;
-}, go = /* @__PURE__ */ at(vo, [["__scopeId", "data-v-9654c938"]]), lt = "w-full min-w-0 px-4 py-6 sm:px-6", _8 = "w-full min-w-0 p-3 sm:p-4", z8 = "w-full min-w-0 space-y-6 px-4 py-6 sm:px-6", ho = "w-full max-w-7xl", bo = "px-4 py-4", Un = "w-full min-w-0", yo = {
+}, go = /* @__PURE__ */ at(vo, [["__scopeId", "data-v-33b13e51"]]), lt = "w-full min-w-0 px-4 py-6 sm:px-6", _8 = "w-full min-w-0 p-3 sm:p-4", z8 = "w-full min-w-0 space-y-6 px-4 py-6 sm:px-6", ho = "w-full max-w-7xl", bo = "px-4 py-4", Un = "w-full min-w-0", yo = {
   /** Filters, short lists (~24rem). */
   sm: "w-full max-w-sm",
   /** Notifications, inspect (~28rem). */
@@ -3101,6 +3101,7 @@ const ce = /* @__PURE__ */ L({
   __name: "PkBadge",
   props: {
     variant: { default: "default" },
+    soft: { type: Boolean, default: !1 },
     class: {}
   },
   setup(e) {
@@ -3112,15 +3113,23 @@ const ce = /* @__PURE__ */ L({
       success: "border-transparent bg-success text-success-foreground",
       warning: "border-transparent bg-warning text-warning-foreground",
       info: "border-transparent bg-info text-info-foreground"
-    }, r = y(
-      () => [ni, a[o.variant], o.class].filter(Boolean).join(" ")
-    );
-    return (s, i) => (t(), n("span", {
+    }, r = {
+      default: "border-transparent bg-primary/12 text-primary",
+      secondary: "border-transparent bg-secondary/70 text-secondary-foreground",
+      destructive: "border-transparent bg-destructive/12 text-destructive",
+      success: "border-transparent bg-success/15 text-success",
+      warning: "border-transparent bg-warning/15 text-warning",
+      info: "border-transparent bg-info/15 text-info"
+    }, s = y(() => {
+      const i = o.soft ? r[o.variant] ?? a[o.variant] : a[o.variant];
+      return [ni, i, o.class].filter(Boolean).join(" ");
+    });
+    return (i, d) => (t(), n("span", {
       "data-slot": "badge",
       "data-variant": e.variant,
-      class: _(r.value)
+      class: _(s.value)
     }, [
-      K(s.$slots, "default")
+      K(i.$slots, "default")
     ], 10, ti));
   }
 }), gt = /* @__PURE__ */ new Map();
@@ -5414,7 +5423,8 @@ const Uu = ["disabled", "aria-label", "aria-busy"], Hu = {
     defaultColor: { default: "neutral" },
     label: { default: "value" },
     busy: { type: Boolean, default: !1 },
-    disabled: { type: Boolean, default: !1 }
+    disabled: { type: Boolean, default: !1 },
+    soft: { type: Boolean, default: !0 }
   },
   emits: ["change"],
   setup(e, { emit: o }) {
@@ -5443,13 +5453,14 @@ const Uu = ["disabled", "aria-label", "aria-busy"], Hu = {
       e.disabled ? (t(), T(Ie, {
         key: 1,
         variant: c(e.value),
+        soft: e.soft,
         class: "capitalize"
       }, {
         default: O(() => [
           U(f(v(i.value) || "-"), 1)
         ]),
         _: 1
-      }, 8, ["variant"])) : (t(), T(qe, {
+      }, 8, ["variant", "soft"])) : (t(), T(qe, {
         key: 0,
         align: "start"
       }, {
@@ -5463,13 +5474,14 @@ const Uu = ["disabled", "aria-label", "aria-busy"], Hu = {
           }, [
             I(Ie, {
               variant: c(e.value),
+              soft: e.soft,
               class: "capitalize"
             }, {
               default: O(() => [
                 U(f(v(i.value) || "-"), 1)
               ]),
               _: 1
-            }, 8, ["variant"]),
+            }, 8, ["variant", "soft"]),
             (t(), n("svg", Hu, [
               l("path", {
                 d: x(me)("chevron-down")
@@ -5489,13 +5501,14 @@ const Uu = ["disabled", "aria-label", "aria-busy"], Hu = {
           }, [
             I(Ie, {
               variant: c(C),
+              soft: e.soft,
               class: "capitalize"
             }, {
               default: O(() => [
                 U(f(S), 1)
               ]),
               _: 2
-            }, 1032, ["variant"]),
+            }, 1032, ["variant", "soft"]),
             String(C) === i.value ? (t(), n("svg", Wu, [
               l("path", {
                 d: x(me)("check")
