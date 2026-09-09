@@ -43,6 +43,34 @@ const iconFor: Record<string, any> = {
 function previewHref(slug: string): string {
     return `/?preview=${encodeURIComponent(slug)}`;
 }
+
+function openPreview(slug: string): void {
+    window.open(previewHref(slug), '_blank', 'noopener,noreferrer');
+}
+
+/**
+ * Same whole-card affordance as CatalogCard: one card, one action, so the
+ * card itself is that action. The Preview link stays a real anchor inside
+ * it (native middle-click / ctrl-click / right-click still work on it),
+ * guarded out here so a click on it doesn't also open a second tab.
+ */
+function onCardClick(slug: string, event: MouseEvent): void {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+    }
+
+    const target = event.target as HTMLElement | null;
+
+    if (target?.closest('a, button')) {
+        return;
+    }
+
+    if ((window.getSelection()?.toString().length ?? 0) > 0) {
+        return;
+    }
+
+    openPreview(slug);
+}
 </script>
 
 <template>
@@ -66,7 +94,11 @@ function previewHref(slug: string): string {
             <article
                 v-for="template in props.templates"
                 :key="template.slug"
-                class="flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm"
+                class="flex cursor-pointer flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-colors hover:bg-muted/40"
+                role="button"
+                tabindex="0"
+                @click="onCardClick(template.slug, $event)"
+                @keydown.enter.prevent="openPreview(template.slug)"
             >
                 <div
                     :class="[
