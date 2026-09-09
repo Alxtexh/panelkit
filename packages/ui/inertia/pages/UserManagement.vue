@@ -238,6 +238,26 @@ function menuFor(row: Record<string, any>): RecordActionGroup[] {
 const DELETE_USER = '__delete'
 
 /**
+ * Click anywhere in the row to open the person, the same way ResourceIndex's
+ * own generic table does it - `UserResource` already declares `rowClick`
+ * and a `view` RecordAction, but embedding the table here (rather than
+ * rendering it through ResourceIndex) meant nothing read either. `menuFor`
+ * already resolves the row's own actions with their URLs; this is the exact
+ * lookup ResourceIndex uses, just against the table this page keeps.
+ */
+const rowClickEnabled = computed(() => props.users?.schema?.table?.rowClick === 'view')
+
+function onUserRowClick(row: Record<string, any>): void {
+    const view = menuFor(row)
+        .flatMap((group) => group.actions)
+        .find((a) => a.key === 'view' && a.link && a.url)
+
+    if (view?.url) {
+        router.visit(view.url)
+    }
+}
+
+/**
  * The oldest account in the organisation, which cannot be deleted.
  *
  * Derived from the rows rather than sent as a flag: the list is ordered newest
@@ -702,8 +722,10 @@ function save(): void {
                             row-key="id"
                             selectable
                             :selected="selectedUsers"
+                            :row-clickable="rowClickEnabled"
                             @toggle-row="toggleRow"
                             @toggle-page="togglePage"
+                            @row-click="onUserRowClick"
                             @row-contextmenu="onRowContextMenu"
                         >
                             <template #actions="{ row }">
