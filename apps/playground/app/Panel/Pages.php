@@ -242,6 +242,21 @@ final class Pages
             ['title' => 'Device preview', 'href' => '/screens/devices', 'icon' => 'smartphone', 'group' => 'Building'],
 
             /*
+             * A READ-ONLY GALLERY OF THE IMPORTED PRESETS.
+             *
+             * There is no CMS behind this: which preset is live at the public
+             * root is `LANDING_DEFAULT`, a constant, not a setting. This entry
+             * exists so an operator can discover and preview what was
+             * imported without knowing to type `?preview=<slug>` by hand.
+             */
+            [
+                'title' => 'Landing pages',
+                'href' => '/landing-pages',
+                'icon' => 'layout-template',
+                'group' => 'Website',
+                'ability' => 'view_landing_pages',
+            ],
+            /*
              * The states a panel has but cannot normally be shown.
              *
              * An error page is by definition something you cannot summon on
