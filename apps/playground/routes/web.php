@@ -19,6 +19,7 @@ use App\Http\Controllers\ImportController;
 use App\Http\Controllers\LandingAssetController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\LandingImageController;
+use App\Http\Controllers\LandingDiscoveryController;
 use App\Http\Controllers\LockController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\SavedViewController;
@@ -77,6 +78,11 @@ $publicLandingMiddleware = [
     EnsurePanelIsUnlocked::class,
 ];
 
+/* Search, answer, and generative engines receive explicit discovery documents. */
+Route::get('robots.txt', [LandingDiscoveryController::class, 'robots'])->name('public.robots');
+Route::get('sitemap.xml', [LandingDiscoveryController::class, 'sitemap'])->name('public.sitemap');
+Route::get('llms.txt', [LandingDiscoveryController::class, 'llms'])->name('public.llms');
+
 /* The selected imported landing is public; the safe fallback is the panel home. */
 Route::get('/', LandingPageController::class)->name('public.landing');
 
@@ -127,12 +133,6 @@ Route::get('panelkit/landings/{template}/_next/image', LandingImageController::c
     ->where('template', '[a-z0-9-]+')
     ->withoutMiddleware($publicLandingMiddleware)
     ->name('panelkit.landing.image');
-
-/* The CMS preview must pass through Laravel so its live DOM gets editor slots. */
-Route::get('landing-pages/preview/{template}', static fn (string $template) => app(LandingAssetController::class)->preview($template))
-    ->where('template', '[a-z0-9-]+')
-    ->withoutMiddleware($publicLandingMiddleware)
-    ->name('landing-pages.preview');
 
 /*
 | IMPORTED LANDING APPLICATIONS.

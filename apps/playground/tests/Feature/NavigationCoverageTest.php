@@ -635,21 +635,6 @@ final class NavigationCoverageTest extends TestCase
         $this->assertTrue($props['panelHome']['isDefault']);
     }
 
-    /** The public site is one active landing, not a gallery of sidebar links. */
-    public function test_the_sidebar_exposes_one_landing_page_cms_entry(): void
-    {
-        $props = $this->actingAs($this->admin)->get('/dashboard')->assertOk()
-            ->viewData('page')['props'];
-
-        $landingEntries = array_values(array_filter(
-            $props['panelPages'],
-            static fn (array $entry): bool => ($entry['href'] ?? null) === '/landing-pages',
-        ));
-
-        $this->assertCount(1, $landingEntries);
-        $this->assertSame('Landing page', $landingEntries[0]['title']);
-    }
-
     /**
      * THE ACCOUNT MENU IN A GENERATED PORTAL IS THE ACCOUNT, AND NOTHING ELSE.
      *

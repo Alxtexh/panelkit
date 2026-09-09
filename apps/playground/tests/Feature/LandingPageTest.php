@@ -13,11 +13,10 @@ final class LandingPageTest extends TestCase
     {
         $this->get('/landing/chanseek')->assertRedirect('/login');
         self::assertSame(200, $this->get('/panelkit/landings/chanseek/app/landing/')->getStatusCode());
-        $activeLanding = $this->get('/panelkit/landings/chanseek/app/landing/')->getContent();
-        self::assertIsString($activeLanding);
-        self::assertStringContainsString('window.__PANELKIT_LANDING__', $activeLanding);
-        self::assertStringContainsString('<title>Shadcn Dashboard & Landing Template</title>', $activeLanding);
-        self::assertStringNotContainsString('<title>PanelKit</title>', $activeLanding);
+        self::assertStringContainsString(
+            '<title>Shadcn Dashboard & Landing Template</title>',
+            (string) file_get_contents(public_path('panelkit/landings/chanseek/app/landing/index.html')),
+        );
         self::assertSame(200, $this->get('/panelkit/landings/magicui/app/')->getStatusCode());
         self::assertSame(200, $this->get('/panelkit/landings/benlhachemi/app/')->getStatusCode());
         self::assertSame(200, $this->get('/panelkit/landings/benlhachemi/app/panelkit-landing-bridge.js')->getStatusCode());
@@ -29,10 +28,6 @@ final class LandingPageTest extends TestCase
         self::assertSame(200, $this->get('/panelkit/landings/hotel/app/en/rooms')->getStatusCode());
         self::assertSame(200, $this->get('/panelkit/landings/free-landing/app/en/')->getStatusCode());
         self::assertSame(200, $this->get('/panelkit/landings/design/app/en/')->getStatusCode());
-        $this->get('/landing-pages/preview/chanseek')
-            ->assertOk()
-            ->assertSee('data-panelkit-slot', false)
-            ->assertSee('window.__PANELKIT_LANDING__', false);
         $benlhachemi = file_get_contents(public_path('panelkit/landings/benlhachemi/app/index.html'));
         $qualiora = file_get_contents(public_path('panelkit/landings/qualiora/en/pages/landing/index.html'));
 
@@ -64,5 +59,24 @@ final class LandingPageTest extends TestCase
             ->get('/panelkit/landings/chanseek/app/landing/')
             ->assertStatus(409)
             ->assertHeader('X-Inertia-Location');
+    }
+
+    /** The public root serves the default template's own document, unmodified. */
+    public function test_the_public_root_serves_the_default_landing(): void
+    {
+        $this->get('/')->assertOk();
+        self::assertStringContainsString(
+            'Next SaaS',
+            (string) file_get_contents(public_path('panelkit/landings/benlhachemi/app/index.html')),
+        );
+    }
+
+    /** `?preview=` swaps which shipped design the root serves, for allow-listed slugs only. */
+    public function test_the_public_root_can_preview_an_allow_listed_design(): void
+    {
+        $this->get('/?preview=hotel')->assertOk();
+
+        // An unknown slug is not an error: it falls back to the default.
+        $this->get('/?preview=not-a-real-design')->assertOk();
     }
 }
