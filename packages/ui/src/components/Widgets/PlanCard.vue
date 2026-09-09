@@ -43,11 +43,15 @@ const extras = computed(() => props.plan.extraPerks ?? [])
 
 <template>
     <article
-        class="bg-card text-card-foreground flex flex-col gap-4 rounded-lg border p-6"
+        class="bg-card text-card-foreground hover:bg-muted/40 flex cursor-pointer flex-col gap-4 rounded-lg border p-6 text-left transition-colors"
         :class="highlighted ? 'border-primary shadow-sm' : ''"
         data-slot="plan-card"
         :data-featured="plan.featured ? 'true' : undefined"
         :data-recommended="plan.recommended ? 'true' : undefined"
+        role="button"
+        tabindex="0"
+        @click="emit('edit', plan.id)"
+        @keydown.enter.prevent="emit('edit', plan.id)"
     >
         <header class="flex flex-col gap-1">
             <p
@@ -134,7 +138,12 @@ const extras = computed(() => props.plan.extraPerks ?? [])
         </ul>
 
         <footer class="mt-auto flex gap-2 pt-2">
-            <PkButton class="flex-1" variant="default" size="sm" @click="emit('edit', plan.id)">
+            <PkButton
+                class="flex-1"
+                variant="default"
+                size="sm"
+                @click.stop="emit('edit', plan.id)"
+            >
                 Edit
             </PkButton>
             <PkButton
@@ -142,7 +151,7 @@ const extras = computed(() => props.plan.extraPerks ?? [])
                 variant="outline"
                 size="sm"
                 :disabled="canDelete === false || (plan.activeUsers ?? 0) > 0"
-                @click="emit('delete', plan.id)"
+                @click.stop="emit('delete', plan.id)"
             >
                 Delete
             </PkButton>

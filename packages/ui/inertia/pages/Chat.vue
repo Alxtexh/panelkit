@@ -4,7 +4,7 @@
  *
  * Reuses kit `useLiveUpdates` when `live.driver` is not `none`.
  */
-import { Head } from '@inertiajs/vue3'
+import { Head, router, usePage } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
 import { PAGE_SHELL, useLiveUpdates } from '@alxtexh-enterprise/panel'
 import type { LiveConfig } from '@alxtexh-enterprise/panel'
@@ -68,6 +68,28 @@ useLiveUpdates({
 })
 
 const list = computed(() => rows.value as unknown as Conversation[])
+
+const page = usePage()
+
+const indexHref = computed(() => {
+    const url = String(page.url ?? '/apps/chat')
+    const q = url.indexOf('?')
+
+    return q === -1 ? url : url.slice(0, q)
+})
+
+/**
+ * `ChatPage::data()` reads `id` (and `q`) straight off the query string, so
+ * opening a conversation is a plain navigation - same shape EmailTemplates'
+ * `openTemplate` and the playground's own Chat page already use.
+ */
+function openConversation(id: number | string) {
+    router.get(
+        indexHref.value,
+        { id, q: props.search || undefined },
+        { preserveState: true, preserveScroll: true },
+    )
+}
 </script>
 
 <template>
@@ -96,6 +118,7 @@ const list = computed(() => rows.value as unknown as Conversation[])
                             ? 'bg-muted font-medium'
                             : 'hover:bg-muted/60'
                     "
+                    @click="openConversation(item.id)"
                 >
                     {{ item.name }}
                     <span v-if="item.preview" class="text-muted-foreground block truncate text-xs">

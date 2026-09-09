@@ -1,12 +1,19 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
-import ResourceKanban from './ResourceKanban.vue'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+const visit = vi.fn()
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: { name: 'Head', template: '<div />', props: ['title'] },
     Link: { name: 'Link', template: '<a><slot /></a>', props: ['href'] },
-    router: { visit: vi.fn() },
+    router: { visit },
 }))
+
+const { default: ResourceKanban } = await import('./ResourceKanban.vue')
+
+afterEach(() => {
+    visit.mockClear()
+})
 
 const baseProps = {
     schema: { key: 'articles', label: 'Article', labelPlural: 'Articles' },
@@ -59,5 +66,21 @@ describe('ResourceKanban', () => {
         })
 
         expect(wrapper.text()).toContain('No cards on this board')
+    })
+
+    it('opens a card on a plain click, not just a double-click', async () => {
+        const wrapper = mount(ResourceKanban, { props: baseProps })
+
+        await wrapper.get('li[draggable]').trigger('click')
+
+        expect(visit).toHaveBeenCalledWith('/articles/1')
+    })
+
+    it('ignores a modified click on a card', async () => {
+        const wrapper = mount(ResourceKanban, { props: baseProps })
+
+        await wrapper.get('li[draggable]').trigger('click', { metaKey: true })
+
+        expect(visit).not.toHaveBeenCalled()
     })
 })

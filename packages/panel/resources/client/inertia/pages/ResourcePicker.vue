@@ -50,6 +50,32 @@ function chooseHref(id: string | number): string {
     return `${props.chooseBase}/${id}?return=${encodeURIComponent(props.returnUrl)}`
 }
 
+/**
+ * The row already reads as clickable (`hover:bg-muted/30`); this just makes
+ * that true. SAME GUARD AS DataTable/RelationPanel's own row click: a click
+ * only counts as "the row" when it hits none of the row's own controls (the
+ * "Select" link itself included, so it keeps working via its own anchor
+ * click without double-firing), a modifier isn't held, and there is no text
+ * selection in progress.
+ */
+function onRowClick(id: string | number, event: MouseEvent): void {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return
+    }
+
+    const target = event.target as HTMLElement | null
+
+    if (target?.closest('a, button, input, select, textarea, label, [role="menuitem"]')) {
+        return
+    }
+
+    if ((window.getSelection()?.toString().length ?? 0) > 0) {
+        return
+    }
+
+    router.visit(chooseHref(id))
+}
+
 function cell(row: Record<string, any>, column: SchemaColumn): string {
     const value = row[column.key]
 
@@ -109,7 +135,12 @@ function cell(row: Record<string, any>, column: SchemaColumn): string {
                             No matching records.
                         </td>
                     </tr>
-                    <tr v-for="row in records" :key="row.id" class="hover:bg-muted/30 border-t">
+                    <tr
+                        v-for="row in records"
+                        :key="row.id"
+                        class="hover:bg-muted/30 cursor-pointer border-t"
+                        @click="onRowClick(row.id, $event)"
+                    >
                         <td
                             v-for="column in schema.table.columns"
                             :key="column.key"

@@ -67,6 +67,25 @@ describe('PlanCard', () => {
         const destroy = wrapper.findAll('button')[1]!
         expect(destroy.attributes('disabled')).toBeDefined()
     })
+
+    it('opens the plan on a click anywhere on the card, not just the Edit button', async () => {
+        const wrapper = mount(PlanCard, { props: { plan: starter } })
+
+        await wrapper.get('[data-slot="plan-card"]').trigger('click')
+
+        expect(wrapper.emitted('edit')?.[0]).toEqual(['starter'])
+    })
+
+    it('does not also open the card when Delete is clicked', async () => {
+        const wrapper = mount(PlanCard, {
+            props: { plan: { ...starter, activeUsers: 0 }, canDelete: true },
+        })
+
+        await wrapper.findAll('button')[1]!.trigger('click')
+
+        expect(wrapper.emitted('delete')?.[0]).toEqual(['starter'])
+        expect(wrapper.emitted('edit')).toBeUndefined()
+    })
 })
 
 describe('PlanGrid', () => {

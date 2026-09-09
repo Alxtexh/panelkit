@@ -190,6 +190,24 @@ async function onColumnDrop(columnValue: string, event: DragEvent) {
 function openRecord(card: BoardCard) {
     router.visit(`${props.indexUrl}/${card.id}`)
 }
+
+/**
+ * A native HTML5 drag (dragstart -> drop elsewhere) does not fire `click` on
+ * the source element, so this and dragging never fight over the same
+ * gesture - only a plain click needed opening the card, the dblclick it
+ * used to require was never discoverable.
+ */
+function onCardClick(card: BoardCard, event: MouseEvent) {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return
+    }
+
+    if ((window.getSelection()?.toString().length ?? 0) > 0) {
+        return
+    }
+
+    openRecord(card)
+}
 </script>
 
 <template>
@@ -256,7 +274,7 @@ function openRecord(card: BoardCard) {
                         :draggable="can.update"
                         @dragstart="onDragStart(card, $event)"
                         @dragend="onDragEnd"
-                        @dblclick="openRecord(card)"
+                        @click="onCardClick(card, $event)"
                     >
                         <p class="text-sm font-medium">{{ card.title || 'Untitled' }}</p>
                         <p
