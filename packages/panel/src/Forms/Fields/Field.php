@@ -251,7 +251,7 @@ abstract class Field implements Renderable
      */
     public function rules(): array
     {
-        return [$this->presenceRule(), ...$this->typeRules(), ...$this->rules];
+        return [...$this->presenceRule(), ...$this->typeRules(), ...$this->rules];
     }
 
     /**
@@ -276,15 +276,35 @@ abstract class Field implements Renderable
      * uses, so the server decides using the SUBMITTED value of the controlling
      * field. A request claiming to be a business must supply the tax number
      * whatever the browser displayed.
+     *
+     * `nullable` RIDES ALONGSIDE `required_if`, not instead of it. The client
+     * keeps every declared key in its form state - `useForm` does not delete a
+     * field when the condition hides it, it just stops showing the control - so
+     * a request whose condition does NOT match still submits this key as
+     * `null`. Without `nullable` that `null` still hits `typeRules()` (`string`,
+     * `max:255`, ...) and fails them, which is a rejection nothing in the UI
+     * can explain: the field failing is not on screen. `required_if` still wins
+     * when its own condition matches, because Laravel evaluates a required-family
+     * rule before `nullable` gets a say.
+     *
+     * TWO ARRAY ELEMENTS, NOT ONE PIPED STRING. `rules()` builds one rule list
+     * per field out of discrete entries (`['required_if:...', 'string', ...]`),
+     * and Laravel only re-splits a rule on `|` when that rule IS the field's
+     * entire spec as a single string - an element that already sits inside such
+     * an array is taken as one literal rule name. `'nullable|required_if:...'`
+     * in that position is not two rules, it is a rule named exactly that, and
+     * Laravel throws looking for it.
+     *
+     * @return list<string>
      */
-    private function presenceRule(): string
+    private function presenceRule(): array
     {
         if (! $this->required) {
-            return 'nullable';
+            return ['nullable'];
         }
 
         if ($this->visibleWhen === null) {
-            return 'required';
+            return ['required'];
         }
 
         [$field, $value] = $this->visibleWhen;
@@ -297,7 +317,7 @@ abstract class Field implements Renderable
             default => (string) $value,
         };
 
-        return "required_if:{$field},{$value}";
+        return ['nullable', "required_if:{$field},{$value}"];
     }
 
     /**

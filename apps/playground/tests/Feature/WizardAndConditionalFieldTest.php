@@ -129,6 +129,21 @@ final class WizardAndConditionalFieldTest extends TestCase
     }
 
     /**
+     * `nullable` RIDES ALONGSIDE `required_if`, not only on the fully-optional
+     * branch. `useForm` never deletes a field just because its condition hid
+     * the control, so a request whose condition does NOT match still submits
+     * this key as `null` - and `typeRules()` (`string`, `max:255`, ...) reject
+     * that `null` outright without `nullable` beside it, which is a rejection
+     * the operator has no way to see: the field failing is not on screen.
+     */
+    public function test_a_required_conditional_field_is_also_nullable(): void
+    {
+        $field = TextField::make('tax_number')->required()->visibleWhen('kind', 'business');
+
+        $this->assertContains('nullable', $field->rules());
+    }
+
+    /**
      * A BOOLEAN CONDITION HAS TO BE WRITTEN THE WAY LARAVEL READS IT. A rule of
      * `required_if:is_business,1` never matches PHP `true` if the value is
      * interpolated raw - the field then silently stops being required, which is
@@ -171,10 +186,10 @@ final class WizardAndConditionalFieldTest extends TestCase
             'name' => 'Edge',
             'model' => 'other',
             'ip_address' => '10.0.0.9',
-            // `status` is the conditional field and is deliberately absent.
+            // `model_other` is the conditional field and is deliberately absent.
         ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors('status');
+            ->assertJsonValidationErrors('model_other');
 
         $this->assertSame(0, Router::query()->count());
     }
