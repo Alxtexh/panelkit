@@ -1,1 +1,0 @@
-import{m as e}from"./vendor-iitVzPgE.js";import{k as t}from"./api-docs-BN78F1L2.js";function n(){let n=e(),r=t(()=>n.props.panel?.groupedSettingsCards===!0);return{grouped:r,sectionClass:t(()=>r.value?`space-y-6 rounded-lg border p-6`:`space-y-6`),wrapClass:t(()=>r.value?`rounded-lg border p-6`:``)}}export{n as t};

@@ -13,6 +13,7 @@
  */
 import { PkBottomNav, PkModal, useAppearance } from '@alxtexh-enterprise/panel';
 import type { BottomNavItem } from '@alxtexh-enterprise/panel';
+import { PanelIdleLockGuard } from '@alxtexh-enterprise/panel/inertia';
 import { router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import SessionExpired from '@/components/SessionExpired.vue';
@@ -230,5 +231,17 @@ router.on('success', () => {
         renders nothing until the router hook in `app.ts` trips it.
     -->
         <SessionExpired />
+
+        <!--
+        THE IDLE-LOCK GUARD BELONGS HERE FOR THE SAME REASON `SessionExpired`
+        DOES: it renders nothing on its own, and it exists to catch something
+        that can happen on any screen. Without it, this application's own
+        `AppSidebarLayout`/`AppHorizontalLayout` never mount the composable
+        that (a) shows the "Still there?" warning before the panel locks and
+        (b) intercepts the 423 a background reload gets once it is locked -
+        so that response fell through to Inertia's own "must receive a valid
+        Inertia response" dialog instead of the lock screen.
+    -->
+        <PanelIdleLockGuard />
     </div>
 </template>

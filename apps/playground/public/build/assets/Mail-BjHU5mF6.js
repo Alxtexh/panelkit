@@ -1,1 +1,0 @@
-import{Rt as e,V as t,j as n,tt as r,z as i}from"./api-docs-BN78F1L2.js";import{t as a}from"./Mail-Ke7c6kCz.js";var o=i({inheritAttrs:!1,__name:`Mail`,setup(i){return(i,o)=>(r(),n(a,e(t(i.$attrs)),null,16))}});export{o as default};

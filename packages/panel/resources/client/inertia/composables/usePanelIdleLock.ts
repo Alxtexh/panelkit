@@ -18,7 +18,10 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 export type PanelIdleLockShared = {
     idleMinutes: number
     warningSeconds: number
+    /** POST-only: `lockNow()` submits here to mark the session locked. */
     lockUrl: string
+    /** GET: where a hard navigation lands - the password-prompt screen itself. */
+    screenUrl: string
 }
 
 export function usePanelIdleLock() {
@@ -44,22 +47,36 @@ export function usePanelIdleLock() {
      * That is correct for the transport, but Inertia cannot render JSON as a
      * page and otherwise opens its "invalid response" dialog. Intercept the
      * exception event and perform one normal navigation to the lock screen.
+     *
+     * `screenUrl`, NOT `lockUrl`. `lockUrl` is the POST-only endpoint
+     * `lockNow()` submits to; a `window.location.assign()` there is a GET and
+     * the route rejects it with 405. `screenUrl` is the GET-navigable password
+     * prompt itself - the page a hard navigation actually needs to land on.
+     *
+     * SUPPRESSING THE DIALOG AND REDIRECTING ARE SEPARATE DECISIONS. A stray
+     * background reload - one already in flight when a DIFFERENT visit (e.g.
+     * `lockNow()`'s own POST) wins the race and navigates to the lock screen
+     * first - can have its 423 arrive after `isAuthPage()` has flipped to
+     * true. Gating `preventDefault()` behind that same check left the dialog
+     * to fire for exactly that late arrival, which is the crash this guards
+     * against: `preventDefault()` always runs for this response shape, and
+     * only the redirect itself is skipped once we're already there.
      */
     function onHttpException(event: Event): void {
         const response = (event as CustomEvent<{ response?: { status?: number } }>).detail?.response
 
-        if (
-            response?.status !== 423 ||
-            !config.value?.lockUrl ||
-            isAuthPage() ||
-            redirectingToLock
-        ) {
+        if (response?.status !== 423 || !config.value?.screenUrl) {
             return
         }
 
         event.preventDefault()
+
+        if (isAuthPage() || redirectingToLock) {
+            return
+        }
+
         redirectingToLock = true
-        window.location.assign(config.value.lockUrl)
+        window.location.assign(config.value.screenUrl)
     }
 
     function isAuthPage(): boolean {

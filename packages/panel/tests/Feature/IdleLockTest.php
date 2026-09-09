@@ -79,6 +79,15 @@ final class IdleLockTest extends TestCase
         $this->assertSame(15, $props['panelIdleLock']['idleMinutes']);
         $this->assertSame(60, $props['panelIdleLock']['warningSeconds']);
         $this->assertSame(url('/second/lock'), $props['panelIdleLock']['lockUrl']);
+        /*
+         * A DIFFERENT ROUTE FROM `lockUrl`, ON PURPOSE. `lockUrl` is POST-only
+         * (`lockNow()` submits there); a client-side hard navigation needs a
+         * GET-navigable target, which is this one - the password prompt itself.
+         */
+        $this->assertSame(
+            url('/second/screens/locked'),
+            $props['panelIdleLock']['screenUrl'],
+        );
         $this->assertTrue(in_array(
             EnforcePanelIdleLock::class,
             app(PanelManager::class)->panel('second')->getMiddleware(),

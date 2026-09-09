@@ -1,1 +1,0 @@
-import{Ft as e,j as t,tt as n,z as r}from"./api-docs-BN78F1L2.js";import{p as i}from"./inertia-bklNUjKi.js";var a=r({__name:`Error`,props:{status:{}},setup(r){return(a,o)=>(n(),t(e(i),{status:r.status,"home-href":`/dashboard`,"login-href":`/login`,"home-label":`Back to dashboard`},null,8,[`status`]))}});export{a as default};

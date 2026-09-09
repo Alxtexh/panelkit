@@ -1,0 +1,1 @@
+import{Rt as e,V as t,j as n,tt as r,z as i}from"./api-docs-CabEpoE3.js";import{k as a}from"./inertia-CJCuhoyp.js";import{t as o}from"./app-DNXk-dmF.js";var s=i({layout:o,inheritAttrs:!1,__name:`Templates`,setup(i){return(i,o)=>(r(),n(a,e(t(i.$attrs)),null,16))}});export{s as default};

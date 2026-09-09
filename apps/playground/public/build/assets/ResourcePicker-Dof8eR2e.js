@@ -1,0 +1,1 @@
+import{Rt as e,V as t,j as n,tt as r,z as i}from"./api-docs-CabEpoE3.js";import{t as a}from"./ResourcePicker-y-EQgtUG.js";var o=i({inheritAttrs:!1,__name:`ResourcePicker`,setup(i){return(i,o)=>(r(),n(a,e(t(i.$attrs)),null,16))}});export{o as default};

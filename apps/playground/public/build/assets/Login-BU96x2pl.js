@@ -1,0 +1,1 @@
+import{Ft as e,Rt as t,V as n,j as r,tt as i,z as a}from"./api-docs-CabEpoE3.js";import{u as o}from"./inertia-CJCuhoyp.js";var s=a({inheritAttrs:!1,__name:`Login`,setup(a){return(a,s)=>(i(),r(e(o),t(n(a.$attrs)),null,16))}});export{s as default};

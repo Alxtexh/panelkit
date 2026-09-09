@@ -1,0 +1,1 @@
+import{Rt as e,V as t,j as n,tt as r,z as i}from"./api-docs-CabEpoE3.js";import{M as a}from"./inertia-CJCuhoyp.js";import{t as o}from"./app-DNXk-dmF.js";var s=i({inheritAttrs:!1,layout:o,__name:`Roles`,setup(i){return(i,o)=>(r(),n(a,e(t(i.$attrs)),null,16))}});export{s as default};

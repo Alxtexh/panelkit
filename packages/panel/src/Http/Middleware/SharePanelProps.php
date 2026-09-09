@@ -272,6 +272,7 @@ final class SharePanelProps
                     'idleMinutes' => $panel->idleLockMinutes(),
                     'warningSeconds' => $panel->idleLockWarningSeconds(),
                     'lockUrl' => $lockUrl,
+                    'screenUrl' => PanelIdleActivity::lockScreenUrl($panel),
                 ];
             }, 'panelIdleLock'),
 
