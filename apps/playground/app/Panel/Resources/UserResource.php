@@ -452,6 +452,9 @@ final class UserResource extends Resource
 
                 $targets = $people->keyBy('id')->all();
             })
+            // A list of people is browsed, then opened - see ClientResource's
+            // own note on why this is declared per resource rather than default.
+            ->rowClick('view')
             ->recordActions([
                 /*
                  * VIEW AND EDIT WERE MISSING, and that was a real gap rather

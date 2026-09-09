@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Panel\Platform\Resources;
 
 use App\Models\Tenant;
+use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Forms\Fields\DateField;
 use Alxtexh\Panel\Forms\Fields\TextareaField;
 use Alxtexh\Panel\Forms\Fields\TextField;
@@ -56,6 +57,18 @@ final class TenantResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            // Browsed, then opened - see ClientResource's own note on why
+            // this is declared per resource rather than default. rowClick
+            // alone only arms the click; the row still needs a real 'view'
+            // RecordAction below to have somewhere to send it.
+            ->rowClick('view')
+            ->recordActions([
+                RecordAction::make('view', 'View')
+                    ->icon('eye')
+                    ->color('primary')
+                    ->authorize('view')
+                    ->link(fn (array $row): string => '/platform/tenants/'.$row['id']),
+            ])
             ->columns([
                 TextColumn::make('name')->from('tenants.name')->sortable()->searchable()->locked(),
                 TextColumn::make('slug')->from('tenants.slug')->sortable()->searchable(),

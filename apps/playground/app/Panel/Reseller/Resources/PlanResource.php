@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Panel\Reseller\Resources;
 
 use App\Models\Plan;
+use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Forms\Fields\NumberField;
 use Alxtexh\Panel\Forms\Fields\TextareaField;
 use Alxtexh\Panel\Forms\Fields\TextField;
@@ -69,6 +70,18 @@ final class PlanResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            // Browsed, then opened - see ClientResource's own note on why
+            // this is declared per resource rather than default. rowClick
+            // alone only arms the click; the row still needs a real 'view'
+            // RecordAction below to have somewhere to send it.
+            ->rowClick('view')
+            ->recordActions([
+                RecordAction::make('view', 'View')
+                    ->icon('eye')
+                    ->color('primary')
+                    ->authorize('view')
+                    ->link(fn (array $row): string => '/reseller/reseller-plans/'.$row['id']),
+            ])
             ->columns([
                 TextColumn::make('name')->from('plans.name')->sortable()->searchable()->locked(),
                 TextColumn::make('speed_mbps')->from('plans.speed_mbps')->sortable(),

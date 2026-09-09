@@ -7,6 +7,7 @@ namespace App\Panel\Resources;
 use App\Models\Plan;
 use App\Panel\Clusters\NetworkCluster;
 use Alxtexh\Panel\Actions\BulkAction;
+use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Forms\Fields\CheckboxField;
 use Alxtexh\Panel\Forms\Fields\HiddenField;
 use Alxtexh\Panel\Forms\Fields\NumberField;
@@ -141,6 +142,18 @@ final class PlanResource extends Resource
              * row somewhere you cannot see the effect of.
              */
             ->reorderable('position')
+            // A catalogue is browsed, then opened - see ClientResource's own
+            // note on why this is declared per resource rather than default.
+            // rowClick alone only arms the click; the row still needs a real
+            // 'view' RecordAction below to have somewhere to send it.
+            ->rowClick('view')
+            ->recordActions([
+                RecordAction::make('view', 'View')
+                    ->icon('eye')
+                    ->color('primary')
+                    ->authorize('view')
+                    ->link(fn (array $row): string => '/plans/'.$row['id']),
+            ])
             ->columns([
                 TextColumn::make('name')->from('plans.name')->sortable()->searchable()->locked(),
                 TextColumn::make('speed_mbps')->from('plans.speed_mbps')->label('Speed')->sortable()->suffix('Mbps'),
