@@ -10,7 +10,6 @@ describe('SelectionBar - selection mode', () => {
         })
 
         expect(wrapper.text()).toContain('3 selected')
-        expect(wrapper.text()).toContain('Ready for a bulk action')
 
         const selectAll = wrapper
             .findAll('button')
@@ -20,8 +19,10 @@ describe('SelectionBar - selection mode', () => {
         await selectAll?.trigger('click')
         expect(wrapper.emitted('select-all-matching')).toBeTruthy()
 
-        const clear = wrapper.find('button[aria-label="Clear selection"]')
-        await clear.trigger('click')
+        const clear = wrapper.findAll('button').find((button) => button.text() === 'Deselect all')
+        expect(clear).toBeDefined()
+
+        await clear?.trigger('click')
         expect(wrapper.emitted('clear')).toBeTruthy()
     })
 
@@ -32,7 +33,28 @@ describe('SelectionBar - selection mode', () => {
         })
 
         expect(wrapper.text()).toContain('All 1,247 matching records')
-        expect(wrapper.text()).toContain('Every matching record is included')
         expect(wrapper.find('[role="status"]').attributes('aria-live')).toBe('polite')
+    })
+
+    /**
+     * THE REGRESSION THIS PINS: a tinted, bordered banner with an icon badge
+     * used to outweigh the toolbar it replaces for a state that is common
+     * rather than exceptional. This stays a plain row - no card, no icon -
+     * at the same visual weight as the rest of the table's toolbar.
+     */
+    it('renders as a plain row, not a tinted bordered card', () => {
+        const wrapper = mount(SelectionBar, {
+            props: { count: 3, allMatching: false, total: 247 },
+        })
+
+        const bar = wrapper.get('[data-slot="selection-bar"]')
+        expect(bar.classes()).not.toContain('border')
+        expect(bar.classes().join(' ')).not.toContain('bg-primary')
+
+        // The mobile "Actions" trigger keeps its own icon; the summary text
+        // itself no longer sits behind a decorative checkmark badge.
+        const summary = bar.get('span')
+        expect(summary.text()).toContain('selected')
+        expect(summary.find('svg').exists()).toBe(false)
     })
 })

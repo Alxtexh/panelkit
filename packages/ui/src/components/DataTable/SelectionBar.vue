@@ -12,6 +12,15 @@
  * explicitly. "Select all N" and "Deselect all" sit together, because someone
  * who over-selects needs the way back to be as obvious as the way in.
  *
+ * PLAIN TEXT AND LINKS, NOT A CARD. This used to be its own tinted, bordered
+ * banner with an icon badge and a subtitle line - a component that visually
+ * outweighed the toolbar it replaces, for a state (some rows are ticked) that
+ * is common rather than exceptional. Filament's own table states this with a
+ * count, two plain links, and the actions trigger, all at the same visual
+ * weight as the rest of the toolbar row. This now does the same: no border, no
+ * background, no icon, sized like `TableToolbar` so swapping between the two
+ * on select/deselect does not jump the layout.
+ *
  * Actions come through the slot. This owns the selection surface, never what an
  * action does - it does not fetch (spec §4 rule 2).
  */
@@ -52,53 +61,40 @@ const selectionSummary = computed(() => {
 
 <template>
     <div
-        class="border-primary/20 bg-primary/[0.06] flex min-h-12 flex-wrap items-center gap-2.5 rounded-lg border px-3 py-2 text-sm sm:gap-3 sm:px-3.5"
+        data-slot="selection-bar"
+        class="flex min-h-9 flex-wrap items-center gap-x-4 gap-y-2 text-sm"
         role="status"
         aria-live="polite"
         aria-label="Selection actions"
     >
-        <span
-            class="bg-primary/10 text-primary inline-flex size-8 shrink-0 items-center justify-center rounded-md"
-            aria-hidden="true"
-        >
-            <svg
-                class="size-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-                <path d="m5 12 4 4L19 6" />
-            </svg>
+        <span class="text-foreground font-medium tabular-nums">
+            {{ selectionSummary }}
         </span>
-
-        <div class="min-w-0 flex-1 basis-[9rem]">
-            <p class="text-foreground truncate text-sm font-semibold leading-5 tabular-nums">
-                {{ selectionSummary }}
-            </p>
-            <p class="text-muted-foreground hidden text-xs leading-4 sm:block">
-                {{ allMatching ? 'Every matching record is included' : 'Ready for a bulk action' }}
-            </p>
-        </div>
 
         <button
             v-if="!allMatching && total !== undefined && total > count"
             type="button"
-            class="border-primary/25 bg-background text-primary hover:bg-primary/10 inline-flex min-h-9 items-center rounded-md border px-3 text-sm font-medium transition-colors"
+            class="text-primary font-medium hover:underline"
             @click="emit('select-all-matching')"
         >
             Select all {{ format(total) }}
         </button>
 
+        <button
+            type="button"
+            class="text-destructive font-medium hover:underline"
+            @click="emit('clear')"
+        >
+            Deselect all
+        </button>
+
         <!-- Desktop bulk actions stay inline. -->
-        <div class="hidden items-center gap-2 md:flex">
+        <div class="ml-auto hidden items-center gap-2 md:flex">
             <slot name="actions" />
         </div>
 
         <!-- Mobile: collapse bulk actions into a bottom drawer. -->
-        <div class="md:hidden">
+        <div class="ml-auto md:hidden">
             <button
                 type="button"
                 dusk="mobile-bulk-actions"
@@ -153,29 +149,6 @@ const selectionSummary = computed(() => {
                     </div>
                 </SheetContent>
             </Sheet>
-        </div>
-
-        <div class="ml-auto flex items-center gap-1">
-            <button
-                type="button"
-                class="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium transition-colors"
-                aria-label="Clear selection"
-                @click="emit('clear')"
-            >
-                <svg
-                    class="size-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                >
-                    <path d="M18 6 6 18M6 6l12 12" />
-                </svg>
-                <span class="hidden sm:inline">Clear</span>
-            </button>
         </div>
     </div>
 </template>
