@@ -935,17 +935,21 @@ function confirmPending() {
             <div
                 v-if="relations.length > 1"
                 class="bg-muted/40 border-border/60 flex w-fit gap-1 rounded-lg border p-1"
+                role="tablist"
+                aria-label="Related records"
             >
                 <button
                     v-for="relation in relations"
                     :key="relation.key"
                     type="button"
+                    role="tab"
                     class="min-h-9 rounded-md px-3 text-sm transition-colors"
                     :class="
                         activeRelation === relation.key
-                            ? 'bg-background text-foreground font-medium shadow-sm'
+                            ? 'bg-background text-foreground font-semibold shadow-sm ring-2 ring-primary/30'
                             : 'text-muted-foreground hover:text-foreground'
                     "
+                    :aria-selected="activeRelation === relation.key"
                     @click="openRelation(relation.key)"
                 >
                     {{ relation.label }}

@@ -46,16 +46,20 @@ function format(n: number): string {
 <template>
     <div
         class="pk-tabs bg-muted/40 flex w-fit max-w-full shrink-0 items-center gap-0.5 overflow-x-auto rounded-lg p-1"
+        role="tablist"
+        aria-label="Table views"
     >
         <button
             type="button"
+            role="tab"
             class="flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm capitalize transition-colors"
             :class="
                 active === null
-                    ? 'bg-background text-foreground shadow-sm font-medium'
+                    ? 'bg-background text-foreground font-semibold shadow-sm ring-2 ring-primary/30'
                     : 'text-muted-foreground hover:text-foreground'
             "
             :aria-current="active === null ? 'page' : undefined"
+            :aria-selected="active === null"
             @click="emit('select', null)"
         >
             All
@@ -78,13 +82,15 @@ function format(n: number): string {
             v-for="tab in tabs"
             :key="tab"
             type="button"
+            role="tab"
             class="flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm capitalize transition-colors"
             :class="
                 active === tab
-                    ? 'bg-background text-foreground shadow-sm font-medium'
+                    ? 'bg-background text-foreground font-semibold shadow-sm ring-2 ring-primary/30'
                     : 'text-muted-foreground hover:text-foreground'
             "
             :aria-current="active === tab ? 'page' : undefined"
+            :aria-selected="active === tab"
             @click="emit('select', tab)"
         >
             {{ tab }}

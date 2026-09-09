@@ -100,7 +100,10 @@ useWidgetPoll(
     <PkBoundary :label="table.label">
         <Deferred :data="dataKey">
             <template #fallback>
-                <div class="@container/table pk-surface min-w-0 rounded-lg" aria-busy="true">
+                <div
+                    class="@container/table pk-surface min-w-0 overflow-hidden rounded-lg"
+                    aria-busy="true"
+                >
                     <div class="border-b px-4 py-3">
                         <h2 class="pk-section-heading">{{ table.label }}</h2>
                     </div>
@@ -117,7 +120,7 @@ useWidgetPoll(
 
             <template #default>
                 <div
-                    class="@container/table pk-surface min-w-0 rounded-lg"
+                    class="@container/table pk-surface min-w-0 overflow-hidden rounded-lg"
                     :aria-busy="resolved ? 'false' : 'true'"
                 >
                     <div class="flex items-center justify-between gap-3 border-b px-4 py-3">

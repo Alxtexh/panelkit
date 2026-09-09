@@ -136,7 +136,7 @@ const bodyStyle = computed(() => {
                         class="rounded px-2 py-1 text-xs transition-colors"
                         :class="
                             period === option.value
-                                ? 'bg-background text-foreground font-medium shadow-sm'
+                                ? 'bg-background text-foreground font-semibold shadow-sm ring-2 ring-primary/30'
                                 : 'text-muted-foreground hover:text-foreground'
                         "
                         :aria-pressed="period === option.value"

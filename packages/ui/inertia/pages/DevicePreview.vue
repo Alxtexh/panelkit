@@ -127,7 +127,7 @@ const frameKey = computed(() => `${device.value.id}-${landscape.value}-${src.val
                     class="rounded px-2.5 py-1 text-xs transition-colors"
                     :class="
                         device.id === d.id
-                            ? 'bg-background font-medium text-foreground shadow-sm'
+                            ? 'bg-background font-semibold text-foreground shadow-sm ring-2 ring-primary/30'
                             : 'text-muted-foreground hover:text-foreground'
                     "
                     @click="device = d"

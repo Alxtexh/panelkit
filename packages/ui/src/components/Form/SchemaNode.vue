@@ -653,17 +653,21 @@ function uploadFor(key: string) {
         <div
             class="bg-muted/30 flex gap-1 overflow-x-auto p-1"
             :class="isRoot ? 'rounded-t-lg border-b' : 'rounded-md'"
+            role="tablist"
+            aria-label="Form sections"
         >
             <button
                 v-for="(tab, i) in node.children ?? []"
                 :key="i"
                 type="button"
+                role="tab"
                 class="flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors"
                 :class="
                     activeTab === i
-                        ? 'bg-background text-foreground font-medium shadow-sm'
+                        ? 'bg-background text-foreground font-semibold shadow-sm ring-2 ring-primary/30'
                         : 'text-muted-foreground hover:text-foreground'
                 "
+                :aria-selected="activeTab === i"
                 @click="activeTab = i"
             >
                 {{ tab.label }}

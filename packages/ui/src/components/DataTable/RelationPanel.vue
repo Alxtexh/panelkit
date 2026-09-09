@@ -159,8 +159,11 @@ function isEmpty(value: unknown): boolean {
             </template>
         </PkEmptyState>
 
-        <div v-else-if="rows.length > 0" class="pk-table-scroll pk-scroll w-full">
-            <table class="w-full border-collapse text-sm">
+        <div
+            v-else-if="rows.length > 0"
+            class="pk-table-scroll pk-scroll w-full min-w-0 max-w-full overflow-x-auto overflow-y-auto overscroll-x-contain"
+        >
+            <table class="w-max min-w-full border-collapse text-sm">
                 <thead class="bg-muted/40">
                     <tr>
                         <th

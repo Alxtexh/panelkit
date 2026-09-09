@@ -130,8 +130,12 @@ function applyFilters(next: CatalogFilters): void {
                 v-for="tab in tabs"
                 :key="tab.key"
                 type="button"
-                class="px-3 py-1.5 text-sm transition-colors"
-                :class="tabKey === tab.key ? 'bg-foreground text-background' : 'hover:bg-muted/60'"
+                class="rounded px-3 py-1.5 text-sm transition-colors"
+                :class="
+                    tabKey === tab.key
+                        ? 'bg-foreground text-background font-semibold shadow-sm ring-2 ring-primary/30'
+                        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                "
                 role="tab"
                 :aria-selected="tabKey === tab.key ? 'true' : 'false'"
                 @click="tabKey = tab.key"
