@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\SuperadminUser;
 use App\Support\DemoData;
+use App\Support\LandingSeoSettings;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -124,6 +125,7 @@ final class SeedReferenceCommand extends Command
         if ($only === null) {
             $this->adoptOrphans();
             $this->superadmin();
+            $this->seedLandingSeo();
         }
 
         $this->newLine();
@@ -173,6 +175,27 @@ final class SeedReferenceCommand extends Command
         );
 
         $this->components->twoColumnDetail('Superadmin', 'superadmin@panel.test at /superadmin/login');
+    }
+
+    /**
+     * The public landing page's actual identity - see `LandingSeoSettings`.
+     *
+     * NAIROBI FIBRE, NOT WHICHEVER TENANT SEEDS LAST. The landing page is not
+     * tenant-scoped - an anonymous visitor reaches it before any tenant is
+     * resolved - so of the five estates above, this names the one the
+     * reference estate is actually built around (`nairobi-fibre.test`
+     * accounts, the demo narrative throughout the rest of this command).
+     * `--tenant` reseeding a single OTHER estate correctly leaves this alone.
+     */
+    private function seedLandingSeo(): void
+    {
+        (new LandingSeoSettings(
+            title: 'Nairobi Fibre — Fast, Reliable Fiber Internet in Nairobi',
+            description: 'Fast, reliable fiber internet plans for homes and businesses in Nairobi. '
+                .'Check coverage and sign up in minutes.',
+            businessName: 'Nairobi Fibre',
+            locale: 'en_KE',
+        ))->save();
     }
 
     private function adoptOrphans(): void

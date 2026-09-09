@@ -215,6 +215,21 @@ final class Sitemap
         return self::urls() === [];
     }
 
+    /**
+     * The XML `write()` would put on disk, returned instead of written.
+     *
+     * FOR A CALLER THAT SERVES `sitemap.xml` DYNAMICALLY rather than
+     * regenerating a static file - an installation whose sitemap is small
+     * enough that `write()`'s disk artefact, and the artefact's own staleness
+     * between requests, buys it nothing. Chunking across the 50,000-URL
+     * ceiling is `write()`'s problem, not this one's: a document this small
+     * is exactly the case chunking does not apply to.
+     */
+    public static function toXml(): string
+    {
+        return self::urlset(self::urls());
+    }
+
     /** Test-only. Mirrors `Changelog::forget()` for the same reason: static state outlives a test otherwise. */
     public static function forget(): void
     {
