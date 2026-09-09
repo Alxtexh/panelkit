@@ -14036,7 +14036,7 @@ const ax = ["data-featured", "data-recommended"], lx = { class: "flex flex-col g
   __name: "PlanCard",
   props: {
     plan: {},
-    canDelete: { type: Boolean }
+    canDelete: { type: Boolean, default: !0 }
   },
   emits: ["edit", "delete"],
   setup(e, { emit: o }) {

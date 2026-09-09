@@ -12,11 +12,21 @@ import PkButton from '../primitives/PkButton.vue'
 import { cycleLabel, formatPerkValue, perkGranted } from './planTypes'
 import type { PlanRecord } from './planTypes'
 
-const props = defineProps<{
-    plan: PlanRecord
-    /** Hide delete when the plan still has subscribers. */
-    canDelete?: boolean
-}>()
+const props = withDefaults(
+    defineProps<{
+        plan: PlanRecord
+        /** Hide delete when the plan still has subscribers. */
+        canDelete?: boolean
+    }>(),
+    /*
+     * Vue casts an absent `Boolean` prop to `false`, not `undefined` - so
+     * without this default, every caller that never heard of `canDelete`
+     * (which was every real one; PlanGrid never declared it to forward)
+     * silently got "explicitly disabled" instead of "not overridden".
+     * `plan.activeUsers > 0` below is what's actually meant to gate this.
+     */
+    { canDelete: true },
+)
 
 const emit = defineEmits<{
     edit: [id: string]

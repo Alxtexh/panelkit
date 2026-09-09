@@ -86,6 +86,22 @@ describe('PlanCard', () => {
         expect(wrapper.emitted('delete')?.[0]).toEqual(['starter'])
         expect(wrapper.emitted('edit')).toBeUndefined()
     })
+
+    it('allows delete for a plan with no active users even when the caller never mentions canDelete', () => {
+        const wrapper = mount(PlanCard, { props: { plan: { ...starter, activeUsers: 0 } } })
+
+        const destroy = wrapper.findAll('button')[1]!
+        expect(destroy.attributes('disabled')).toBeUndefined()
+    })
+
+    it('still blocks delete when a caller explicitly opts out', () => {
+        const wrapper = mount(PlanCard, {
+            props: { plan: { ...starter, activeUsers: 0 }, canDelete: false },
+        })
+
+        const destroy = wrapper.findAll('button')[1]!
+        expect(destroy.attributes('disabled')).toBeDefined()
+    })
 })
 
 describe('PlanGrid', () => {
