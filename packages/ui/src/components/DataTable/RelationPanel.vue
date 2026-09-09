@@ -19,6 +19,7 @@
  * bolted-on table under a loose button row. Filters reuse TableToolbar when the
  * relation table declares any.
  */
+import { router } from '@inertiajs/vue3'
 import { computed, useSlots } from 'vue'
 import type { SchemaColumn } from '../../composables/useSchemaColumns'
 import PkEmptyState from '../primitives/PkEmptyState.vue'
@@ -105,6 +106,37 @@ function format(column: SchemaColumn, value: unknown): string {
 function isEmpty(value: unknown): boolean {
     return value === null || value === undefined || value === ''
 }
+
+/**
+ * Click anywhere in the row to open it, same as DataTable's own rows - this
+ * table just isn't drawn by DataTable. Only the first column linked before,
+ * which is the exact gap that feature closed everywhere else.
+ *
+ * SAME GUARD AS DataTable.onRowClick: a click only counts as "the row" when
+ * it hits none of the row's own controls, and a text selection is not a
+ * click either - see that function's own note for why both matter.
+ */
+function onRowClick(row: Record<string, unknown>, event: MouseEvent): void {
+    if (!props.recordBase || row.id == null) {
+        return
+    }
+
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return
+    }
+
+    const target = event.target as HTMLElement | null
+
+    if (target?.closest('a, button, input, select, textarea, label, [role="menuitem"]')) {
+        return
+    }
+
+    if ((window.getSelection()?.toString().length ?? 0) > 0) {
+        return
+    }
+
+    router.visit(`${props.recordBase}/${row.id}`)
+}
 </script>
 
 <template>
@@ -182,6 +214,8 @@ function isEmpty(value: unknown): boolean {
                         :key="row.id ?? i"
                         data-slot="table-row"
                         class="pk-row hover:bg-muted/40 transition-colors"
+                        :class="recordBase && row.id != null ? 'cursor-pointer' : ''"
+                        @click="onRowClick(row, $event)"
                     >
                         <td
                             v-for="column in visible"

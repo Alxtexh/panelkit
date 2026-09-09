@@ -129,6 +129,14 @@ final class TableWidget
             'description' => $this->description,
             'limit' => $this->limit,
             'href' => $href,
+            /*
+             * SAME OPT-IN AS THE INDEX, carried onto the card. A resource that
+             * declares `rowClick('view')` gets clickable rows here too, at the
+             * same `{href}/{id}` a row link on its own index page already
+             * resolves to - and one that does not (an audit log, a fixture)
+             * stays inert here for the identical reason it stays inert there.
+             */
+            'rowClick' => $class !== null ? ($class::schema()['table']['rowClick'] ?? null) : null,
             ...$this->layoutToArray(),
             ...$this->refreshToArray(),
         ];

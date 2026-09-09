@@ -20,6 +20,7 @@ export interface TableWidgetDecl {
     span: number
     limit: number
     href: string | null
+    rowClick?: string | null
     poll?: number | null
     live?: string | null
 }
@@ -44,6 +45,22 @@ const resolved = computed(
 
 function retry() {
     router.reload({ only: [props.dataKey] })
+}
+
+/**
+ * Same destination a row link on the resource's own index page already
+ * resolves to. Cards have no per-row RecordAction menu to look one up in -
+ * `{href}/{id}` is the one convention every resource's `view` action already
+ * follows, so this is not a guess.
+ */
+const rowClickable = computed(() => props.table.rowClick === 'view' && Boolean(props.table.href))
+
+function onRowClick(row: Record<string, unknown>) {
+    const id = row[resolved.value?.rowKey ?? 'id']
+
+    if (props.table.href && id !== undefined && id !== null) {
+        router.visit(`${props.table.href}/${id}`)
+    }
 }
 
 const schemaColumns = computed<SchemaColumn[]>(() => resolved.value?.columns ?? [])
@@ -162,7 +179,9 @@ useWidgetPoll(
                         :row-key="resolved?.rowKey ?? 'id'"
                         :selectable="false"
                         :framed="false"
+                        :row-clickable="rowClickable"
                         :empty-title="`No ${table.label.toLowerCase()} yet`"
+                        @row-click="onRowClick"
                     >
                         <template
                             v-for="column in schemaColumns"

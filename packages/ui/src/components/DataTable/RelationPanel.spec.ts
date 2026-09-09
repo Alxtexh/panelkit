@@ -1,12 +1,23 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { SchemaColumn } from '../../composables/useSchemaColumns'
-import RelationPanel from './RelationPanel.vue'
+
+const visit = vi.fn()
+
+vi.mock('@inertiajs/vue3', () => ({
+    router: { visit },
+}))
+
+const { default: RelationPanel } = await import('./RelationPanel.vue')
 
 const columns: SchemaColumn[] = [
     { key: 'title', label: 'Title', type: 'text' },
     { key: 'note', label: 'Note', type: 'text' },
 ]
+
+afterEach(() => {
+    visit.mockClear()
+})
 
 describe('RelationPanel', () => {
     it('wraps content in TableShell with a title band and actions', () => {
@@ -79,5 +90,64 @@ describe('RelationPanel', () => {
             true,
         )
         expect(wrapper.text()).toMatch(/Filters|Tools/)
+    })
+
+    it('opens a row on click when the relation has a dedicated record page', async () => {
+        const wrapper = mount(RelationPanel, {
+            props: {
+                columns,
+                rows: [{ id: 42, title: 'One', note: 'a' }],
+                loaded: true,
+                recordBase: '/articles/1/comments',
+            },
+        })
+
+        await wrapper.get('[data-slot="table-row"]').trigger('click')
+
+        expect(visit).toHaveBeenCalledWith('/articles/1/comments/42')
+    })
+
+    it('does nothing on row click without a dedicated record page', async () => {
+        const wrapper = mount(RelationPanel, {
+            props: {
+                columns,
+                rows: [{ id: 42, title: 'One', note: 'a' }],
+                loaded: true,
+            },
+        })
+
+        await wrapper.get('[data-slot="table-row"]').trigger('click')
+
+        expect(visit).not.toHaveBeenCalled()
+    })
+
+    it('ignores a row click that lands on the first column link', async () => {
+        const wrapper = mount(RelationPanel, {
+            props: {
+                columns,
+                rows: [{ id: 42, title: 'One', note: 'a' }],
+                loaded: true,
+                recordBase: '/articles/1/comments',
+            },
+        })
+
+        await wrapper.get('a').trigger('click')
+
+        expect(visit).not.toHaveBeenCalled()
+    })
+
+    it('ignores a modified click so opening in a new tab still works', async () => {
+        const wrapper = mount(RelationPanel, {
+            props: {
+                columns,
+                rows: [{ id: 42, title: 'One', note: 'a' }],
+                loaded: true,
+                recordBase: '/articles/1/comments',
+            },
+        })
+
+        await wrapper.get('[data-slot="table-row"]').trigger('click', { metaKey: true })
+
+        expect(visit).not.toHaveBeenCalled()
     })
 })
