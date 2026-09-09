@@ -40,12 +40,24 @@ const iconFor: Record<string, any> = {
     'layout-template': LayoutTemplate,
 };
 
-function previewHref(slug: string): string {
-    return `/?preview=${encodeURIComponent(slug)}`;
+/**
+ * `chanseek`'s compiled bundle hardcodes a React Router basename of its own
+ * nested URL (see `Pages::LANDING_DEFAULT`'s comment on why it isn't the
+ * live default) - previewing it at the root-relative `?preview=` route it
+ * can't match renders blank. Every other imported template tolerates root
+ * hosting fine, so only this one needs its own href instead of the generic
+ * preview route.
+ */
+function previewHref(template: LandingTemplate): string {
+    if (template.slug === 'chanseek') {
+        return template.href;
+    }
+
+    return `/?preview=${encodeURIComponent(template.slug)}`;
 }
 
-function openPreview(slug: string): void {
-    window.open(previewHref(slug), '_blank', 'noopener,noreferrer');
+function openPreview(template: LandingTemplate): void {
+    window.open(previewHref(template), '_blank', 'noopener,noreferrer');
 }
 
 /**
@@ -54,7 +66,7 @@ function openPreview(slug: string): void {
  * it (native middle-click / ctrl-click / right-click still work on it),
  * guarded out here so a click on it doesn't also open a second tab.
  */
-function onCardClick(slug: string, event: MouseEvent): void {
+function onCardClick(template: LandingTemplate, event: MouseEvent): void {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
         return;
     }
@@ -69,7 +81,7 @@ function onCardClick(slug: string, event: MouseEvent): void {
         return;
     }
 
-    openPreview(slug);
+    openPreview(template);
 }
 </script>
 
@@ -97,8 +109,8 @@ function onCardClick(slug: string, event: MouseEvent): void {
                 class="flex cursor-pointer flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-colors hover:bg-muted/40"
                 role="button"
                 tabindex="0"
-                @click="onCardClick(template.slug, $event)"
-                @keydown.enter.prevent="openPreview(template.slug)"
+                @click="onCardClick(template, $event)"
+                @keydown.enter.prevent="openPreview(template)"
             >
                 <div
                     :class="[
@@ -128,7 +140,7 @@ function onCardClick(slug: string, event: MouseEvent): void {
                     </p>
                     <PkButton
                         as="a"
-                        :href="previewHref(template.slug)"
+                        :href="previewHref(template)"
                         target="_blank"
                         rel="noreferrer"
                         variant="outline"
