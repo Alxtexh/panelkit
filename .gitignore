@@ -140,3 +140,7 @@ tmp/
 # all, only vendor/node_modules/bootstrap/storage bloat.
 temp-filament/
 testfolder/
+
+# Downloaded reference scripts, kept locally for comparison only - never ship.
+codecanyon-Z4btd3XY-erpgo-saas-all-in-one-business-erp-with-project-account-hrm-crm-pos/
+whatsml/
