@@ -1,2 +1,10 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /dashboard
+Disallow: /login
+Disallow: /api
+Disallow: /platform
+Disallow: /reseller
+Disallow: /superadmin
+Disallow: /client
+Sitemap: /sitemap.xml

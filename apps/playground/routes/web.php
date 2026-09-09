@@ -78,8 +78,17 @@ $publicLandingMiddleware = [
     EnsurePanelIsUnlocked::class,
 ];
 
-/* Search, answer, and generative engines receive explicit discovery documents. */
-Route::get('robots.txt', [LandingDiscoveryController::class, 'robots'])->name('public.robots');
+/*
+ | Search, answer, and generative engines receive explicit discovery documents.
+ |
+ | NOT `robots.txt` - a real static file already sits at `public/robots.txt`,
+ | and Laravel serves that directly without ever reaching this router, so a
+ | route here could never run. `Alxtexh\Panel\Support\Sitemap` owns that file's
+ | lifecycle deliberately (it only ever APPENDS a `Sitemap:` line to an
+ | existing one, never creates or overwrites it) - a dynamic route duplicating
+ | the same responsibility would just be a second, unreachable place to edit
+ | this app's crawl policy and expect nothing to happen.
+ */
 Route::get('sitemap.xml', [LandingDiscoveryController::class, 'sitemap'])->name('public.sitemap');
 Route::get('llms.txt', [LandingDiscoveryController::class, 'llms'])->name('public.llms');
 

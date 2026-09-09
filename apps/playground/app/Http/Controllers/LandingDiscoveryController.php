@@ -10,13 +10,6 @@ use Illuminate\Http\Response;
 /** Public discovery documents for search engines and answer engines. */
 final class LandingDiscoveryController
 {
-    public function robots(): Response
-    {
-        $body = "User-agent: *\nAllow: /\nDisallow: /dashboard\nDisallow: /admin\nDisallow: /api\nDisallow: /login\nSitemap: /sitemap.xml\n";
-
-        return response($body, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
-    }
-
     public function sitemap(): Response
     {
         $body = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
