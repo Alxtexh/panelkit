@@ -882,18 +882,26 @@ final class InstallCommand extends Command
             ));
 
             /*
-             * BOTH CHILDREN, THEN THE PARENT - `make:panel` creates
-             * `Panel/Admin/Resources` AND `Panel/Admin/Widgets`
-             * unconditionally (`MakePanelCommand::handle()`), but this used
-             * to `rmdir()` only `Resources` before `Panel/Admin` itself.
-             * `rmdir()` refuses a non-empty directory and fails silently
-             * here (the `@`) - so with `Widgets` still inside it,
-             * `Panel/Admin` was never actually removed, and a fresh install
-             * kept two directories nothing discovers (`Panel/Resources` is
-             * where `AdminPanelProvider` was just repointed to, above)
-             * sitting next to the real one, confirmed by a release-candidate
-             * mini-SaaS build.
+             * THE `.gitkeep` FIRST, THEN BOTH CHILDREN, THEN THE PARENT.
+             *
+             * `make:panel` creates `Panel/Admin/Resources` AND
+             * `Panel/Admin/Widgets` unconditionally
+             * (`MakePanelCommand::ensureDirectory()`), each seeded with a
+             * `.gitkeep` so an empty directory survives a git clone. `rmdir()`
+             * refuses a NON-EMPTY directory and fails silently here (the `@`)
+             * - so even after this method started removing both children
+             * (not just `Resources`) in the right order, the `.gitkeep` files
+             * still made every one of these three `rmdir()` calls a no-op:
+             * confirmed by re-running this exact install and finding
+             * `Panel/Admin/{Resources,Widgets}/.gitkeep` still on disk. A
+             * fresh install kept three directories nothing discovers
+             * (`Panel/Resources` is where `AdminPanelProvider` was just
+             * repointed to, above) sitting next to the real ones, confirmed
+             * by a release-candidate mini-SaaS build and then by tagged-
+             * artifact verification for this exact release.
              */
+            @unlink(app_path('Panel/Admin/Resources/.gitkeep'));
+            @unlink(app_path('Panel/Admin/Widgets/.gitkeep'));
             @rmdir(app_path('Panel/Admin/Resources'));
             @rmdir(app_path('Panel/Admin/Widgets'));
             @rmdir(app_path('Panel/Admin'));

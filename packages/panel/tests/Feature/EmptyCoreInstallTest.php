@@ -193,33 +193,50 @@ final class EmptyCoreInstallTest extends TestCase
 
     /**
      * `make:panel` creates BOTH `Panel/Admin/Resources` and
-     * `Panel/Admin/Widgets` unconditionally (`MakePanelCommand::handle()`),
-     * but `createDefaultPanel()` used to `rmdir()` only `Resources` before
-     * `Panel/Admin` itself - `rmdir()` silently refuses a non-empty
-     * directory (the leading `@` swallows the warning), so with `Widgets`
-     * still inside it `Panel/Admin` was never actually removed. A fresh
-     * install was left with two decoy directories nothing discovers
+     * `Panel/Admin/Widgets` unconditionally
+     * (`MakePanelCommand::ensureDirectory()`), each seeded with a
+     * `.gitkeep` file so the empty directory survives a git clone.
+     * `createDefaultPanel()` went through two rounds of this same bug:
+     *
+     *   1. It first `rmdir()`'d only `Resources` before `Panel/Admin`
+     *      itself - `rmdir()` silently refuses a non-empty directory (the
+     *      leading `@` swallows the warning), so with `Widgets` still
+     *      inside, `Panel/Admin` was never actually removed.
+     *   2. Adding a second `rmdir()` for `Widgets`, in the right order,
+     *      STILL left all three directories on disk - the `.gitkeep` file
+     *      inside each made every `rmdir()` a no-op regardless of order.
+     *      Caught by actually re-running a tagged release's `panel:install`
+     *      in a fresh app and finding `Panel/Admin/{Resources,Widgets}/
+     *      .gitkeep` still there, not by reading the source a second time.
+     *
+     * A fresh install was left with decoy directories nothing discovers
      * (`Panel/Resources`/`Panel/Widgets`, which `AdminPanelProvider` is
-     * repointed to just above, are the real ones) sitting beside them -
-     * confirmed by a release-candidate mini-SaaS build.
+     * repointed to just above, are the real ones) sitting beside them.
      */
-    public function test_install_removes_both_decoy_admin_directories_before_their_parent(): void
+    public function test_install_removes_both_decoy_admin_directories_and_their_gitkeep_files(): void
     {
         $install = (string) file_get_contents(
             dirname(__DIR__, 2).'/src/Commands/InstallCommand.php'
         );
 
+        $unlinkResources = strpos($install, "@unlink(app_path('Panel/Admin/Resources/.gitkeep'));");
+        $unlinkWidgets = strpos($install, "@unlink(app_path('Panel/Admin/Widgets/.gitkeep'));");
         $resources = strpos($install, "@rmdir(app_path('Panel/Admin/Resources'));");
         $widgets = strpos($install, "@rmdir(app_path('Panel/Admin/Widgets'));");
         $parent = strpos($install, "@rmdir(app_path('Panel/Admin'));");
 
+        $this->assertNotFalse($unlinkResources, 'InstallCommand must remove Resources/.gitkeep before rmdir() can succeed.');
+        $this->assertNotFalse($unlinkWidgets, 'InstallCommand must remove Widgets/.gitkeep before rmdir() can succeed.');
         $this->assertNotFalse($resources, 'InstallCommand must still remove the decoy Resources directory.');
-        $this->assertNotFalse($widgets, 'InstallCommand must also remove the decoy Widgets directory - previously missing.');
+        $this->assertNotFalse($widgets, 'InstallCommand must also remove the decoy Widgets directory.');
         $this->assertNotFalse($parent, 'InstallCommand must still remove the now-empty decoy Panel/Admin directory.');
 
-        // ORDER MATTERS: both children before the parent, or the parent's
-        // rmdir() still finds it non-empty and silently fails again.
-        $this->assertTrue($resources < $parent && $widgets < $parent, 'Both decoy children must be removed before their parent directory.');
+        // ORDER MATTERS: each .gitkeep before its own directory's rmdir(),
+        // and both directories before their parent's - or an rmdir() still
+        // finds something inside and silently fails again.
+        $this->assertTrue($unlinkResources < $resources, '.gitkeep must be removed before Resources itself.');
+        $this->assertTrue($unlinkWidgets < $widgets, '.gitkeep must be removed before Widgets itself.');
+        $this->assertTrue($resources < $parent && $widgets < $parent, 'Both decoy directories must be removed before their parent.');
     }
 
     public function test_local_auth_prefill_defaults_to_the_first_user_flags(): void
