@@ -989,8 +989,8 @@ final class Table
         return $this->model;
     }
 
-    /** @param class-string $model */
     /**
+     * @param  class-string  $model
      * @param  list<string|QueryExpression>|null  $valueSelect  See `resolveSelect()` - overrides which VALUES this query selects, not row identity/ordering/joins.
      */
     public function toListQuery(string $model, ?array $valueSelect = null): ListQuery

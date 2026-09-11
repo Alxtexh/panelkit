@@ -123,14 +123,27 @@ final class SelectFilter extends Filter implements HasOptions
          * form means.
          */
         if ($options !== [] && ! array_is_list($options)) {
-            $options = array_map(
-                static fn (int|string $value, string $label): array => [
+            /*
+             * A FOREACH, NOT `array_map` OVER `array_keys()`/`array_values()`.
+             * Both express the same loop, but the two-array form loses the
+             * per-element pairing between a key and ITS OWN value once they
+             * pass through separate `array_keys()`/`array_values()` calls -
+             * the declared element type stays the full `string|array{value,
+             * label}` union `options()` accepts, with no way to tell the
+             * checker that a map's own values are always the label half.
+             * Reading `$label` here, element by element, keeps that pairing
+             * so `is_string($label)` narrows THIS element only.
+             */
+            $normalised = [];
+
+            foreach ($options as $value => $label) {
+                $normalised[] = [
                     'value' => (string) $value,
-                    'label' => $label,
-                ],
-                array_keys($options),
-                array_values($options),
-            );
+                    'label' => is_string($label) ? $label : $label['label'],
+                ];
+            }
+
+            $options = $normalised;
         }
 
         return $this->resolved = $options;

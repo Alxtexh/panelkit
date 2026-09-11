@@ -13,18 +13,6 @@ parameters:
 			path: app/Ai/PanelAssistant.php
 
 		-
-			message: '#^Method App\\Ai\\Tools\\FindSubscriber\:\:description\(\) never returns Stringable so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: app/Ai/Tools/FindSubscriber.php
-
-		-
-			message: '#^Method App\\Ai\\Tools\\FindSubscriber\:\:handle\(\) never returns Stringable so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: app/Ai/Tools/FindSubscriber.php
-
-		-
 			message: '#^Method App\\Ai\\Tools\\SearchKnowledge\:\:description\(\) never returns Stringable so it can be removed from the return type\.$#'
 			identifier: return.unusedType
 			count: 1
@@ -37,118 +25,10 @@ parameters:
 			path: app/Ai/Tools/SearchKnowledge.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\Client\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Client\>\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Ai/Tools/SuspendSubscriber.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Client\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Client\>\:\:\$phone\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Ai/Tools/SuspendSubscriber.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Client\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Client\>\:\:\$status\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Ai/Tools/SuspendSubscriber.php
-
-		-
-			message: '#^Call to an undefined method App\\Models\\Client\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Client\>\:\:save\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Ai/Tools/SuspendSubscriber.php
-
-		-
-			message: '#^Method App\\Ai\\Tools\\SuspendSubscriber\:\:description\(\) never returns Stringable so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: app/Ai/Tools/SuspendSubscriber.php
-
-		-
-			message: '#^Method App\\Ai\\Tools\\SuspendSubscriber\:\:handle\(\) never returns Stringable so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: app/Ai/Tools/SuspendSubscriber.php
-
-		-
-			message: '#^Method App\\Ai\\Tools\\SuspendSubscriber\:\:shouldRequestApproval\(\) never returns null so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: app/Ai/Tools/SuspendSubscriber.php
-
-		-
-			message: '#^Parameter \#3 \$record of method PanelKit\\Panel\\Ai\\PanelTool\:\:authorise\(\) expects Illuminate\\Database\\Eloquent\\Model\|null, App\\Models\\Client\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Client\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Ai/Tools/SuspendSubscriber.php
-
-		-
 			message: '#^Access to an undefined property object\:\:\$id\.$#'
 			identifier: property.notFound
 			count: 2
 			path: app/Console/Commands/JourneyCommand.php
-
-		-
-			message: '#^Method App\\Console\\Commands\\SeedDemoCommand\:\:seedClients\(\) has parameter \$planIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Console/Commands/SeedDemoCommand.php
-
-		-
-			message: '#^Method App\\Console\\Commands\\SeedDemoCommand\:\:seedClients\(\) has parameter \$routerIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Console/Commands/SeedDemoCommand.php
-
-		-
-			message: '#^Method App\\Console\\Commands\\SeedDemoCommand\:\:seedClients\(\) has parameter \$tenantIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Console/Commands/SeedDemoCommand.php
-
-		-
-			message: '#^Method App\\Console\\Commands\\SeedDemoCommand\:\:seedInbox\(\) has parameter \$tenantIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Console/Commands/SeedDemoCommand.php
-
-		-
-			message: '#^Method App\\Console\\Commands\\SeedDemoCommand\:\:seedPlans\(\) has parameter \$tenantIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Console/Commands/SeedDemoCommand.php
-
-		-
-			message: '#^Method App\\Console\\Commands\\SeedDemoCommand\:\:seedPlans\(\) should return array\<int, list\<int\>\> but returns array\<array\<mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Console/Commands/SeedDemoCommand.php
-
-		-
-			message: '#^Method App\\Console\\Commands\\SeedDemoCommand\:\:seedRouters\(\) has parameter \$tenantIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Console/Commands/SeedDemoCommand.php
-
-		-
-			message: '#^Method App\\Console\\Commands\\SeedDemoCommand\:\:seedRouters\(\) should return array\<int, list\<int\>\> but returns array\<array\<mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Console/Commands/SeedDemoCommand.php
-
-		-
-			message: '#^Method App\\Console\\Commands\\SeedDemoCommand\:\:seedSessions\(\) has parameter \$tenantIds with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Console/Commands/SeedDemoCommand.php
-
-		-
-			message: '#^Method App\\Console\\Commands\\SeedDemoCommand\:\:seedTenants\(\) should return list\<int\> but returns array\<mixed\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Console/Commands/SeedDemoCommand.php
 
 		-
 			message: '#^Access to an undefined property object\:\:\$name\.$#'
@@ -211,46 +91,40 @@ parameters:
 			path: app/Console/Commands/SeedReferenceCommand.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
+			message: '#^Method App\\Demo\\Console\\SeedDemoCommand\:\:seedRouters\(\) has parameter \$tenantIds with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
-			path: app/Documents/ClientInvoiceKind.php
+			path: app/Demo/Console/SeedDemoCommand.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$price_cents\.$#'
-			identifier: property.notFound
+			message: '#^Method App\\Demo\\Console\\SeedDemoCommand\:\:seedRouters\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
-			path: app/Documents/ClientInvoiceKind.php
+			path: app/Demo/Console/SeedDemoCommand.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$speed_mbps\.$#'
-			identifier: property.notFound
+			message: '#^Offset ''lat'' on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
-			path: app/Documents/ClientInvoiceKind.php
+			path: app/Demo/Panel/DemoDashboard.php
 
 		-
-			message: '#^Method App\\Documents\\ClientInvoiceKind\:\:records\(\) should return list\<array\{id\: int\|string, label\: string\}\> but returns array\<int, array\{id\: int, label\: string\}\>\.$#'
-			identifier: return.type
+			message: '#^Offset ''lng'' on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
-			path: app/Documents/ClientInvoiceKind.php
+			path: app/Demo/Panel/DemoDashboard.php
+
+		-
+			message: '#^Parameter \#1 \$markers of method Alxtexh\\Panel\\Widgets\\MapWidget\:\:markers\(\) expects Closure\(\)\: list\<array\{lat\: float, lng\: float, label\?\: string, popup\?\: string\}\>, Closure\(\)\: array\<int, array\{lat\: 0\.0, lng\: 0\.0, label\: string, popup\: non\-falsy\-string\}\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Demo/Panel/DemoDashboard.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Documents/OrganisationBranding.php
-
-		-
-			message: '#^Parameter \#1 \$array \(array\{200\: array\{description\: ''OK'', content\?\: array\{''application/json''\: array\{schema\: array\<string, mixed\>\}\}\}, 403\: array\{description\: ''Authenticated, but…''\}, 404\: array\{description\: ''No such record \-…''\}, 422\: array\{description\: ''Validation failed\.'', content\?\: array\{''application/json''\: array\{schema\: array\<string, mixed\>\}\}\}\}\) to function array_filter does not contain falsy values, the array will always stay the same\.$#'
-			identifier: arrayFilter.same
-			count: 1
-			path: app/Http/Controllers/ApiReferenceController.php
-
-		-
-			message: '#^Parameter \$enum of method App\\Http\\Controllers\\ApiReferenceController\:\:param\(\) expects list\<string\>, array\<string\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/ApiReferenceController.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\Customer\|App\\Models\\SuperadminUser\|App\\Models\\User\:\:\$appearance\.$#'
@@ -353,18 +227,6 @@ parameters:
 			identifier: method.unresolvableReturnType
 			count: 1
 			path: app/Http/Controllers/AuditController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Auth/MagicLinkController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Auth/MagicLinkController.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$contact_email\.$#'
@@ -485,30 +347,6 @@ parameters:
 			identifier: property.notFound
 			count: 1
 			path: app/Http/Controllers/ImpersonationController.php
-
-		-
-			message: '#^Method App\\Http\\Controllers\\ImportController\:\:resourceFor\(\) should return class\-string\<PanelKit\\Panel\\Resources\\Resource\> but returns string\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Http/Controllers/ImportController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/InvoiceController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$price_cents\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/InvoiceController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$speed_mbps\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/InvoiceController.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\MailMessage\:\:\$thread_count\.$#'
@@ -637,174 +475,6 @@ parameters:
 			path: app/Http/Controllers/SavedViewController.php
 
 		-
-			message: '#^Method App\\Http\\Controllers\\Settings\\DeviceController\:\:forUser\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{id\: mixed, current\: bool, ip\: mixed, browser\: string, platform\: string, lastActiveAt\: string\|null\}\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Http/Controllers/Settings/DeviceController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Customer\|App\\Models\\SuperadminUser\|App\\Models\\User\:\:\$email_verified_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Settings/ProfileController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Customer\|App\\Models\\SuperadminUser\|App\\Models\\User\:\:\$two_factor_confirmed_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Settings/ProfileController.php
-
-		-
-			message: '#^Access to an undefined property PanelKit\\Panel\\Models\\ConnectedAccount\:\:\$email\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Settings/SecurityController.php
-
-		-
-			message: '#^Access to an undefined property PanelKit\\Panel\\Models\\ConnectedAccount\:\:\$last_used_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Settings/SecurityController.php
-
-		-
-			message: '#^Access to an undefined property PanelKit\\Panel\\Models\\ConnectedAccount\:\:\$nickname\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Settings/SecurityController.php
-
-		-
-			message: '#^Access to an undefined property PanelKit\\Panel\\Models\\ConnectedAccount\:\:\$provider\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Settings/SecurityController.php
-
-		-
-			message: '#^Call to an undefined method App\\Models\\Customer\|App\\Models\\SuperadminUser\|App\\Models\\User\:\:hasEnabledTwoFactorAuthentication\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/Settings/SecurityController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,PanelKit\\Panel\\Models\\ConnectedAccount\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Settings/SecurityController.php
-
-		-
-			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,PanelKit\\Panel\\Models\\ConnectedAccount\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: method.unresolvableReturnType
-			count: 1
-			path: app/Http/Controllers/Settings/SecurityController.php
-
-		-
-			message: '#^Return type of call to method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:all\(\) contains unresolvable type\.$#'
-			identifier: method.unresolvableReturnType
-			count: 1
-			path: app/Http/Controllers/Settings/SecurityController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Customer\|App\\Models\\SuperadminUser\|App\\Models\\User\:\:\$appearance\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Contracts\\Auth\\Authenticatable\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Anonymous function never returns array so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Anonymous function should return null but returns string\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Call to an undefined method App\\Models\\Customer\|App\\Models\\SuperadminUser\|App\\Models\\User\:\:unreadNotifications\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<\(int\|string\),Illuminate\\Support\\Collection\<int, class\-string\>\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<string,array\<string, mixed\>\>\:\:sortBy\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<string,class\-string\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Parameter \#1 \$items of method Illuminate\\Support\\Collection\<string,array\<string, mixed\>\>\:\:merge\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Parameter \#1 \$items of method Illuminate\\Support\\Collection\<string,array\<string, mixed\>\>\:\:merge\(\) expects Illuminate\\Contracts\\Support\\Arrayable\<string, array\{key\: mixed, title\: mixed, href\: string, icon\: mixed, group\: mixed, sort\: mixed, members\: array\<int, mixed\>\}\>\|iterable\<string, array\{key\: mixed, title\: mixed, href\: string, icon\: mixed, group\: mixed, sort\: mixed, members\: array\<int, mixed\>\}\>, Illuminate\\Support\\Collection\<int, array\{key\: mixed, title\: mixed, href\: string, icon\: mixed, group\: mixed, sort\: mixed, members\: array\<int, mixed\>\}\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Return type of call to method Illuminate\\Support\\Collection\<\(int\|string\),Illuminate\\Support\\Collection\<int, class\-string\>\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: method.unresolvableReturnType
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Return type of call to method Illuminate\\Support\\Collection\<\(int\|string\),array\<string, mixed\>\>\:\:values\(\) contains unresolvable type\.$#'
-			identifier: method.unresolvableReturnType
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Return type of call to method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:all\(\) contains unresolvable type\.$#'
-			identifier: method.unresolvableReturnType
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Return type of call to method Illuminate\\Support\\Collection\<string,array\<string, mixed\>\>\:\:values\(\) contains unresolvable type\.$#'
-			identifier: method.unresolvableReturnType
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Return type of call to method Illuminate\\Support\\Collection\<string,class\-string\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: method.unresolvableReturnType
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>theme_colors" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -839,18 +509,6 @@ parameters:
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/ChatMessage.php
-
-		-
-			message: '#^Method App\\Models\\Client\:\:plan\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Client.php
-
-		-
-			message: '#^Method App\\Models\\Client\:\:router\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Client.php
 
 		-
 			message: '#^Method App\\Models\\Feedback\:\:tenant\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
@@ -919,12 +577,6 @@ parameters:
 			path: app/Models/User.php
 
 		-
-			message: '#^Class App\\Models\\User uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/User.php
-
-		-
 			message: '#^Method App\\Models\\User\:\:memberships\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel, TPivotModel, TAccessor \(2\-4 required\)$#'
 			identifier: missingType.generics
 			count: 1
@@ -937,190 +589,10 @@ parameters:
 			path: app/Models/User.php
 
 		-
-			message: '#^The @use tag of class App\\Models\\User describes Illuminate\\Database\\Eloquent\\Factories\\HasFactory but the class uses PanelKit\\Panel\\Audit\\Auditable\.$#'
-			identifier: generics.wrongParent
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Offset ''panel'' on array\{title\: string, href\: string, icon\: string, group\: string\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Panel/Pages.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Panel/Pages.php
-
-		-
-			message: '#^Method App\\Panel\\Pages\\DashboardPage\:\:clientsPerRouter\(\) should return list\<array\{label\: string, value\: int\}\> but returns array\<int, array\{label\: string, value\: int\}\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Method App\\Panel\\Pages\\DashboardPage\:\:filterDimensions\(\) should return list\<array\{key\: string, label\: string, singular\?\: string\|null, placeholder\?\: string\|null, options\: list\<array\{value\: int, label\: string\}\>\}\> but returns array\{array\{key\: ''routers'', label\: ''Routers'', singular\: ''router'', placeholder\: ''All routers'', options\: array\<int, array\{value\: int, label\: string\}\>\}\}\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Method App\\Panel\\Pages\\DashboardPage\:\:groupedCount\(\) should return list\<array\{label\: string, value\: int\}\> but returns array\<int, array\{label\: string, value\: int\}\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Method App\\Panel\\Pages\\DashboardPage\:\:multiAxisSeries\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Method App\\Panel\\Pages\\DashboardPage\:\:routerHealth\(\) should return list\<array\{label\: string, value\: float\}\> but returns array\<int, array\{label\: string, value\: float\}\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Method App\\Panel\\Pages\\DashboardPage\:\:statusByRouter\(\) should return array\{series\: list\<array\{name\: string, points\: list\<array\{label\: string, value\: int\}\>\}\>\} but returns array\{series\: list\<array\{name\: string, points\: array\<int, array\{label\: string, value\: int\}\>\}\>\}\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Method App\\Panel\\Pages\\DashboardPage\:\:strip\(\) never returns null so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Method App\\Panel\\Pages\\DashboardPage\:\:stripAbility\(\) never returns null so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Parameter \#1 \$data of method PanelKit\\Panel\\Widgets\\ChartWidget\:\:data\(\) expects Closure\(PanelKit\\Panel\\Widgets\\Period\)\: array\<''points''\|int\<0, max\>, array\<''label''\|''value''\|int\<0, max\>, array\{label\: string, value\: float\|int\}\|float\|int\|string\>\>, Closure\(\)\: array\{series\: list\<array\{name\: string, points\: list\<array\{label\: string, value\: int\}\>\}\>\} given\.$#'
-			identifier: argument.type
-			count: 4
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Parameter \#1 \$data of method PanelKit\\Panel\\Widgets\\ChartWidget\:\:data\(\) expects Closure\(PanelKit\\Panel\\Widgets\\Period\)\: array\<''points''\|int\<0, max\>, array\<''label''\|''value''\|int\<0, max\>, array\{label\: string, value\: float\|int\}\|float\|int\|string\>\>, Closure\(\)\: array\{xy\: array\<int, array\{x\: int\<0, max\>, y\: float\|int\<0, max\>, label\: string\}\>\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Parameter \#1 \$data of method PanelKit\\Panel\\Widgets\\ChartWidget\:\:data\(\) expects Closure\(PanelKit\\Panel\\Widgets\\Period\)\: array\<''points''\|int\<0, max\>, array\<''label''\|''value''\|int\<0, max\>, array\{label\: string, value\: float\|int\}\|float\|int\|string\>\>, Closure\(PanelKit\\Panel\\Widgets\\Period, DateTimeImmutable\|null\)\: array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Parameter \#1 \$data of method PanelKit\\Panel\\Widgets\\ChartWidget\:\:data\(\) expects Closure\(PanelKit\\Panel\\Widgets\\Period\)\: array\<''points''\|int\<0, max\>, array\<''label''\|''value''\|int\<0, max\>, array\{label\: string, value\: float\|int\}\|float\|int\|string\>\>, Closure\(PanelKit\\Panel\\Widgets\\Period, DateTimeImmutable\|null\)\: array\{bars\: list\<array\<string, mixed\>\>, lines\: list\<array\<string, mixed\>\>\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Parameter \#1 \$data of method PanelKit\\Panel\\Widgets\\ChartWidget\:\:data\(\) expects Closure\(PanelKit\\Panel\\Widgets\\Period\)\: array\<''points''\|int\<0, max\>, array\<''label''\|''value''\|int\<0, max\>, array\{label\: string, value\: float\|int\}\|float\|int\|string\>\>, Closure\(PanelKit\\Panel\\Widgets\\Period, DateTimeImmutable\|null\)\: array\{points\: list\<array\{label\: string, value\: float\|int, at\: string\}\>, total\: float\|int, period\: string, bucket\: string\} given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Parameter \#1 \$data of method PanelKit\\Panel\\Widgets\\ChartWidget\:\:data\(\) expects Closure\(PanelKit\\Panel\\Widgets\\Period\)\: array\<''points''\|int\<0, max\>, array\<''label''\|''value''\|int\<0, max\>, array\{label\: string, value\: float\|int\}\|float\|int\|string\>\>, Closure\(PanelKit\\Panel\\Widgets\\Period, DateTimeImmutable\|null\)\: array\{points\: list\<array\{label\: string, value\: float\|int\}\>, total\: float\|int, period\: string, bucket\: string\} given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Parameter \#1 \$data of method PanelKit\\Panel\\Widgets\\ChartWidget\:\:data\(\) expects Closure\(PanelKit\\Panel\\Widgets\\Period\)\: array\<''points''\|int\<0, max\>, array\<''label''\|''value''\|int\<0, max\>, array\{label\: string, value\: float\|int\}\|float\|int\|string\>\>, Closure\(PanelKit\\Panel\\Widgets\\Period, DateTimeImmutable\|null\)\: list\<array\{label\: string, value\: int\}\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Parameter \#1 \$expression of method Illuminate\\Database\\Query\\Builder\:\:selectRaw\(\) expects literal\-string, non\-falsy\-string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Parameter \#1 \$sparkline of method PanelKit\\Panel\\Widgets\\StatWidget\:\:sparkline\(\) expects Closure\(\)\: array\<''points''\|int\<0, max\>, array\<''label''\|''value''\|int\<0, max\>, array\{label\: string, value\: float\|int\}\|float\|int\|string\>\>, Closure\(\)\: array\{points\: list\<array\{label\: string, value\: float\|int\}\>, total\: float\|int, period\: string, bucket\: string\} given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Parameter \#1 \$trend of method PanelKit\\Panel\\Widgets\\ChartWidget\:\:trend\(\) expects Closure\(PanelKit\\Panel\\Widgets\\Period\)\: PanelKit\\Panel\\Widgets\\Trend, Closure\(PanelKit\\Panel\\Widgets\\Period, DateTimeImmutable\|null\)\: PanelKit\\Panel\\Widgets\\Trend given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Panel/Pages/DashboardPage.php
-
-		-
-			message: '#^Parameter \#1 \$options of method PanelKit\\Panel\\Tables\\Filters\\SelectFilter\:\:options\(\) expects \(Closure\(\)\: list\<string\>\)\|list\<string\>, Closure\(\)\: array given\.$#'
-			identifier: argument.type
-			count: 3
-			path: app/Panel/Resources/ActivityResource.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$access_code\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Panel/Resources/ClientResource.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$expiry_date\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Panel/Resources/ClientResource.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Panel/Resources/ClientResource.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Panel/Resources/ClientResource.php
-
-		-
-			message: '#^Parameter \#1 \$handle of method PanelKit\\Panel\\Actions\\RecordAction\:\:handle\(\) expects Closure\(Illuminate\\Database\\Eloquent\\Model, array\<string, mixed\>\)\: mixed, Closure\(App\\Models\\Client, array\)\: void given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Panel/Resources/ClientResource.php
-
-		-
-			message: '#^Class PanelKit\\Panel\\Resources\\Resource referenced with incorrect case\: PanelKit\\Panel\\Resources\\resource\.$#'
-			identifier: class.nameCase
-			count: 1
-			path: app/Panel/Resources/ClientSessionResource.php
-
-		-
-			message: '#^Parameter \#1 \$options of method PanelKit\\Panel\\Tables\\Filters\\SelectFilter\:\:options\(\) expects \(Closure\(\)\: list\<string\>\)\|list\<string\>, Closure\(\)\: array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Panel/Resources/RouterResource.php
-
-		-
-			message: '#^Parameter \#1 \$columns of method PanelKit\\Panel\\Tables\\Table\:\:alsoSelect\(\) expects list\<string\>, array\{0\: ''users\.id'', 1\: ''users\.last_login_at'', 2\: Illuminate\\Contracts\\Database\\Query\\Expression, 3\?\: Illuminate\\Contracts\\Database\\Query\\Expression\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Panel/Resources/UserResource.php
-
-		-
-			message: '#^Parameter \#1 \$handle of method PanelKit\\Panel\\Actions\\RecordAction\:\:handle\(\) expects Closure\(Illuminate\\Database\\Eloquent\\Model, array\<string, mixed\>\)\: mixed, Closure\(App\\Models\\User\)\: void given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Panel/Resources/UserResource.php
 
 		-
 			message: '#^Parameter \#1 \$value of static method Illuminate\\Database\\Connection\:\:raw\(\) expects float\|int\|literal\-string, non\-falsy\-string given\.$#'
@@ -1229,18 +701,6 @@ parameters:
 			identifier: larastan.noEnvCallsOutsideOfConfig
 			count: 2
 			path: bootstrap/app.php
-
-		-
-			message: '#^Anonymous function should return PanelKit\\Panel\\Models\\Role but returns Spatie\\Permission\\Contracts\\Role\.$#'
-			identifier: return.type
-			count: 1
-			path: database/factories/UserFactory.php
-
-		-
-			message: '#^Parameter \#2 \$role of method Database\\Factories\\UserFactory\:\:attach\(\) expects PanelKit\\Panel\\Models\\Role, Spatie\\Permission\\Contracts\\Role given\.$#'
-			identifier: argument.type
-			count: 1
-			path: database/factories/UserFactory.php
 
 		-
 			message: '#^Call to an undefined method object\:\:getKeyName\(\)\.$#'

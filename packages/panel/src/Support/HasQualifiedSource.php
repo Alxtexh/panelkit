@@ -20,12 +20,20 @@ use Illuminate\Support\Facades\DB;
  * implementations of "how do I alias this back to my own key." Requires the
  * using class to declare `public readonly string $key`, exactly as `Column`
  * and `Entry` both already do.
+ *
+ * @property literal-string $key `Column`/`Entry` type this `string`, not
+ *  `literal-string` - correctly, since it is a widely-used constructor
+ *  parameter this one trait has no business narrowing for every caller.
+ *  This annotation only tells PHPStan what `selectExpression()` below
+ *  already assumes and every real `::make(...)` call site already satisfies
+ *  (a field/column key is developer-authored, never request input) - see
+ *  `fromRaw()`'s own docblock for the same assumption about `$rawExpression`.
  */
 trait HasQualifiedSource
 {
     protected ?string $databaseColumn = null;
 
-    /** A SQL expression this value is computed by - see `fromRaw()`. */
+    /** @var literal-string|null A SQL expression this value is computed by - see `fromRaw()`. */
     protected ?string $rawExpression = null;
 
     /** Qualified database column when it differs from the key. */
@@ -50,6 +58,8 @@ trait HasQualifiedSource
      * nothing bound, so callers pass a literal written in the resource
      * class. An expression built from a request parameter is an injection,
      * and there is no shape of this API that makes that safe.
+     *
+     * @param literal-string $expression
      */
     public function fromRaw(string $expression): static
     {
