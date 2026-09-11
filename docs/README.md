@@ -1,5 +1,18 @@
 # Alxtexhpanel documentation
 
+> **This directory is superseded by the documentation site.** The canonical,
+> maintained documentation is now `docs-site/` (built with VitePress, deployed
+> to https://alxtexh.github.io/panelkit/) and the [AI Blueprint](../AI_BLUEPRINT.md).
+> The pages below are kept only because `docs/public-api.json`,
+> `scripts/check-public-api.php`, and a few generator commands still read or
+> link into this directory — do not add new guide content here. See
+> `docs-site/index.md` (the site's own homepage) for the current information
+> architecture. `docs/coverage/` holds a Filament-documentation coverage
+> comparison — a checklist used to catch forgotten topics, not a
+> compatibility claim; `docs/coverage/filament-comparison.md` and
+> `filament-to-panelkit.md` are current and worth keeping updated as PanelKit
+> and Filament both evolve.
+
 A schema-driven admin panel for Laravel. You describe a screen in one PHP class;
 the panel sends that description to the browser once, and every interaction
 afterwards moves data only.

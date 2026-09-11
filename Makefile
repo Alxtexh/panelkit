@@ -235,3 +235,40 @@ publish-preview: ## Show exactly what a Composer dist install would fetch (maint
 	@echo
 	@echo "== @alxtexh-enterprise/panel (client tarball shape, maintainer verify only; not npm registry) =="
 	@cd packages/ui && npm pack --dry-run 2>&1 | grep -E "package size|unpacked size|total files" | sed 's/npm notice/ /'
+
+# --------------------------------------------------------------- documentation
+#
+# docs-site is a VitePress site under its own pnpm workspace entry (see
+# pnpm-workspace.yaml). The API reference under docs-site/api/classes/*.md is
+# GENERATED from the actual installed package via PHP Reflection - it is not
+# hand-maintained, and re-running it after a source change is how the site
+# stays honest instead of drifting the way a hand-written reference would.
+
+.PHONY: docs-api
+docs-api: ## Regenerate the API reference (docs/api-manifest/*, docs-site/api/classes/*.md) from source
+	@cd apps/playground && [ -d vendor ] || composer install --no-interaction --no-progress
+	@php scripts/generate-api-manifest.php
+
+.PHONY: docs-llms
+docs-llms: docs-api ## Regenerate llms.txt / llms-full.txt from the doc site's own file tree
+	@php scripts/generate-llms-txt.php
+
+.PHONY: docs
+docs: docs-llms ## Full docs build: install deps, generate the API reference + llms.txt, build the static site
+	@pnpm $(PNPM_LOCAL_FLAGS) --filter panelkit-docs run build
+
+.PHONY: docs-build
+docs-build: docs ## Alias for `docs` (explicit name, matches CI)
+
+.PHONY: docs-dev
+docs-dev: docs-api ## Serve the docs site locally with hot reload
+	@pnpm $(PNPM_LOCAL_FLAGS) --filter panelkit-docs run dev
+
+.PHONY: docs-preview
+docs-preview: docs ## Build, then preview the production docs build locally
+	@pnpm $(PNPM_LOCAL_FLAGS) --filter panelkit-docs run preview
+
+.PHONY: check-docs
+check-docs: docs-api ## Validate the docs: dead links (via build), stale API references, forbidden Filament terms in the AI Blueprint
+	@pnpm $(PNPM_LOCAL_FLAGS) --filter panelkit-docs run build
+	@php scripts/check-docs.php

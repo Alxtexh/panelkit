@@ -39,6 +39,7 @@ final class Blueprint
     {
         return implode("\n\n", array_filter([
             self::heading(),
+            self::officialDocs(),
             self::dayZero(),
             self::rules(),
             self::shape(),
@@ -115,9 +116,9 @@ final class Blueprint
      * planning a screen would otherwise reinvent.
      */
     private const CLIENT_ONLY = <<<'MD'
-        **Client-side components** (`@alxtexh-enterprise/panel`, no PHP equivalent): `StatStrip`
-        `MiniStatCard` `SegmentedBar` `HeatmapChart` `ComboChart` `PolarAreaChart`
-        `RadarChart` `SetupChecklist` `CatalogCard` `PlanCard` `PlanGrid` `PlanEditor` `CatalogGrid` `CatalogTill` `CatalogBrowser` `CatalogRegister` `LineItems` `CartPanel`
+        **Client-side components with no PHP constructor at all** (`@alxtexh-enterprise/panel`):
+        `StatStrip` `MiniStatCard` `CatalogCard` `PlanCard` `PlanGrid` `PlanEditor` `CatalogGrid`
+        `CatalogTill` `CatalogBrowser` `CatalogRegister` `LineItems` `CartPanel`
         `PkQtyStepper` `PkStatusBadge` `PkSignaturePad` `PaymentGateways`
         _How to reach them: import them into YOUR OWN Vue page. A `CatalogBrowserPage` or
         `PlanSetupPage` is optional routing, not a requirement to draw the widget.
@@ -125,6 +126,13 @@ final class Blueprint
         a `StatStrip` - if you want one card split into four windows of the same
         metric, that screen is hand-written today. `ChartWidget::type('catalog')`
         and `type('items')` do mount `CatalogGrid` / `LineItems` on a dashboard._
+
+        **Chart renderers already reachable from PHP - do not hand-roll a Vue chart for these:**
+        `SegmentedBar` (`ChartWidget::type('segments')`), `HeatmapChart` (`type('heatmap')`),
+        `ComboChart` (`type('combo')`), `PolarAreaChart` (`type('polarArea')`), `RadarChart`
+        (`type('radar')`). These were previously (and incorrectly) listed above as having no PHP
+        equivalent; `ChartWidget::TYPES` has dispatched to all five since before this file was
+        first written, and `ChartBody.vue` wires each one directly to its named type.
         MD;
 
     private const PAGE_HOW = 'extend `Page` (or `DashboardPage` / `PlanSetupPage` / `TillPage` / '
@@ -286,6 +294,38 @@ final class Blueprint
 
         Read this before adding a screen. It describes the conventions that are not
         visible in a single file, and the mistakes that return HTTP 200.
+        MD;
+    }
+
+    /**
+     * Routes to the deeper, human-maintained references this file cannot
+     * replace - everything below is deliberately terse.
+     *
+     * WHY THIS EXISTS SEPARATELY FROM dayZero(). The rest of this file is
+     * generated, versionless prose - it describes conventions, not the
+     * verified, per-class API surface. An agent that needs a method's exact
+     * signature, or the reasoning behind a rule rather than the rule itself,
+     * belongs in the documentation site's generated API reference or the
+     * longer AI Blueprint modules, not in a longer version of this file.
+     */
+    private static function officialDocs(): string
+    {
+        return <<<'MD'
+        ## Official documentation
+
+        This file is a fast, generated summary. For the full picture:
+
+        - **Human guides and the generated API reference**: https://alxtexh.github.io/panelkit/
+        - **AI Blueprint** (a router to focused, per-topic modules - forms, money,
+          relation managers, tenancy, and more): `AI_BLUEPRINT.md` at the repository
+          root of the `alxtexh-enterprise/panel` monorepo, or
+          https://alxtexh.github.io/panelkit/ai/ online. Read the Money and Relation
+          Managers modules before touching either - they are the two most
+          expensive-to-get-wrong parts of this framework, and both fail silently.
+
+        This application's own resources, panels and commands are listed further
+        below - that inventory is generated from what is actually registered here
+        and cannot go stale the way the linked documentation theoretically could.
         MD;
     }
 

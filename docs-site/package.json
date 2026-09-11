@@ -1,0 +1,13 @@
+{
+    "name": "panelkit-docs",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vitepress dev . --port 5180",
+        "build": "vitepress build .",
+        "preview": "vitepress preview . --port 5181"
+    },
+    "devDependencies": {
+        "vitepress": "^1.6.4"
+    }
+}

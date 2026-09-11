@@ -1,9 +1,11 @@
-# The only two real npm install roots in the repository - see the Makefile
+# The only real npm install roots in the repository - see the Makefile
 # comment above `install` for how packages/panel/resources/client (a build
-# copy, not an install target) fits in.
+# copy, not an install target) fits in. docs-site is the documentation
+# portal (VitePress); it has no runtime relationship to the panel itself.
 packages:
   - apps/playground
   - packages/ui
+  - docs-site
 allowBuilds:
   esbuild: true
   unrs-resolver: true
