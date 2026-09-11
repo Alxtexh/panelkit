@@ -13,6 +13,12 @@ declare(strict_types=1);
  * every guide/API/AI page's actual content for a client that wants the
  * whole corpus in one fetch.
  *
+ * NOT CURRENTLY RUN OR COMMITTED. The docs site has no live deployment yet,
+ * so a generated llms.txt full of links to a domain nothing serves would be
+ * actively misleading rather than merely unfinished - re-run this (and commit
+ * the output under docs-site/public/) only once $baseUrl below actually
+ * resolves to something.
+ *
  * Usage: php scripts/generate-llms-txt.php
  */
 $root = dirname(__DIR__);

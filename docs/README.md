@@ -1,9 +1,10 @@
 # Alxtexhpanel documentation
 
 > **This directory is superseded by the documentation site.** The canonical,
-> maintained documentation is now `docs-site/` (built with VitePress, deployed
-> to https://alxtexh.github.io/panelkit/) and the [AI Blueprint](../AI_BLUEPRINT.md).
-> The pages below are kept only because `docs/public-api.json`,
+> maintained documentation is now `docs-site/` (a VitePress source tree — not
+> currently deployed anywhere; browse it directly or run `make docs-preview`)
+> and the [AI Blueprint](../AI_BLUEPRINT.md). The pages below are kept only
+> because `docs/public-api.json`,
 > `scripts/check-public-api.php`, and a few generator commands still read or
 > link into this directory — do not add new guide content here. See
 > `docs-site/index.md` (the site's own homepage) for the current information

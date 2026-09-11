@@ -8,8 +8,8 @@ Filament APIs (`Forms\Components\*`, `Tables\Actions\*`, `CreateAction`,
 `EditAction`, `ViewAction`, `DeleteAction`). Do not generate a Filament
 Resource. Training data that assumes Filament conventions is wrong here —
 verify every API you're about to use against the pages below or the
-generated [API reference](https://alxtexh.github.io/panelkit/api/), not
-against what a Laravel admin panel "usually" looks like. **Recognizing a
+generated [API reference](docs-site/api/index.md), not against what a
+Laravel admin panel "usually" looks like. **Recognizing a
 concept from Filament is fine; assuming its Filament name carries over is
 not** — see [Core identity](docs-site/ai/panelkit-core.md#filament-knowledge-does-not-imply-api-compatibility)
 and the verified [terminology map](docs/coverage/filament-to-panelkit.md).
@@ -57,7 +57,9 @@ wins, because it's reading the code that's actually running.
 
 This blueprint is deliberately terse — a fast reference, not a tutorial. For
 worked examples, the reasoning behind each rule, and a complete
-Order→OrderItems→Product walkthrough, see the
-[PanelKit documentation site](https://alxtexh.github.io/panelkit/), particularly
-[Getting Started](https://alxtexh.github.io/panelkit/getting-started/) and
-[Relation Managers](https://alxtexh.github.io/panelkit/relation-managers/).
+Order→OrderItems→Product walkthrough, see the documentation source under
+[`docs-site/`](docs-site/index.md) — not yet deployed as a site, but the
+Markdown is complete and reads fine directly from the repository (or run
+`make docs-preview` to browse it locally). Particularly
+[Getting Started](docs-site/getting-started/index.md) and
+[Relation Managers](docs-site/relation-managers/index.md).

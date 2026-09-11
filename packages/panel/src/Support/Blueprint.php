@@ -313,15 +313,19 @@ final class Blueprint
         return <<<'MD'
         ## Official documentation
 
-        This file is a fast, generated summary. For the full picture:
+        This file is a fast, generated summary. Neither of these ships inside
+        this Composer package or renders as a website yet - both live as
+        Markdown source in the `alxtexh-enterprise/panelkit` development
+        repository, readable directly on GitHub:
 
-        - **Human guides and the generated API reference**: https://alxtexh.github.io/panelkit/
+        - **Human guides and the generated API reference**:
+          https://github.com/Alxtexh/panelkit/tree/main/docs-site
         - **AI Blueprint** (a router to focused, per-topic modules - forms, money,
-          relation managers, tenancy, and more): `AI_BLUEPRINT.md` at the repository
-          root of the `alxtexh-enterprise/panel` monorepo, or
-          https://alxtexh.github.io/panelkit/ai/ online. Read the Money and Relation
-          Managers modules before touching either - they are the two most
-          expensive-to-get-wrong parts of this framework, and both fail silently.
+          relation managers, tenancy, and more):
+          https://github.com/Alxtexh/panelkit/blob/main/AI_BLUEPRINT.md
+          Read the Money and Relation Managers modules before touching either -
+          they are the two most expensive-to-get-wrong parts of this framework,
+          and both fail silently.
 
         This application's own resources, panels and commands are listed further
         below - that inventory is generated from what is actually registered here
