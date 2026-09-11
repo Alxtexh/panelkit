@@ -42,10 +42,17 @@ final class KeyValueColumn extends Column
         return $this;
     }
 
-    public function toSchema(): array
+    /**
+     * OVERRIDES `toArray()`, NOT `toSchema()` - see MoneyColumn::toArray()'s
+     * docblock: `Table.php`'s column-serialisation loop always calls
+     * `->toArray()` directly, so a `toSchema()` override here never ran and
+     * every key-value column rendered the generic "Key"/"Value" labels
+     * regardless of `->labels()`.
+     */
+    public function toArray(): array
     {
         return [
-            ...parent::toSchema(),
+            ...parent::toArray(),
             'keyLabel' => $this->keyLabel,
             'valueLabel' => $this->valueLabel,
         ];

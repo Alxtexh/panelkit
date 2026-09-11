@@ -27,6 +27,33 @@ describe('InfoNode - dedicated view entries', () => {
         expect(html).toContain('Cover')
     })
 
+    /**
+     * `BadgeEntry` has no `->labels()`, so this always renders the raw
+     * stored value - and `capitalize` alone turned `in_progress` into
+     * "In_progress" (it does not know `_` is a word boundary). Confirmed
+     * live on a Ticket's Status entry by Phase 6's audit.
+     */
+    it('humanizes a snake_case badge value', () => {
+        const node: InfoNodeType = {
+            component: 'entry',
+            key: 'status',
+            label: 'Status',
+            type: 'badge',
+        }
+
+        const wrapper = mount(InfoNode, {
+            props: { node, record: { ...record, status: 'in_progress' } },
+        })
+
+        // `capitalize` (CSS text-transform) does the per-word upper-casing
+        // visually; jsdom's text() reflects the DOM text node, not the paint,
+        // so this asserts the separator was swapped for a space and the
+        // `capitalize` class is what turns it into "In Progress" on screen.
+        expect(wrapper.text()).toContain('in progress')
+        expect(wrapper.text()).not.toContain('in_progress')
+        expect(wrapper.find('.capitalize').text()).toBe('in progress')
+    })
+
     it('renders key-value pairs', () => {
         const node: InfoNodeType = {
             component: 'entry',
@@ -126,7 +153,7 @@ describe('InfoNode - dedicated view entries', () => {
         expect(dts[0].classes()).toContain('uppercase')
         expect(dts[0].classes()).toContain('text-muted-foreground')
         expect(wrapper.find('dd').classes()).toContain('font-medium')
-        expect(wrapper.text()).toContain('None')
+        expect(wrapper.text()).toContain('—')
         expect(wrapper.find('section').classes()).toContain('rounded-xl')
         expect(wrapper.find('dl').classes().join(' ')).toMatch(/sm:grid-cols-2/)
     })

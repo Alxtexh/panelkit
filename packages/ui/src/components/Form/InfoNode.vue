@@ -122,15 +122,26 @@ const isBlank = computed(() => {
     return v === null || v === undefined || v === ''
 })
 
+/**
+ * `BadgeEntry` has no `->labels()` (only `->colors()`), so there is no
+ * mapped display text to fall back to the way `BadgeColumn` can - this
+ * always renders the raw stored value. `capitalize` below only upper-cases
+ * a word's first letter and does not know `_`/`-` are word boundaries, so
+ * `in_progress` rendered "In_progress" - swapping separators for spaces
+ * first is the same fix `ResourceIndex.vue`'s `badgeLabel()` applies to the
+ * List table's equivalent fallback.
+ */
+const badgeDisplay = computed(() => String(value.value ?? '').replace(/[_-]+/g, ' '))
+
 const moneyDisplay = computed(() => {
     if (isBlank.value) {
-        return 'None'
+        return '—'
     }
 
     const raw = Number(value.value)
 
     if (Number.isNaN(raw)) {
-        return 'None'
+        return '—'
     }
 
     const divisor = props.node.divideBy ?? 100
@@ -146,7 +157,7 @@ const moneyDisplay = computed(() => {
 
 const display = computed(() => {
     if (isBlank.value) {
-        return 'None'
+        return '—'
     }
 
     const v = value.value
@@ -211,10 +222,10 @@ const missingViewMessage = computed(() => {
                 :variant="badgeVariant as any"
                 class="capitalize"
             >
-                {{ value }}
+                {{ badgeDisplay }}
             </PkBadge>
             <span v-else-if="node.type === 'badge'" class="text-muted-foreground font-normal"
-                >None</span
+                >—</span
             >
             <IconCell
                 v-else-if="node.type === 'icon'"
@@ -267,7 +278,7 @@ const missingViewMessage = computed(() => {
                         <dd class="text-foreground col-span-2 break-words">{{ item }}</dd>
                     </div>
                 </dl>
-                <span v-else class="text-muted-foreground font-normal">None</span>
+                <span v-else class="text-muted-foreground font-normal">—</span>
             </div>
             <div v-else-if="node.type === 'repeatable'" class="flex flex-col gap-3 font-normal">
                 <div
@@ -287,7 +298,7 @@ const missingViewMessage = computed(() => {
                 <span
                     v-if="!Array.isArray(value) || value.length === 0"
                     class="text-muted-foreground font-normal"
-                    >None</span
+                    >—</span
                 >
             </div>
             <span

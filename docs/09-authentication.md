@@ -386,6 +386,30 @@ Changing or resetting a password **cycles the remember token** and signs other
 devices out. Without that, an attacker holding a stolen recaller cookie loses
 their session row and is transparently signed back in on the next request.
 
+## Idle lock
+
+On by default: 15 minutes of no mouse/keyboard/touch/scroll activity shows a
+password-prompt lock screen rather than signing the session out entirely —
+the working state (open tabs, an unsaved form's draft) survives, but nothing
+in the panel is visible or reachable until the same account re-enters its
+password. A background tab locks immediately on refocus if the window was
+already exceeded, rather than waiting for the next check.
+
+```php
+Panel::make('admin')
+    ->idleLock(30)          // minutes, and a 60s on-screen warning by default
+    ->idleLock(30, 120)     // custom warning too
+    ->idleLock(false)       // off entirely
+```
+
+Off by default in a **test fixture panel** — `->idleLock(false)` — since an
+automated suite (or an agent driving a browser through many long, sparse
+interactions) has no "someone stepped away" signal to react to, and a fixed
+per-test wait would either flake or slow every run down for a feature the
+test isn't exercising. A real user's panel should keep the default on:
+15 minutes is short enough to matter for a shared or public workstation and
+long enough that normal use before a real lock is threatened.
+
 ## Impersonation
 
 A dedicated ability, separate from managing users — support needs the first and

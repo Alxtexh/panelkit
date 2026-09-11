@@ -23,7 +23,7 @@ defineProps<{
     >
         <div class="min-w-0 space-y-1">
             <div class="flex flex-wrap items-center gap-2.5">
-                <h1 class="text-2xl font-semibold tracking-tight">{{ title }}</h1>
+                <h1 class="font-semibold">{{ title }}</h1>
                 <div v-if="$slots.status" class="flex items-center gap-2">
                     <slot name="status" />
                 </div>

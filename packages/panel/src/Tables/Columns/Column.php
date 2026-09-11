@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tables\Columns;
 
-use Illuminate\Contracts\Database\Query\Expression as QueryExpression;
-use Illuminate\Support\Facades\DB;
 use Alxtexh\Panel\Schema\Renderable;
+use Alxtexh\Panel\Support\HasQualifiedSource;
 use Alxtexh\Panel\Tables\Summarizer;
 
 /**
@@ -33,6 +32,8 @@ use Alxtexh\Panel\Tables\Summarizer;
  */
 abstract class Column implements Renderable
 {
+    use HasQualifiedSource;
+
     protected ?string $label = null;
 
     protected bool $sortable = false;
@@ -59,11 +60,6 @@ abstract class Column implements Renderable
     protected bool $resizable = false;
 
     protected ?string $sortKey = null;
-
-    protected ?string $databaseColumn = null;
-
-    /** A SQL expression this column's value is computed by - see `fromRaw()`. */
-    protected ?string $rawExpression = null;
 
     protected string $align = 'left';
 
@@ -184,75 +180,14 @@ abstract class Column implements Renderable
         return $this;
     }
 
-    /** Qualified database column when it differs from the key. */
-    public function from(string $column): static
-    {
-        $this->databaseColumn = $column;
-
-        return $this;
-    }
-
-    /**
-     * A value the DATABASE computes, rather than a column it stores.
-     *
-     * FOR THE THINGS THAT ARE A COMPARISON, NOT A FACT. The case that forced
-     * this was a ticket's unread badge: "is there a reply newer than the last
-     * time this side looked" is two columns compared, and the alternatives
-     * were both bad - a stored flag that has to be maintained by every writer,
-     * or a per-row lookup, which is the N+1 a badge is not worth.
-     *
-     * IT MUST BE AN `Expression`, and that is the whole reason this is a
-     * separate method rather than a longer string passed to `from()`. A raw
-     * expression handed to the builder as a STRING is quoted as an
-     * identifier - `select "(case when ... end) as unread"` - which fails with
-     * a syntax error pointing at a dot, several layers from anything that
-     * looks like this.
-     *
-     * NEVER GIVEN USER INPUT. Everything here is interpolated into SQL with
-     * nothing bound, so callers pass a literal written in the resource class.
-     * A column expression built from a request parameter is an injection, and
-     * there is no shape of this API that makes that safe.
+    /*
+     * `from()`, `fromRaw()` and `selectExpression()` are inherited from
+     * `HasQualifiedSource`, shared with `Entry` - see that trait for the
+     * reasoning ("a ticket's unread badge" for `fromRaw()`, the aliasing note
+     * for `selectExpression()`). A column and a view-page entry describe the
+     * same kind of fact and used to each carry their own, silently-driftable
+     * copy of this.
      */
-    public function fromRaw(string $expression): static
-    {
-        $this->rawExpression = $expression;
-
-        return $this;
-    }
-
-    /**
-     * How this column appears in the SELECT list - aliased to its own key.
-     *
-     * THE ALIAS IS ADDED HERE RATHER THAN WRITTEN BY HAND, because writing it by
-     * hand fails silently. `->from('clients.name')` on a column keyed
-     * `client_name` selects a result column called `name`, the row arrives with
-     * a key nothing looks for, and the cell renders an em dash. Nothing errors:
-     * the query is valid, the join is correct, and the only symptom is a column
-     * of dashes that reads like missing data.
-     *
-     * An explicit `as` in the expression is respected - several resources
-     * already write `->from('plans.name as plan_name')`, and second-guessing
-     * them would break the thing this is meant to fix.
-     */
-    public function selectExpression(): string|QueryExpression
-    {
-        // A computed value - see `fromRaw()` for why this cannot be a string.
-        if ($this->rawExpression !== null) {
-            return DB::raw($this->rawExpression.' as '.$this->key);
-        }
-
-        $column = $this->databaseColumn ?? $this->key;
-
-        // Already aliased, or unqualified and therefore already named after
-        // itself. Neither needs help.
-        if (stripos($column, ' as ') !== false || ! str_contains($column, '.')) {
-            return $column;
-        }
-
-        $bare = substr($column, strrpos($column, '.') + 1);
-
-        return $bare === $this->key ? $column : "{$column} as {$this->key}";
-    }
 
     /**
      * Rendered before the value, e.g. a currency code.

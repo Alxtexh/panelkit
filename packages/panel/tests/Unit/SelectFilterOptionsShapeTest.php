@@ -33,27 +33,39 @@ it('accepts a closure that resolves to a list', function () {
 });
 
 /**
- * THE MISTAKE THIS CATCHES: `SelectField::options()` on the sibling form
- * field class takes a `value => label` map, and it is the same method name
- * on a class in the same package - so reaching for that shape here is a
- * natural mistake, not a careless one. Passed through uncaught, the string
- * keys survive into the JSON payload as an object rather than an array, and
- * `TableToolbar.vue`'s `(filter.options ?? []).map(...)` throws
- * "options.map is not a function" in the browser - a crash with no
- * indication it started from a one-line typo in a resource class.
+ * THE SHAPE EVERY DOC EXAMPLE USES: `SelectField::options()` on the sibling
+ * form field class takes a `value => label` map, it is the same method name
+ * on a class in the same package, and docs/04-columns-and-filters.md's own
+ * canonical examples call `SelectFilter::make('status')->options(['paid' =>
+ * 'Paid', ...])` - so this is the natural, documented shape, not a mistake to
+ * guard against. It used to be rejected: passed through uncaught, the string
+ * keys would have survived into the JSON payload as an object rather than an
+ * array, and `TableToolbar.vue`'s `(filter.options ?? []).map(...)` would
+ * throw "options.map is not a function" in the browser. Normalising the map
+ * into the list-of-{value,label} shape here - rather than forwarding it
+ * raw, and rather than rejecting it - keeps that crash structurally
+ * impossible while making the documented call actually work.
  */
-it('rejects a value => label map with a clear message naming the fix', function () {
+it('accepts a value => label map and normalises it to the list shape', function () {
     $filter = SelectFilter::make('status')->options([
         'draft' => 'Draft',
         'sent' => 'Sent',
     ]);
 
-    expect(fn () => $filter->resolvedOptions())
-        ->toThrow(InvalidArgumentException::class, "SelectFilter::make('status')");
+    $resolved = $filter->resolvedOptions();
+
+    expect(array_is_list($resolved))->toBeTrue()
+        ->and($resolved)->toBe([
+            ['value' => 'draft', 'label' => 'Draft'],
+            ['value' => 'sent', 'label' => 'Sent'],
+        ])
+        ->and($filter->allowedValues())->toBe(['draft', 'sent']);
 });
 
-it('rejects a map returned from a closure the same way', function () {
+it('normalises a map returned from a closure the same way', function () {
     $filter = SelectFilter::make('status')->options(fn (): array => ['draft' => 'Draft']);
 
-    expect(fn () => $filter->resolvedOptions())->toThrow(InvalidArgumentException::class);
+    expect($filter->resolvedOptions())->toBe([
+        ['value' => 'draft', 'label' => 'Draft'],
+    ]);
 });

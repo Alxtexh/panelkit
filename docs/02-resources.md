@@ -20,9 +20,9 @@ final class InvoiceResource extends Resource
 
     // Optional: defaults derive from the model name.
     protected static ?string $slug = 'invoices';
-    protected static ?string $navigationGroup = 'Billing';
-    protected static ?string $navigationIcon = 'receipt';
-    protected static ?int $navigationSort = 10;
+    protected static ?string $group = 'Billing';
+    protected static string $icon = 'receipt';
+    protected static ?int $sort = 10;
 
     public static function table(Table $table): Table { /* … */ }
     public static function form(Form $form): Form { /* … */ }
@@ -32,6 +32,34 @@ final class InvoiceResource extends Resource
 **Nothing registers it.** Discovery finds the class; the navigation entry, the
 routes and the abilities `view_any_invoices`, `create_invoices` and the rest all
 follow from it existing.
+
+### Navigation icons
+
+`$icon` picks from a curated set of Lucide names, not the whole ~1600-icon
+library - keeping it curated is what lets the kit ship the sidebar's icons as
+tree-shaken components instead of an unbounded dynamic import. As of this
+writing the supported names are:
+
+```
+activity, app-window, app-window-mac, archive, book-open, building, calendar,
+chat, chevrons-up-down, circle-check, coins, credit-card, faq, file,
+file-question, file-text, flag, folder, folder-tree, gauge, help, home,
+impersonate, info, key, layers, layout-grid, layout-template, life-buoy,
+list, lock, log-in, login, mail, map, megaphone, message-circle, package,
+panel-left, panel-left-close, receipt, rocket, router, scroll-text,
+server-crash, settings, shield-alert, shopping-bag, shopping-cart, sliders,
+smartphone, sparkles, square, timer-off, trash, user, user-check, user-plus,
+users, wallet, webhook, wrench
+```
+
+A plausible but uncurated name (`user-cog` is a real Lucide icon, just not
+one PanelKit ships) compiles and runs - it simply falls back to the generic
+`package` icon in the sidebar, silently, since `package` is *also* a
+legitimately declared icon elsewhere. `php artisan panel:doctor` checks every
+registered resource's and page's `$icon` against this exact list and names
+the resource and the bad value when one doesn't match, so a typo or a guess
+outside the curated set is caught before it ships rather than noticed as "my
+resource just has the box icon for some reason."
 
 ## Create / edit / view: pages first
 
@@ -74,6 +102,55 @@ $table
 > **If your table joins, qualify the key column.** The keyset tiebreaker appears
 > in every `ORDER BY`, so an unqualified `id` becomes ambiguous the moment a
 > second table has one.
+
+## Record identity and navigation
+
+Two small conventions, both about how a record presents itself, that are
+easy to skip and then notice only once a real application has several
+resources side by side.
+
+**`recordTitle()` - what the View/Edit page calls a record.** The base
+implementation checks `name`, `title`, `full_name`, `subject`, `number`,
+`code`, `label`, then `email`, in that order, and falls back to `#id` only
+when none of those columns exist. That covers the ordinary case with zero
+code: a table with a plain `name` or `subject` column already gets a
+human-readable title for free. It does **not** guess at a *prefixed*
+identifier like `invoice_number` or `order_number` - a suffix-matching rule
+would also catch a `phone_number` that was never meant to identify the
+record, and a wrong guess silently mislabelling every record is worse than
+one that still falls through to `#id` and asks for an override:
+
+```php
+public static function recordTitle(Model $record): ?string
+{
+    return $record->invoice_number;
+}
+```
+
+`make:panel-resource --generate` writes this override for you automatically
+when it detects a `{table-singular}_number` column and none of the base
+class's literal candidates exist on the table - so `invoices.invoice_number`
+or `orders.order_number` get a working title with no manual step, while a
+`phone_number` column elsewhere is never mistaken for the record's identity.
+
+**Row navigation - `->rowClick('view')`.** Off by default at the `Table`
+class level, deliberately: a whole clickable row is not free (a mis-aimed
+click on the way to a checkbox becomes an unwanted navigation), and it is
+the right choice for a table people *browse* (a customer list, a product
+catalogue) but not necessarily one they *read in place* (an audit log, a
+dense line-item table). `make:panel-resource --generate` opts a freshly
+generated resource IN by default, since an ordinary generated CRUD table is
+usually the browsable kind - remove it with `->rowClick('none')` if a
+particular resource genuinely is not:
+
+```php
+public static function table(Table $table): Table
+{
+    return $table
+        ->columns([...])
+        ->rowClick('view'); // primary column opens the View page; row actions (⋮) still work
+}
+```
 
 ## Nested resources
 
@@ -127,13 +204,53 @@ rather than multiplying the list's rows.
 
 ## Relation managers
 
-The tab on the parent view page is a summary. It links to the nested pages
-above. Do not implement Filament's modal CRUD here.
+A `RelationManager` is the tab on a parent record's view page showing its
+related rows - an order's line items, an invoice's payments, a client's
+sessions. It is always a **summary tab**, never a Filament-style modal CRUD
+surface. There are two genuinely different shapes it can take, and the
+difference is not cosmetic - it decides what the tab can and cannot do.
+
+### Simple vs. resource-backed - pick one deliberately
+
+**A simple `RelationManager`** (`->related()` + `->table()`, no
+`->resource()`) is a read list, plus optionally a fixed, one-shot inline
+create form. It is the right choice for small, structurally straightforward
+related rows that do not need their own dedicated pages: an order's line
+items, a note thread, anything a person adds to and reads from the parent's
+own page and nothing more.
+
+**A resource-backed `RelationManager`** (`->resource(SomeResource::class)`)
+is backed by a real, independently-routable child `Resource` - the same kind
+declared under [Nested resources](#nested-resources) above. It gets its own
+dedicated list/create/edit/view pages at `/{parent}/{id}/{child}`, its own
+policy, and - critically - the field-options route a searchable
+`SelectField::relationship()` needs (see below). Pick this when the related
+rows are themselves complex enough to want their own View/Edit pages, need
+independent permissions, or need relationship search inside their own form.
+
+| Capability | Simple (`->related()`) | Resource-backed (`->resource()`) |
+|---|---|---|
+| List rows on the tab | ✓ | ✓ |
+| Filters, sorting, pagination | ✓ | ✓ |
+| Inline create (from the tab) | ✓, if `->form()` is set | ✓, gated on the child resource's `create` ability |
+| Row-level Edit / Delete | ✗ - not a bug, see below | ✓ - the child resource's own dedicated pages |
+| `SelectField::relationship()` search inside the tab's own form | ✗ - throws at schema-build time, see below | ✓ |
+| Dedicated View/Edit pages for a related row | ✗ | ✓, at `/{parent}/{id}/{child}/{row}` |
+| Independent policy / permissions | ✗ - authorised against the PARENT resource's own abilities | ✓ - the child resource's own policy |
+
+**Do not pretend a simple `RelationManager` supports what only a
+resource-backed one actually provides.** There is no partial or hidden
+nested-CRUD behind `->related()` - a bare relation's rows are read and
+(optionally) created from the tab, full stop. If you find yourself wanting
+row-level Edit or Delete on a tab, that is the signal to add
+`->resource(...)`, not a missing feature to work around.
 
 ```php
 public static function relations(): array
 {
     return [
+        // Resource-backed: Line gets its own pages, policy, and searchable
+        // relationship fields.
         RelationManager::make('lines', 'Lines')
             ->resource(LineResource::class)
             ->table(fn (Table $t) => $t->columns([
@@ -153,6 +270,125 @@ parent page. It does not lock the nested resource's own dedicated pages;
 resource's own `create`/`update` abilities, independently of any tab that
 happens to link to them. A relation genuinely meant to be read-only
 everywhere gates that on the nested resource itself, not here.
+
+### Searchable relationship fields need a resource-backed relation
+
+`SelectField::relationship()` is searchable by default, and that search runs
+against a `field-options` route registered per top-level `Resource` (see
+[Nested resources](#nested-resources) above - a resource declaring `$parent`
+gets that route mounted at `/{parent}/{parentId}/{resource}/field-options`).
+A **simple** `RelationManager` is not itself a routable `Resource`, so there
+is no route its own inline form's search could ever reach.
+
+Using `->relationship()` on a simple relation's `->form()` fails loudly, at
+schema-build time, rather than shipping a dropdown whose search silently
+returns nothing:
+
+```
+SelectField [product_id] uses relationship search inside RelationManager
+[items], but this relation has no ->resource() and therefore no
+field-options endpoint to search against - the dropdown would open with a
+search box that silently returns nothing. Either call ->options([...]) on
+[product_id] for a small, fixed related table, or add
+->resource(SomeResource::class) to RelationManager::make('items', ...) to
+give this relation dedicated pages and a working search endpoint.
+```
+
+Two ways to fix it, matching the table above:
+
+```php
+// A: a small, fixed related table - ship it inline, no search endpoint needed.
+// ->all() matters: pluck() returns a Collection, and ->options() takes a
+// plain array.
+SelectField::make('product_id')->options(fn () => Product::pluck('name', 'id')->all());
+
+// B: the related table is large enough that search genuinely earns its keep -
+// give the relation its own resource.
+RelationManager::make('items', 'Order items')->resource(OrderItemResource::class);
+```
+
+### Sorting - a safe default, no configuration required
+
+A `RelationManager`'s table needs no explicit `->sortable()` column. If none
+is declared, its rows sort by the table's own key column (newest first) -
+the same column every list already appends as an unconditional tiebreaker
+for deterministic pagination, so nothing about correctness depends on this.
+This is deliberately different from a top-level `Resource`'s own List page,
+which still requires at least one `->sortable()` column: a full admin list
+with no sort story at all is almost always a genuine oversight worth
+catching there, where a small related tab with no sort story is a completely
+ordinary, unremarkable choice.
+
+Declare `->sortable()` on a column the normal way if you want the tab's own
+header to offer a user-facing sort:
+
+```php
+RelationManager::make('items', 'Order items')
+    ->related(OrderItem::class, 'order_items.order_id')
+    ->table(fn (Table $t) => $t->columns([
+        TextColumn::make('quantity')->from('order_items.quantity')->sortable(),
+    ])->keyColumn('order_items.id')->defaultSort('quantity', 'desc'));
+```
+
+### A complete example: Order → OrderItems → Product
+
+An order's line items, end to end - each item a real reference to a
+`Product`, unbounded in count (not a fixed 2-4 shape a `KeyValueEntry`
+summarises), which is why this is a `RelationManager`, not a `Repeater`.
+
+```php
+final class OrderResource extends Resource
+{
+    protected static string $model = Order::class;
+    protected static string $panel = 'admin';
+    protected static string $icon = 'shopping-cart';
+
+    public static function relations(): array
+    {
+        return [
+            RelationManager::make('items', 'Order items')
+                ->related(OrderItem::class, 'order_items.order_id')
+                ->table(fn (Table $table): Table => $table
+                    // order_items only stores product_id - product_name is a
+                    // JOINED column, the same ->query()/->alsoSelect() pattern
+                    // "Why the list stays fast" uses for a top-level Resource,
+                    // applied here to a RelationManager's own table.
+                    ->query(fn ($query) => $query
+                        ->leftJoin('products', 'products.id', '=', 'order_items.product_id'))
+                    ->columns([
+                        TextColumn::make('product_name')->from('products.name')
+                            ->sortable(),
+                        TextColumn::make('quantity')->from('order_items.quantity'),
+                        MoneyColumn::make('unit_price')->from('order_items.unit_price')
+                            ->currency('USD')->major(),
+                    ])
+                    ->defaultSort('product_name', 'asc')
+                    ->keyColumn('order_items.id')
+                    ->alsoSelect(['order_items.id']))
+                ->form(fn (Form $form): Form => $form->schema([
+                    // A small catalogue: ->options(), not ->relationship() -
+                    // this is a simple relation, no ->resource() here.
+                    // ->all() matters: pluck() returns a Collection, and
+                    // ->options() takes a plain array.
+                    SelectField::make('product_id')
+                        ->label('Product')
+                        ->options(fn () => Product::pluck('name', 'id')->all())
+                        ->required(),
+                    NumberField::make('quantity')->min(1)->required(),
+                    MoneyField::make('unit_price')->min(0)->required(),
+                ])),
+        ];
+    }
+}
+```
+
+This gives the Order's View page an "Order items" tab: a sorted, paginated
+table of line items with inline create ("Add"). There is no row-level Edit
+or Delete - a simple relation does not have one, per the table above. If line
+items ever need their own View/Edit pages, independent permissions, or a
+searchable product picker over a catalogue too large to ship inline, that is
+the point to switch to `->resource(OrderItemResource::class)` instead of
+`->related()`/`->form()`.
 
 ## Infolists
 
@@ -216,6 +452,56 @@ rendering blank. Empty `infolist()` still falls back to table columns on the
 view page.
 
 Click POSTs `{ action }` to `{resource}/{id}/infolist-action`. `Entry::url()` remains a plain link. The view page stays a dedicated page.
+
+### The view page selects its own data
+
+A non-empty `infolist()` drives the view page's own database selection -
+independently of `table()`. An entry for an attribute your list never
+displays still reaches the view page with its real value; a table column
+your infolist never mentions does not leak in just because the list shows it.
+Each screen gets exactly what it declares.
+
+**Showing a relationship value on an infolist** uses the same mechanism a
+table column does - a real SQL join declared once on `table()->query()`, plus
+`->from('other_table.column')` on the entry, aliased back to the entry's own
+key:
+
+```php
+public static function table(Table $table): Table
+{
+    return $table
+        ->columns([/* … */])
+        ->query(fn ($query) => $query
+            ->leftJoin('customers', 'customers.id', '=', 'invoices.customer_id'))
+        ->keyColumn('invoices.id');
+}
+
+public static function infolist(): array
+{
+    return [
+        TextEntry::make('customer_name')->label('Customer')->from('customers.name'),
+    ];
+}
+```
+
+`TextEntry::make('customer.name')` (dot notation, an Eloquent-relation-path
+habit) is **not** supported and will not resolve - PanelKit does not walk a
+relation per row for an infolist value, which is exactly the N+1 a join
+avoids. `->fromRaw($sqlExpression)` is also available on any entry, for a
+computed value - see "Computed values" in the columns chapter; the same
+alias and raw-SQL-safety rules apply.
+
+**If `table()` already joins another table, qualify any infolist entry whose
+key collides with a column name on that joined table** - even one that isn't
+itself reading the join. A resource that joins `customers` (for a
+`customer_name` entry) and separately declares a plain `BadgeEntry::make('status')`
+for its own `status` column will get `SQLSTATE[HY000]: ambiguous column name:
+status` on its view page the moment `customers` also has a `status` column -
+because the view page's query now runs through that same join. The fix is
+the same `->from()` every other qualified entry already uses:
+`BadgeEntry::make('status')->from('invoices.status')`. `table()`'s own
+columns already need this for the identical reason; an infolist that
+previously never ran through the join is the newly-exposed case.
 
 ## Header widgets
 

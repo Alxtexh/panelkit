@@ -4,7 +4,9 @@ A Laravel + Inertia + Vue admin panel you install into an app. Filament's
 developer experience, SPA transport.
 
 **[Full documentation →](docs/README.md)** for every field, column, filter, action,
-widget and command, and how to switch each part on.
+widget and command, and how to switch each part on. **[Changelog →](CHANGELOG.md)**
+for what changed release to release, including any breaking change and the
+fix it needs.
 
 From GitHub only (no Packagist or npm registry). Develop in **panelkit**;
 installers consume **Alxtexh/panel**. Vue is vendored into that Composer package

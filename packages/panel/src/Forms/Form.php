@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Forms;
 use Illuminate\Database\Eloquent\Model;
 use Alxtexh\Panel\Forms\Fields\Field;
 use Alxtexh\Panel\Forms\Fields\RepeaterField;
+use Alxtexh\Panel\Forms\Fields\SelectField;
 use Alxtexh\Panel\Schema\Component;
 use Alxtexh\Panel\Schema\Renderable;
 use Alxtexh\Panel\Schema\Section;
@@ -231,6 +232,41 @@ final class Form
                 foreach ($field->childOptions() as $childKey => $childOptions) {
                     $options[$childKey] = $childOptions;
                 }
+            }
+        }
+
+        return $options;
+    }
+
+    /**
+     * Each searchable relationship field's CURRENT value, resolved to a
+     * label - see `SelectField::resolveCurrentOption()`'s own docblock for
+     * why this exists as a separate pass rather than folded into
+     * `resolveOptions()` above: that method has no record to resolve
+     * against (it also serves the Create page, which has none), and every
+     * OTHER caller of it - `SingularController`, `DocumentTemplateController`,
+     * `SetupWizardController`, `BenchmarkCommand` - has no reason to pay for
+     * a lookup it would never use. Callable only where a record already
+     * exists (`ResourceController::edit()`), with the SAME values array the
+     * page's `values` prop is built from, so it stays one relationship-row
+     * lookup per searchable field, not a query per option.
+     *
+     * @param  array<string, mixed>  $values
+     * @return array<string, list<array{value: mixed, label: string}>>
+     */
+    public function currentValueOptions(array $values): array
+    {
+        $options = [];
+
+        foreach ($this->fields() as $field) {
+            if (! $field instanceof SelectField) {
+                continue;
+            }
+
+            $resolved = $field->resolveCurrentOption($values[$field->key] ?? null);
+
+            if ($resolved !== null) {
+                $options[$field->key] = [$resolved];
             }
         }
 

@@ -752,16 +752,27 @@ function onRowContextMenu(row: Record<string, any>, event: MouseEvent) {
 /**
  * A click on the row body opens the record.
  *
- * IT REUSES THE `view` RECORD ACTION rather than building a URL from the
- * resource name, and that is the whole design. The action list arriving with
- * each row has already been filtered by the policy for this record and this
- * user, so a row whose operator may not view it carries no `view` action and
- * simply does not navigate. Constructing `/clients/{id}` here would instead
- * send them to a page that 403s - the permission approximated in a second
- * place, and wrong.
+ * BUILDS `{index}/{id}` DIRECTLY, the same URL the primary-column `<Link>`
+ * elsewhere on this page already navigates to (see that link's own `:href`)
+ * - not a lookup into the row's action MENU. It used to search
+ * `menuFor(row)` for an action literally keyed `view`, on the theory that
+ * the menu would naturally carry one, filtered per-record by policy. It
+ * never does: `Resource::definition()` adds no automatic View/Edit row
+ * action (only Delete, plus whatever a resource explicitly declares via
+ * `->recordActions()`), and no resource in practice adds its own "View"
+ * entry, since the dedicated page IS the normal way to reach it. The
+ * lookup therefore always failed, silently - `rowClick('view')` set
+ * `cursor: pointer` on every row correctly, but clicking one did nothing,
+ * which a docs-only fresh-developer test caught by actually clicking a row
+ * rather than reading the source.
  *
- * IT ALSO SILENTLY DOES NOTHING when the resource has no view page at all,
- * which is the correct outcome for a table whose records are edited in place.
+ * NO CLIENT-SIDE PERMISSION CHECK, matching that same sibling `<Link>`
+ * exactly: `ResourceController::show()` is registered - and authorises the
+ * `view` ability per record - for every resource unconditionally, so a
+ * user without it gets the same real 403 either way. Approximating that
+ * check again here, with whatever ability data happens to reach the list
+ * page, would be the second place to get it wrong instead of the one place
+ * that already does.
  */
 function onRowClick(row: Record<string, any>) {
     if (formUsesModal('view')) {
@@ -770,13 +781,7 @@ function onRowClick(row: Record<string, any>) {
         return
     }
 
-    const view = menuFor(row)
-        .flatMap((group) => group.actions)
-        .find((a) => a.key === 'view' && a.link && a.url)
-
-    if (view?.url) {
-        router.visit(view.url)
-    }
+    router.visit(`${props.schema.routes.index}/${row.id}`)
 }
 
 /** One entry point for both the inline buttons and the menu. */
@@ -1408,7 +1413,19 @@ function badgeLabel(key: string, value: unknown): string {
         return value ? (column?.label ?? 'Yes') : `Not ${(column?.label ?? 'set').toLowerCase()}`
     }
 
-    return String(value)
+    /*
+     * NO `->labels()` DECLARED: humanize the raw enum value rather than
+     * print it verbatim. The template's `capitalize` class already
+     * upper-cases every badge's first letter per word - which turned
+     * `in_progress` into "In_progress" (CSS capitalize does not know `_` is
+     * a word boundary) instead of "In Progress". Every OTHER badge in the
+     * app already reads as Title Case once `capitalize` runs on it, so
+     * swapping separators for spaces here is joining that existing
+     * convention, not inventing a new one. Confirmed live on Tickets'
+     * Status/Priority columns by Phase 6's audit; Customers'/Invoices'
+     * single-word badges only looked correct by accident.
+     */
+    return String(value).replace(/[_-]+/g, ' ')
 }
 </script>
 

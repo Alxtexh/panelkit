@@ -2,15 +2,28 @@
 /**
  * The floating "Unsaved changes" bar.
  *
- * PINNED TO THE MAIN CONTENT COLUMN (`#pk-main`), not the viewport. Teleporting
- * to `body` with `fixed inset-x-0` spanned the full screen, painted over the
- * sidebar, and read as a too-long strip. The shell scrollport is a fixed
- * containing block (`transform` on `#pk-main`), so `fixed inset-x-0` here only
- * covers the pane to the right of the rail. Inner chrome stays on FORM_MEASURE
- * (max-w-7xl), left-aligned like the fields, with PAGE_SHELL_COMPACT padding.
+ * PINNED TO THE MAIN CONTENT COLUMN (`#pk-main`), not the viewport - so it
+ * covers the pane to the right of the rail, not the sidebar too. Inner chrome
+ * stays on FORM_MEASURE (max-w-7xl), left-aligned like the fields, with
+ * PAGE_SHELL_COMPACT padding.
+ *
+ * `position: sticky`, NOT `fixed`. `#pk-main` is both the scroll container
+ * (`overflow-y: auto`) AND, via `transform-gpu`, the containing block a
+ * `fixed` descendant resolves against - and a `fixed` element whose
+ * containing block is a transformed ancestor is positioned like `absolute`,
+ * which scrolls WITH that ancestor's content instead of staying pinned to
+ * its viewport. Verified live: scrolling `#pk-main` to its end moved the bar
+ * from `top: 658` to `top: -67` in the same viewport, off-screen, on a 390px
+ * Create page - the exact bug Phase 6's audit reported ("the bar drifts into
+ * the middle of the form"). `position: sticky` does not have this failure
+ * mode: it stays in normal flow, so it sticks to the bottom of `#pk-main`'s
+ * own scrollport regardless of any ancestor's transform. The no-shell
+ * fallback below already used `sticky` for the same reason; this just
+ * stopped the two branches disagreeing.
  *
  * Outside a panel shell (tests, rare host pages) Teleport is disabled and the
- * bar sticks at the bottom of its in-tree parent instead.
+ * bar sticks at the bottom of its in-tree parent instead - now the same rule,
+ * not a different one.
  *
  * IT DOES NOT FETCH: it emits `save` and `cancel`, and the page owns both.
  * Dirtiness belongs to the form, not to a bar that draws it.
@@ -78,11 +91,8 @@ onMounted(() => {
 const teleportTo = computed(() => (shellReady.value ? '#pk-main' : 'body'))
 const teleportDisabled = computed(() => !shellReady.value)
 
-const frameClass = computed(() =>
-    shellReady.value
-        ? 'pointer-events-none fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 px-3 pb-3 sm:bottom-0 sm:px-4 sm:pb-4'
-        : 'pointer-events-none sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 px-3 pb-3 sm:bottom-0 sm:px-4 sm:pb-4',
-)
+const frameClass =
+    'pointer-events-none sticky inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 px-3 pb-3 sm:bottom-0 sm:px-4 sm:pb-4'
 
 /**
  * MANUAL, NOT CSS-CLASS-DRIVEN. `<Transition>`'s default mode detects

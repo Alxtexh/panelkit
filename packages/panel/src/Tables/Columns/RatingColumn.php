@@ -25,10 +25,17 @@ final class RatingColumn extends Column
         return $this;
     }
 
-    public function toSchema(): array
+    /**
+     * OVERRIDES `toArray()`, NOT `toSchema()` - see MoneyColumn::toArray()'s
+     * docblock: `Table.php`'s column-serialisation loop always calls
+     * `->toArray()` directly, so a `toSchema()` override here never ran and
+     * every rating column rendered against the client's default star count
+     * regardless of a custom `->max()`.
+     */
+    public function toArray(): array
     {
         return [
-            ...parent::toSchema(),
+            ...parent::toArray(),
             'max' => $this->max,
         ];
     }

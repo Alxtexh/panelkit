@@ -990,7 +990,10 @@ final class Table
     }
 
     /** @param class-string $model */
-    public function toListQuery(string $model): ListQuery
+    /**
+     * @param  list<string|QueryExpression>|null  $valueSelect  See `resolveSelect()` - overrides which VALUES this query selects, not row identity/ordering/joins.
+     */
+    public function toListQuery(string $model, ?array $valueSelect = null): ListQuery
     {
         $query = ListQuery::for($model);
 
@@ -999,7 +1002,7 @@ final class Table
         }
 
         $query
-            ->select($this->resolveSelect())
+            ->select($this->resolveSelect($valueSelect))
             ->sortable($this->resolveSortable())
             ->searchable($this->resolveSearchable())
             ->searchableRelations($this->searchableRelations)
@@ -1055,10 +1058,18 @@ final class Table
     /**
      * §10: select only what the schema declares. Never SELECT * on a wide table.
      *
-     * @return list<string>
+     * `$valueSelect`, WHEN GIVEN, REPLACES the table's own columns as the
+     * source of "which values does this query need" - everything else (the
+     * row key, `alsoSelect()`, the reorder column) still applies unchanged,
+     * because those are about row IDENTITY and ordering, not which values a
+     * particular screen displays. This is what lets `ResourceController::show()`
+     * drive the View page's selection from `infolist()`'s own entries
+     * instead of `table()`'s columns - see `Entry`'s class docblock.
+     *
+     * @param  list<string|QueryExpression>|null  $valueSelect
+     * @return list<string|QueryExpression>
      */
-    /** @return list<string|QueryExpression> */
-    private function resolveSelect(): array
+    private function resolveSelect(?array $valueSelect = null): array
     {
         /*
          * The order column is SELECTED as well as sortable.
@@ -1072,13 +1083,17 @@ final class Table
          */
         $extra = $this->reorderColumn === null ? [] : [$this->reorderColumn];
 
-        $select = [];
+        if ($valueSelect !== null) {
+            $select = $valueSelect;
+        } else {
+            $select = [];
 
-        foreach ($this->flattenColumns() as $column) {
-            // The ALIASED expression: a joined column must arrive under the key
-            // the schema declares, or the row carries a key nothing reads and
-            // the cell renders an em dash with no error anywhere.
-            $select[] = $column->selectExpression();
+            foreach ($this->flattenColumns() as $column) {
+                // The ALIASED expression: a joined column must arrive under the key
+                // the schema declares, or the row carries a key nothing reads and
+                // the cell renders an em dash with no error anywhere.
+                $select[] = $column->selectExpression();
+            }
         }
 
         /*

@@ -43,11 +43,11 @@ describe('TagsCell', () => {
         expect(wrapper.text()).toContain('two')
     })
 
-    it('shows None when empty', () => {
+    it('shows a muted dash, not the word "None", when empty', () => {
         const wrapper = mount(TagsCell, {
             props: { value: null },
         })
 
-        expect(wrapper.text()).toBe('None')
+        expect(wrapper.text()).toBe('-')
     })
 })

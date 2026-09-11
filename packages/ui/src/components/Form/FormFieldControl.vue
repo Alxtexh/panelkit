@@ -26,16 +26,18 @@ import { fieldControl } from '../../composables/useFieldControls'
 import { MUTED_COPY_SNUG } from '../../lib/copyClasses'
 import { CreateOptionError } from '../../lib/createOptionError'
 import { createOptionActionLabel, createOptionTitle } from '../../lib/createOptionTitle'
-import { FOCUS_RING, FOCUS_RING_WITHIN } from '../../lib/focusRing'
+import { FOCUS_RING, FOCUS_RING_WITHIN, INVALID_BORDER } from '../../lib/focusRing'
 import { INPUT_COPY } from '../../lib/inputClasses'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
 import { Checkbox } from '../shadcn/checkbox'
 import { Switch } from '../shadcn/switch'
 import CreateOptionDialog from './CreateOptionDialog.vue'
+import PkDatePicker from './PkDatePicker.vue'
 import PkFileUpload from './PkFileUpload.vue'
 import type { UploadedFileValue } from './PkFileUpload.vue'
 import PkKeyValue from './PkKeyValue.vue'
 import PkRichEditor from './PkRichEditor.vue'
+import PkSelectMenu from './PkSelectMenu.vue'
 import PkToggleButtons from './PkToggleButtons.vue'
 import type { FormField } from './types'
 
@@ -113,6 +115,23 @@ const results = ref<{ value: any; label: string }[]>([])
 const searching = ref(false)
 /** The chosen option's label, kept so the closed control shows a name not an id. */
 const chosenLabel = ref<string | null>(null)
+
+/**
+ * FALLS BACK TO `options` FOR THE CURRENT VALUE, because `chosenLabel` only
+ * knows about a label once `pick()` runs - so an Edit page, which arrives
+ * with a value already set and nothing yet picked, showed the raw foreign
+ * key (`94`) instead of the related record's name until you opened the
+ * search and re-chose it. A searchable `relationship()` field ships no
+ * option LIST (the client searches instead), but the controller still sends
+ * a single-entry `options` array for the field's CURRENT value specifically
+ * - cheap (one row), unlike shipping the whole related table. This is what
+ * reads that entry; `pick()`'s explicit choice still wins once somebody
+ * searches.
+ */
+const initialLabel = computed(
+    () => props.options.find((opt) => String(opt.value) === String(props.value))?.label ?? null,
+)
+const effectiveLabel = computed(() => chosenLabel.value ?? initialLabel.value)
 
 let debounce: ReturnType<typeof setTimeout> | undefined
 
@@ -315,7 +334,61 @@ function affixAction(action: FormField['suffixAction']): void {
     }
 }
 
-const inputClass = `border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50 ${INPUT_COPY} ${FOCUS_RING}`
+/*
+ * `INVALID_BORDER` ON THE PLAIN NATIVE `<input>`/`<textarea>` TOO, not just
+ * `PkSelectMenu`/`PkDatePicker`. Phase 6's audit reported "every field type"
+ * as missing a red border on validation failure - and live verification
+ * (scripted `document.querySelectorAll('[aria-invalid="true"]')` on a
+ * submitted, empty Create form) showed the two custom overlay triggers WERE
+ * already fixed by then, but the plain text/email/number inputs still had
+ * no `invalid`-class at all: this file builds its own `inputClass` /
+ * `affixedInputClass` strings rather than reusing `PkTextInput.vue`'s BASE
+ * (which already carries this styling), so they never inherited it.
+ */
+const inputClass = `border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50 ${INPUT_COPY} ${FOCUS_RING} ${INVALID_BORDER}`
+
+/*
+ * ONE SHARED CONTRACT for "is this field invalid, and what describes it" -
+ * not a separate `:aria-invalid="!!error"` / `:aria-describedby="..."` pair
+ * hand-written per branch below. Before this, `aria-invalid` was repeated
+ * correctly (mostly) across every native control, but `aria-describedby`
+ * only ever reached `PkSelectMenu` and `PkDatePicker` - the two custom
+ * overlay controls, fixed in an earlier pass specifically because they
+ * needed their OWN new prop for it. Every native `<input>`/`<textarea>`,
+ * the searchable-select trigger, the morph type/id pickers, `Switch`, and
+ * `Checkbox` still had the error `<p>` sitting right below them with an
+ * `id` nobody referenced - correct for a SIGHTED user tabbing in (they see
+ * the red text appear), silent for a screen reader user doing the same
+ * (nothing announces that a description exists until `role="alert"` fires,
+ * which only happens the MOMENT the error first appears, not on every
+ * later visit to that field).
+ *
+ * BOTH IDS WHEN BOTH EXIST. The error `<p>` and the help `<p>` used to be
+ * `v-if`/`v-else-if` - mutually exclusive, so an error appearing did not
+ * just outrank the help text visually, it deleted it from the DOM, taking
+ * whatever context it gave ("must be a valid email", "shown to customers
+ * on the invoice") with it. Both now render when both exist; `describedBy`
+ * joins both ids so a screen reader gets the same union a sighted user
+ * now sees.
+ */
+const errorId = computed(() => `f-${props.field.key}-error`)
+const helpId = computed(() => `f-${props.field.key}-help`)
+
+const describedBy = computed(() => {
+    const ids = [
+        props.error ? errorId.value : null,
+        props.field.help && props.field.type !== 'toggle' ? helpId.value : null,
+    ].filter((id): id is string => id !== null)
+
+    return ids.length > 0 ? ids.join(' ') : undefined
+})
+
+/** Spread onto every native control - `v-bind="fieldAria"`, not two
+ *  hand-written attributes per branch. */
+const fieldAria = computed(() => ({
+    'aria-invalid': !!props.error,
+    'aria-describedby': describedBy.value,
+}))
 
 const affixedInputClass = `bg-background h-9 min-w-0 flex-1 border-0 bg-transparent px-3 text-sm focus-visible:ring-0 focus-visible:outline-none disabled:opacity-50 ${INPUT_COPY}`
 
@@ -414,6 +487,7 @@ function insertChip(token: string) {
         <component
             :is="registered"
             v-if="registered"
+            v-bind="fieldAria"
             :field="field"
             :model-value="value"
             :values="values"
@@ -434,6 +508,7 @@ function insertChip(token: string) {
              validation error elsewhere never empties the input. -->
         <PkFileUpload
             v-else-if="field.type === 'file' && upload"
+            v-bind="fieldAria"
             :model-value="(value as UploadedFileValue | null) ?? null"
             :accept="field.accept ?? []"
             :max-kilobytes="field.maxKilobytes ?? 10240"
@@ -482,6 +557,7 @@ function insertChip(token: string) {
 
         <PkRichEditor
             v-else-if="field.type === 'richtext'"
+            v-bind="fieldAria"
             :model-value="(value as string | null) ?? null"
             :toolbar="field.toolbar ?? ['bold', 'italic', 'heading', 'list', 'link']"
             :max-length="field.maxLength ?? null"
@@ -492,6 +568,7 @@ function insertChip(token: string) {
 
         <PkKeyValue
             v-else-if="field.type === 'keyvalue'"
+            v-bind="fieldAria"
             :model-value="(value as Record<string, string> | null) ?? null"
             :key-label="field.keyLabel ?? 'Key'"
             :value-label="field.valueLabel ?? 'Value'"
@@ -502,6 +579,7 @@ function insertChip(token: string) {
 
         <PkMultiSelect
             v-else-if="field.type === 'multiselect'"
+            v-bind="fieldAria"
             :model-value="(Array.isArray(value) ? value : []) as (string | number)[]"
             :options="(options ?? []) as any"
             :disabled="field.disabled || processing"
@@ -513,36 +591,34 @@ function insertChip(token: string) {
         <div v-else-if="morphTypes.length" class="flex flex-col gap-2">
             <PkToggleButtons
                 v-if="field.morphTypeSelect === 'toggle-buttons'"
+                v-bind="fieldAria"
                 :field="{ key: `${field.key}-type`, grouped: true, inline: true }"
                 :model-value="morphValue.type ?? null"
                 :options="morphTypes.map((opt) => ({ value: opt.value, label: opt.label }))"
                 :disabled="field.disabled || processing"
                 @update:model-value="(next) => setMorphType(next == null ? '' : String(next))"
             />
-            <select
+            <PkSelectMenu
                 v-else
                 :id="`f-${field.key}-type`"
-                :value="morphValue.type ?? ''"
+                :model-value="morphValue.type ?? null"
+                :options="morphTypes"
                 :disabled="field.disabled || processing"
-                :class="[
-                    'border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50',
-                    FOCUS_RING,
-                ]"
-                @change="setMorphType(($event.target as HTMLSelectElement).value)"
-            >
-                <option value="">Type</option>
-                <option v-for="opt in morphTypes" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                </option>
-            </select>
+                :invalid="!!error"
+                :described-by="describedBy"
+                placeholder="Type"
+                @update:model-value="(next) => setMorphType(next == null ? '' : String(next))"
+            />
             <div v-if="morphValue.type && searchOptions" class="relative">
                 <button
                     type="button"
                     :class="[
                         'border-input bg-background flex h-9 w-full items-center justify-between rounded-md border px-3 text-left text-sm disabled:opacity-50',
                         FOCUS_RING,
+                        INVALID_BORDER,
                     ]"
                     :disabled="field.disabled || processing"
+                    v-bind="fieldAria"
                     @click="openSearch"
                 >
                     <span :class="chosenLabel || morphValue.id ? '' : 'text-muted-foreground'">
@@ -578,17 +654,19 @@ function insertChip(token: string) {
 
         <div v-else-if="field.type === 'select' && searchOptions" class="relative">
             <button
+                :id="`f-${field.key}`"
                 type="button"
                 :class="[
                     'border-input bg-background flex h-9 w-full items-center justify-between rounded-md border px-3 text-left text-sm disabled:opacity-50',
                     FOCUS_RING,
+                    INVALID_BORDER,
                 ]"
                 :disabled="field.disabled || processing"
-                :aria-invalid="!!error"
+                v-bind="fieldAria"
                 @click="openSearch"
             >
-                <span :class="chosenLabel || value ? '' : 'text-muted-foreground'">
-                    {{ chosenLabel ?? (value ? String(value) : 'Search…') }}
+                <span :class="effectiveLabel || value ? '' : 'text-muted-foreground'">
+                    {{ effectiveLabel ?? (value ? String(value) : 'Search…') }}
                 </span>
                 <span
                     v-if="value"
@@ -648,23 +726,19 @@ function insertChip(token: string) {
             <div v-if="open" class="fixed inset-0 z-40" @click="open = false" />
         </div>
 
-        <select
+        <PkSelectMenu
             v-else-if="field.type === 'select'"
             :id="`f-${field.key}`"
-            :value="value ?? ''"
+            :model-value="(value as string | number | null) ?? null"
+            :options="options ?? []"
             :disabled="field.disabled || processing"
-            :aria-invalid="!!error"
-            :class="[
-                'border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50',
-                FOCUS_RING,
-            ]"
-            @change="emit('change', ($event.target as HTMLSelectElement).value || null)"
-        >
-            <option value="">-</option>
-            <option v-for="opt in options" :key="String(opt.value)" :value="opt.value">
-                {{ opt.label }}
-            </option>
-        </select>
+            :invalid="!!error"
+            :placeholder="field.placeholder ?? 'Select…'"
+            :clearable="!field.required"
+            :label="field.label"
+            :described-by="describedBy"
+            @update:model-value="(next) => emit('change', next)"
+        />
 
         <!--
             A SWITCH FOR `toggle`, A BOX FOR `checkbox`, and they are not the
@@ -679,6 +753,7 @@ function insertChip(token: string) {
         <label v-else-if="field.type === 'toggle'" class="flex items-center gap-2 text-sm">
             <Switch
                 :id="`f-${field.key}`"
+                v-bind="fieldAria"
                 :model-value="!!value"
                 :disabled="field.disabled || processing"
                 @update:model-value="(checked: boolean) => emit('change', checked)"
@@ -689,6 +764,7 @@ function insertChip(token: string) {
         <label v-else-if="field.type === 'checkbox'" class="flex items-center gap-2 text-sm">
             <Checkbox
                 :id="`f-${field.key}`"
+                v-bind="fieldAria"
                 :model-value="!!value"
                 :disabled="field.disabled || processing"
                 @update:model-value="(checked) => emit('change', checked === true)"
@@ -703,20 +779,23 @@ function insertChip(token: string) {
             :rows="field.rows ?? 3"
             :placeholder="field.placeholder"
             :disabled="field.disabled || processing"
-            :aria-invalid="!!error"
+            v-bind="fieldAria"
             :class="[
                 'border-input bg-background rounded-md border px-3 py-2 text-sm disabled:opacity-50',
                 INPUT_COPY,
                 FOCUS_RING,
+                INVALID_BORDER,
             ]"
             @input="emit('change', ($event.target as HTMLTextAreaElement).value)"
         />
 
         <div
             v-else-if="field.type === 'textarea'"
+            :aria-invalid="!!error"
             :class="[
                 'border-input flex overflow-hidden rounded-md border',
                 FOCUS_RING_WITHIN,
+                INVALID_BORDER,
                 { 'opacity-50': field.disabled || processing },
             ]"
         >
@@ -741,7 +820,7 @@ function insertChip(token: string) {
                 :rows="field.rows ?? 3"
                 :placeholder="field.placeholder"
                 :disabled="field.disabled || processing"
-                :aria-invalid="!!error"
+                v-bind="fieldAria"
                 :class="[
                     'min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm focus-visible:outline-none',
                     INPUT_COPY,
@@ -765,19 +844,26 @@ function insertChip(token: string) {
             </button>
         </div>
 
+        <PkDatePicker
+            v-else-if="field.type === 'date' || field.type === 'datetime'"
+            :id="`f-${field.key}`"
+            :model-value="(value as string) ?? null"
+            :with-time="field.type === 'datetime'"
+            :disabled="field.disabled || processing"
+            :invalid="!!error"
+            :described-by="describedBy"
+            @update:model-value="(next) => emit('change', next)"
+        />
+
         <input
             v-else-if="!hasInputAffixes"
             :id="`f-${field.key}`"
             :type="
                 field.type === 'number'
                     ? 'number'
-                    : field.type === 'date'
-                      ? 'date'
-                      : field.type === 'datetime'
-                        ? 'datetime-local'
-                        : field.type === 'password'
-                          ? 'password'
-                          : (field.inputType ?? 'text')
+                    : field.type === 'password'
+                      ? 'password'
+                      : (field.inputType ?? 'text')
             "
             :value="value ?? ''"
             :placeholder="field.placeholder"
@@ -785,16 +871,18 @@ function insertChip(token: string) {
             :min="field.min"
             :max="field.max"
             :disabled="field.disabled || processing"
-            :aria-invalid="!!error"
+            v-bind="fieldAria"
             :class="inputClass"
             @input="emit('change', ($event.target as HTMLInputElement).value)"
         />
 
         <div
             v-else
+            :aria-invalid="!!error"
             :class="[
                 'border-input flex h-9 overflow-hidden rounded-md border',
                 FOCUS_RING_WITHIN,
+                INVALID_BORDER,
                 { 'opacity-50': field.disabled || processing },
             ]"
         >
@@ -818,13 +906,9 @@ function insertChip(token: string) {
                 :type="
                     field.type === 'number'
                         ? 'number'
-                        : field.type === 'date'
-                          ? 'date'
-                          : field.type === 'datetime'
-                            ? 'datetime-local'
-                            : field.type === 'password'
-                              ? 'password'
-                              : (field.inputType ?? 'text')
+                        : field.type === 'password'
+                          ? 'password'
+                          : (field.inputType ?? 'text')
                 "
                 :value="value ?? ''"
                 :placeholder="field.placeholder"
@@ -832,7 +916,7 @@ function insertChip(token: string) {
                 :min="field.min"
                 :max="field.max"
                 :disabled="field.disabled || processing"
-                :aria-invalid="!!error"
+                v-bind="fieldAria"
                 :class="affixedInputClass"
                 @input="emit('change', ($event.target as HTMLInputElement).value)"
             />
@@ -926,10 +1010,18 @@ function insertChip(token: string) {
             Browse
         </a>
 
-        <p v-if="error" class="text-destructive text-xs leading-snug" role="alert">
+        <!--
+            BOTH RENDER WHEN BOTH EXIST - see `describedBy`'s own docblock
+            above for why this used to be `v-if`/`v-else-if`, and what that
+            silently discarded. The error still reads first and loudest
+            (destructive colour, `role="alert"`); the help text stays
+            available underneath rather than vanishing the moment there is
+            something wrong to say instead.
+        -->
+        <p v-if="error" :id="errorId" class="text-destructive text-xs leading-snug" role="alert">
             {{ error }}
         </p>
-        <p v-else-if="field.help && field.type !== 'toggle'" :class="MUTED_COPY_SNUG">
+        <p v-if="field.help && field.type !== 'toggle'" :id="helpId" :class="MUTED_COPY_SNUG">
             {{ field.help }}
         </p>
     </div>

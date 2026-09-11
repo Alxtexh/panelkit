@@ -134,6 +134,7 @@ final class MakeResourceCommand extends Command
             $namespace,
             $softDeletes,
             $hasMany,
+            $this->option('generate') ? $this->inferRecordTitleColumn($table) : null,
         ));
 
         $this->components->info("Created {$path}");
@@ -301,7 +302,7 @@ final class MakeResourceCommand extends Command
         /** @extends Factory<{$model}> */
         class {$model}Factory extends Factory
         {
-            protected $model = {$model}::class;
+            protected \$model = {$model}::class;
 
             /**
              * Add domain-safe defaults here. The empty definition is deliberate:
@@ -644,6 +645,43 @@ final class MakeResourceCommand extends Command
         return 'id';
     }
 
+    /**
+     * A generated `recordTitle()` override, ONLY when the base class's own
+     * fallback (`name`/`title`/`full_name`/`subject`/`number`/`code`/
+     * `label`/`email` - see `Resource::recordTitle()`) would not already
+     * find something on this table. The common case needs zero generated
+     * code: a table with a plain `name`, `subject`, or `code` column
+     * already gets a human-readable View-page title for free.
+     *
+     * THE ONE ADDITIONAL PATTERN WORTH GUESSING: `{singular}_number`, e.g.
+     * `invoice_number` on an `invoices` table, or `order_number` on
+     * `orders` - a very common real-world identifier shape the base class
+     * cannot cover literally, because it isn't literal (it is prefixed with
+     * the resource's own name). One narrow, predictable rule, not a
+     * resource-name-to-column lookup table: it fires only for THIS exact
+     * `{table-singular}_number` shape, so a `phone_number` or
+     * `tracking_number` column elsewhere on the same table is never
+     * mistaken for the record's identity.
+     *
+     * Returns null when neither applies - the generated resource then
+     * genuinely has no safe guess, and falls through to `#id` until a
+     * developer writes an explicit override, which is the honest outcome
+     * for a table with no ordinary-English identifying column at all.
+     */
+    private function inferRecordTitleColumn(string $table): ?string
+    {
+        foreach (['name', 'title', 'full_name', 'subject', 'number', 'code', 'label', 'email'] as $attribute) {
+            if (Schema::hasColumn($table, $attribute)) {
+                // The base class already finds this one - no override needed.
+                return null;
+            }
+        }
+
+        $prefixed = Str::snake(Str::singular($table)).'_number';
+
+        return Schema::hasColumn($table, $prefixed) ? $prefixed : null;
+    }
+
     /** @return list<string> */
     private function detectChildModels(string $table): array
     {
@@ -696,6 +734,7 @@ final class MakeResourceCommand extends Command
         string $namespace,
         bool $softDeletes,
         array $hasMany,
+        ?string $recordTitleColumn,
     ): string {
         $panelImports = collect($imports)
             ->reject(static fn (string $i): bool => str_starts_with($i, 'Models\\'))
@@ -735,6 +774,20 @@ final class MakeResourceCommand extends Command
             ? "\n         * Soft deletes: `TrashedFilter` is wired on the table."
             : '';
 
+        $recordTitleBlock = $recordTitleColumn === null
+            ? ''
+            : "\n\n            /*\n"
+                ." * The base class's own name/title/full_name/subject/number/code/\n"
+                ." * label/email fallback does not cover `{$recordTitleColumn}` - it is\n"
+                ." * prefixed with the resource's own name, not one of those literal\n"
+                ." * attributes - so this override is generated instead of leaving the\n"
+                ." * View page to show a raw `#id`. Edit or remove freely.\n"
+                ." */\n"
+                ."            public static function recordTitle(\\Illuminate\\Database\\Eloquent\\Model \$record): ?string\n"
+                ."            {\n"
+                ."                return \$record->{$recordTitleColumn};\n"
+                .'            }';
+
         return <<<PHP
         <?php
 
@@ -768,7 +821,7 @@ final class MakeResourceCommand extends Command
              * panel split exists for rather than a naming convention.
              */
             protected static string \$panel = '{$panelId}';
-            {$hasManyBlock}
+            {$hasManyBlock}{$recordTitleBlock}
 
             public static function form(Form \$form): Form
             {
@@ -785,6 +838,17 @@ final class MakeResourceCommand extends Command
                     ]){$filterCode}
                     ->keyColumn('{$table}.id')
                     ->alsoSelect(['{$table}.id'])
+                    /*
+                     * ROW CLICK OPENS THE VIEW PAGE, the recommended default
+                     * for an ordinary browsable list - see `Table::rowClick()`'s
+                     * own docblock for when to remove this: a table people READ
+                     * IN PLACE rather than browse (an audit log, an invoice's
+                     * own line items) usually should not have a clickable row,
+                     * since a mis-aimed click on the way to a checkbox becomes
+                     * an unwanted navigation there. Row actions (⋮) still work
+                     * either way.
+                     */
+                    ->rowClick('view')
                     /*
                      * ROW AND BULK ACTIONS ARE NOT GENERATED, because what may
                      * be DONE to a {$model} is the one thing a table cannot be

@@ -42,8 +42,15 @@ final class CodeColumn extends Column
         return $this;
     }
 
-    public function toSchema(): array
+    /**
+     * OVERRIDES `toArray()`, NOT `toSchema()` - see MoneyColumn::toArray()'s
+     * docblock for why `toSchema()` is a dead override here: `Table.php`'s
+     * column-serialisation loop always calls `->toArray()` directly, so a
+     * `language` set here never reached the client and every code column
+     * rendered its hint-less default.
+     */
+    public function toArray(): array
     {
-        return [...parent::toSchema(), 'language' => $this->language];
+        return [...parent::toArray(), 'language' => $this->language];
     }
 }

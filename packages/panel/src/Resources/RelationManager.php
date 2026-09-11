@@ -399,7 +399,7 @@ final class RelationManager
 
             NestedRelation::appendPivotColumns($definition, $parent, $resource);
 
-            $query = $definition->toListQuery($this->model);
+            $query = $definition->toListQuery($this->model)->sortableByKeyIfUnset();
 
             $query->constrain(function ($builder) use ($parent, $resource, $modify): void {
                 NestedRelation::constrain($builder, $resource, $parent);
@@ -412,7 +412,7 @@ final class RelationManager
             return $query->run($request);
         }
 
-        $query = $definition->toListQuery($this->model);
+        $query = $definition->toListQuery($this->model)->sortableByKeyIfUnset();
 
         // Layered on top of whatever join the table already declares, so a
         // relation manager can still show joined columns.
@@ -443,6 +443,7 @@ final class RelationManager
             // on canInlineCreate(), which is false here regardless.
         } elseif ($this->form !== null) {
             $formSchema = ($this->form)(Form::make())->toSchema();
+            $this->assertSearchableFieldsAreSupported($formSchema);
         } elseif ($this->resource !== null) {
             $formSchema = $this->resource::formDefinition()->toSchema();
         }
@@ -489,6 +490,51 @@ final class RelationManager
             'createAbility' => $this->createAbility,
             'updateAbility' => $this->updateAbility,
         ];
+    }
+
+    /**
+     * A SEARCHABLE `relationship()` FIELD HAS NO ENDPOINT TO SEARCH AGAINST
+     * ON A BARE RELATIONMANAGER, and the old behaviour was silent: the
+     * dropdown opened, the search box looked live, typing fired no request
+     * (`FormFieldControl.vue`'s `searchOptions` resolves through
+     * `relationPages()`, which needs `pages.resource` - `null` here, since
+     * only `->resource(...)` registers one), and the client showed "No
+     * matches" - which reads exactly like a related table that is
+     * genuinely empty, not like a feature that cannot work in this context.
+     *
+     * `{resource}/field-options` is registered per top-level Resource (see
+     * `PanelRoutes::within()`): a resource declaring `$parent` gets that
+     * route mounted at `{parent}/{parentId}/{resource}/field-options`, and
+     * that mount is what a nested `->resource(...)` gives a RelationManager.
+     * A bare `RelationManager::make()` is not itself a routable Resource, so
+     * there is no route this field's search could ever reach - not a bug to
+     * fix in the client, an architecture that fundamentally requires a
+     * nested resource to search.
+     *
+     * FAILS AT SCHEMA-BUILD TIME, which runs on every request in development
+     * (this class caches nothing), so the very first page load surfaces it -
+     * matching every other misconfiguration this codebase catches with a
+     * thrown exception rather than a degraded render (`SelectField`'s own
+     * "resolved N options" throw is the same policy).
+     *
+     * @param  array<string, mixed>  $formSchema
+     */
+    private function assertSearchableFieldsAreSupported(array $formSchema): void
+    {
+        foreach ($formSchema['fields'] ?? [] as $field) {
+            if (! is_array($field) || ($field['type'] ?? null) !== 'select' || ($field['searchable'] ?? false) !== true) {
+                continue;
+            }
+
+            throw new InvalidArgumentException(
+                "SelectField [{$field['key']}] uses relationship search inside RelationManager [{$this->key}], ".
+                'but this relation has no ->resource() and therefore no field-options endpoint to search against - '.
+                'the dropdown would open with a search box that silently returns nothing. '.
+                "Either call ->options([...]) on [{$field['key']}] for a small, fixed related table, ".
+                "or add ->resource(SomeResource::class) to RelationManager::make('{$this->key}', ...) ".
+                'to give this relation dedicated pages and a working search endpoint.',
+            );
+        }
     }
 
     /**

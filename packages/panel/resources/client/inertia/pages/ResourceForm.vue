@@ -908,13 +908,25 @@ onBeforeUnmount(() => {
     <Head :title="`${isEdit ? 'Edit' : 'New'} ${schema.label}`" />
 
     <!--
-        `pb-24` CLEARS THE FLOATING SAVE BAR. The bar is fixed to the bottom
-        of the main content column (`#pk-main`), so without reserved space it sits ON the last section
-        of a scrolled-to-bottom form - covering the exact fields somebody is
-        trying to fill (the user hit this on the announcement toggles). The
-        padding means fully scrolled content ends above the bar, always.
+        `pb-40 sm:pb-24` CLEARS THE FLOATING SAVE BAR. The bar is fixed to the
+        bottom of the main content column (`#pk-main`), so without reserved
+        space it sits ON the last section of a scrolled-to-bottom form -
+        covering the exact fields somebody is trying to fill (the user hit
+        this on the announcement toggles). The padding means fully scrolled
+        content ends above the bar, always.
+
+        TWO VALUES, NOT ONE, matching `UnsavedBar.vue`'s own `sm:` split.
+        Below `sm` the bar sits `bottom-[calc(3.5rem+safe-area)]` to clear
+        `PkBottomNav` underneath it - so the actual exclusion zone on a
+        handset is the bar's own height (which can grow past its usual ~70px
+        when a secondary action like "Create & add another" wraps to two
+        lines at narrow widths) PLUS the nav's 3.5rem, comfortably over the
+        96px `pb-24` alone ever reserved. That gap is exactly where the
+        Status/Date fields of a Create form disappeared behind both bars at
+        390px. `sm:pb-24` keeps the desktop value unchanged, where the bar
+        sits flush at `bottom-0` with no nav stacked under it.
     -->
-    <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4 pb-24']">
+    <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4 pb-40 sm:pb-24']">
         <PkPageHeader
             :title="isEdit ? `Edit ${schema.label}` : `New ${schema.label}`"
             :purpose="

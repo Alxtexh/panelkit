@@ -24,7 +24,8 @@ mass assignment is bounded by what you wrote rather than by `$fillable`.
 |---|---|
 | `TextField` | Single-line text |
 | `TextareaField` | Multi-line text |
-| `NumberField` | Numbers, with `min()` / `max()` |
+| `NumberField` | Integers, with `min()` / `max()` and decision-chip `presets()` |
+| `MoneyField` | Decimal amounts — `currency()` prefix, `decimals()`, `min()` / `max()` as floats |
 | `PasswordField` | Passwords — blank means *unchanged*, never *null* |
 | `SelectField` | One of a list; `searchable()` or `relationship()` for long lists |
 | `MultiSelectField` | Several of a list |
@@ -68,7 +69,7 @@ TextField::make('reference')
     ->help('Shown under the control')
     ->disabled()
     ->span(2)                      // Columns in the form grid
-    ->rules(['string', 'max:64'])  // Extra Laravel rules
+    ->rule('string', 'max:64')     // Extra Laravel rules (variadic, not an array)
     ->chips(['INV-', 'CR-'])       // One-tap values
     ->prefix('INV-')               // Text before the control
     ->suffixAction(['label' => 'Copy', 'copy' => true])
@@ -146,6 +147,12 @@ SelectField::make('article_id')
     })
     ->live();
 ```
+
+**Inside a `RelationManager`'s own `->form()`**, this only works when that
+relation is resource-backed (`->resource(...)`) - a simple `->related()`
+relation has no route for the search to reach and fails at schema-build time
+with a message naming the fix. See
+[Relation managers](02-resources.md#relation-managers).
 
 ### SelectField::morphTo()
 
@@ -350,10 +357,10 @@ thousand rows does not ship to the browser.
 ## Layout
 
 Fields can be grouped, and the layout components live in
-`Alxtexh\Panel\Forms`:
+`Alxtexh\Panel\Schema`:
 
 ```php
-use Alxtexh\Panel\Forms\Section;
+use Alxtexh\Panel\Schema\Section;
 
 $form->schema([
     Section::make('Details')->schema([

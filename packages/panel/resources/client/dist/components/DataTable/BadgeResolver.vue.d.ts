@@ -17,8 +17,8 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     disabled: boolean;
     busy: boolean;
     options: Record<string, string>;
-    soft: boolean;
     colors: Record<string, string>;
     defaultColor: string;
+    soft: boolean;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

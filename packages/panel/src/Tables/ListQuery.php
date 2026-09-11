@@ -265,6 +265,43 @@ final class ListQuery
         return $this;
     }
 
+    /**
+     * A safe fallback when nothing declared a sortable column: sort by the
+     * query's own key - the SAME column `run()` already appends
+     * unconditionally as the tiebreaker on every query, sortable or not (see
+     * that ORDER BY's own docblock). Because that tiebreaker exists, the
+     * query mechanics already tolerate zero explicit sort terms - keyset
+     * pagination's seek clause degrades to a plain `WHERE id > cursor` and
+     * works correctly; nothing about correctness needed this method to
+     * exist.
+     *
+     * What needed it: `run()` throws "must declare at least one sortable
+     * column" specifically so a full resource List page - built once,
+     * reused for as long as the resource exists - does not silently ship
+     * with no user-facing sort at all, which is a real, almost always
+     * accidental omission there. A `RelationManager` tab is a different
+     * shape of problem: a small, already-authorization-scoped related list
+     * (an order's line items, a client's notes) that a developer very
+     * reasonably never thought of as needing its own sort story, and for
+     * which "most recent first, tied on insertion order" - i.e. exactly what
+     * the tiebreaker alone already produces - is a perfectly good default,
+     * not a bug to be caught.
+     *
+     * DELIBERATELY OPT-IN, not folded into `run()`'s own check. A top-level
+     * resource's List page keeps throwing exactly as before - that guardrail
+     * stays a guardrail there. Only `RelationManager::rows()` calls this, so
+     * only the case this docblock argues for actually changes.
+     */
+    public function sortableByKeyIfUnset(): self
+    {
+        if ($this->sortable !== []) {
+            return $this;
+        }
+
+        return $this->sortable([$this->keyColumn => $this->qualifiedKey()])
+            ->defaultSort($this->keyColumn, 'desc');
+    }
+
     /** @param list<string> $columns */
     public function searchable(array $columns): self
     {

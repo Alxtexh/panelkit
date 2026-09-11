@@ -5,6 +5,15 @@ import { FORM_MEASURE } from '../../lib/pageShell'
 import UnsavedBar from './UnsavedBar.vue'
 
 describe('UnsavedBar', () => {
+    /**
+     * `sticky`, NOT `fixed` - see the component's own docblock.
+     * `#pk-main` is the scroll container AND (via `transform-gpu`) the
+     * containing block a `fixed` descendant would resolve against, and a
+     * `fixed` element whose containing block is transformed scrolls WITH
+     * that ancestor's content instead of staying pinned - verified live by
+     * scrolling `#pk-main` on a 390px Create page and watching the bar drift
+     * off-screen. `sticky` has no such failure mode.
+     */
     it('pins inside #pk-main with FORM_MEASURE, not full-viewport body chrome', async () => {
         const shell = document.createElement('main')
         shell.id = 'pk-main'
@@ -19,8 +28,8 @@ describe('UnsavedBar', () => {
         const frame = document.querySelector('[data-slot="unsaved-bar"]') as HTMLElement | null
         expect(frame).not.toBeNull()
         expect(shell.contains(frame)).toBe(true)
-        expect(frame!.className).toContain('fixed')
-        expect(frame!.className).not.toContain('sticky')
+        expect(frame!.className).toContain('sticky')
+        expect(frame!.className).not.toContain('fixed')
         const chrome = frame!.firstElementChild as HTMLElement
         expect(chrome.className).toContain('max-w-7xl')
         expect(chrome.className).toContain(FORM_MEASURE.split(' ')[0])

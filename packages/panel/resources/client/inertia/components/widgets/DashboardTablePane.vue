@@ -8,7 +8,13 @@
  */
 import { Deferred, Link, router, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import { DataTable, PkBadge, PkBoundary, useSchemaColumns } from '@alxtexh-enterprise/panel'
+import {
+    DataTable,
+    hasBadgeValue,
+    PkBadge,
+    PkBoundary,
+    useSchemaColumns,
+} from '@alxtexh-enterprise/panel'
 import type { SchemaColumn } from '@alxtexh-enterprise/panel'
 import { useWidgetPoll } from '../../composables/useWidgetPoll'
 import { formatMoney } from '../../lib/money'
@@ -78,7 +84,7 @@ const dateFormats: Record<string, Intl.DateTimeFormatOptions> = {
 }
 
 function displayValue(column: SchemaColumn, value: unknown, row: Record<string, unknown>): string {
-    if (value === null || value === undefined || value === '') return 'None'
+    if (value === null || value === undefined || value === '') return '-'
 
     if (column.type === 'money') return formatMoney(column, value, row)
 
@@ -187,15 +193,25 @@ useWidgetPoll(
                             v-for="column in schemaColumns"
                             v-slot:[`cell:${column.key}`]="slotProps"
                         >
+                            <!--
+                                AN EMPTY BADGE COLUMN IS A DASH, NOT A BADGE -
+                                same rule as `ResourceIndex.vue`'s table (see
+                                `hasBadgeValue`'s own docblock): a pill reading
+                                the word "None" answers a question nobody
+                                asked, capitalized as if it were a real status.
+                            -->
+                            <span
+                                v-if="column.type === 'badge' && !hasBadgeValue(slotProps.value)"
+                                class="text-muted-foreground"
+                            >
+                                -
+                            </span>
                             <PkBadge
-                                v-if="column.type === 'badge'"
+                                v-else-if="column.type === 'badge'"
                                 :variant="badgeVariant(column.key, slotProps.value) as any"
                                 class="capitalize"
                             >
-                                {{
-                                    column.options?.[String(slotProps.value)] ??
-                                    String(slotProps.value ?? 'None')
-                                }}
+                                {{ column.options?.[String(slotProps.value)] ?? String(slotProps.value) }}
                             </PkBadge>
                             <span v-else-if="shouldFormat(column)" class="tabular-nums">
                                 {{

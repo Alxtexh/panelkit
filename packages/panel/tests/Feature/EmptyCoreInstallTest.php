@@ -191,6 +191,37 @@ final class EmptyCoreInstallTest extends TestCase
         $this->assertStringContainsString("Route::redirect('/', '/login');", $install);
     }
 
+    /**
+     * `make:panel` creates BOTH `Panel/Admin/Resources` and
+     * `Panel/Admin/Widgets` unconditionally (`MakePanelCommand::handle()`),
+     * but `createDefaultPanel()` used to `rmdir()` only `Resources` before
+     * `Panel/Admin` itself - `rmdir()` silently refuses a non-empty
+     * directory (the leading `@` swallows the warning), so with `Widgets`
+     * still inside it `Panel/Admin` was never actually removed. A fresh
+     * install was left with two decoy directories nothing discovers
+     * (`Panel/Resources`/`Panel/Widgets`, which `AdminPanelProvider` is
+     * repointed to just above, are the real ones) sitting beside them -
+     * confirmed by a release-candidate mini-SaaS build.
+     */
+    public function test_install_removes_both_decoy_admin_directories_before_their_parent(): void
+    {
+        $install = (string) file_get_contents(
+            dirname(__DIR__, 2).'/src/Commands/InstallCommand.php'
+        );
+
+        $resources = strpos($install, "@rmdir(app_path('Panel/Admin/Resources'));");
+        $widgets = strpos($install, "@rmdir(app_path('Panel/Admin/Widgets'));");
+        $parent = strpos($install, "@rmdir(app_path('Panel/Admin'));");
+
+        $this->assertNotFalse($resources, 'InstallCommand must still remove the decoy Resources directory.');
+        $this->assertNotFalse($widgets, 'InstallCommand must also remove the decoy Widgets directory - previously missing.');
+        $this->assertNotFalse($parent, 'InstallCommand must still remove the now-empty decoy Panel/Admin directory.');
+
+        // ORDER MATTERS: both children before the parent, or the parent's
+        // rmdir() still finds it non-empty and silently fails again.
+        $this->assertTrue($resources < $parent && $widgets < $parent, 'Both decoy children must be removed before their parent directory.');
+    }
+
     public function test_local_auth_prefill_defaults_to_the_first_user_flags(): void
     {
         $install = (string) file_get_contents(

@@ -56,6 +56,17 @@ php artisan panel:install
 `composer require`, and it will publish config, scaffold panel plumbing, and
 write front-end wiring based on the version Composer already installed.
 
+> **Testing a local fork or an unreleased branch?** A Composer `path`
+> repository pointed at a local checkout (instead of the `vcs` repository
+> above) has no version tag to satisfy `^1.0` against, and Composer will only
+> offer `dev-main` (or whichever branch you have checked out). Require that
+> constraint explicitly instead: `composer require alxtexh-enterprise/panel:@dev`
+> (no `-W` needed for a path repository). This applies only to local
+> path-repository testing - a normal install from the `vcs` repository above
+> uses `^1.0` exactly as documented.
+
+
+
 **AI: read `AGENTS.md` first.** Install writes that file (Day 0 do/don't at the
 top). Claude Code: `php artisan panel:blueprint --file=CLAUDE.md`. Cursor: if
 `.cursor/rules` already exists, install also writes `panelkit.mdc`.

@@ -103,26 +103,34 @@ final class SelectFilter extends Filter implements HasOptions
         $options = $this->options instanceof Closure ? ($this->options)() : $this->options;
 
         /*
-         * CAUGHT HERE, NOT ON THE CLIENT. `SelectField::options()` takes a
+         * NORMALISED HERE, NOT REJECTED. `SelectField::options()` takes a
          * `value => label` map - the natural shape to reach for, since it is
-         * the SAME method name on a sibling class in the same package. This
-         * one takes a `list` instead (a security allowlist, per the class
-         * docblock: an associative map has no unambiguous "the value side"
-         * to allow). Passed a map anyway, `json_encode` turns the string keys
-         * into a JS OBJECT, and the client's `(filter.options ?? []).map(...)`
-         * throws "options.map is not a function" - a crash in a browser
-         * console, days after the typo that caused it. This throws in the
-         * request that made the mistake, naming the fix.
+         * the SAME method name on a sibling class in the same package, it is
+         * what every documented example in docs/04-columns-and-filters.md
+         * shows, and it is the shape Laravel/Filament convention trains a
+         * developer to expect. This class used to throw on that shape instead
+         * of accepting it, because passing the raw map straight through to
+         * `json_encode` turns the string keys into a JS OBJECT, and the
+         * client's `(filter.options ?? []).map(...)` would throw
+         * "options.map is not a function" - a crash in a browser console,
+         * days after the typo that caused it. Rather than force every
+         * developer who reaches for the natural shape into an unusual list
+         * format, normalise the map into the list-of-{value,label} shape this
+         * class has always required internally: the ambiguity concern (an
+         * associative map has no unambiguous "the value side" for a security
+         * allowlist) does not apply once every key is treated as an allowed
+         * value and every value as its label, which is exactly what the map
+         * form means.
          */
         if ($options !== [] && ! array_is_list($options)) {
-            throw new InvalidArgumentException(sprintf(
-                "SelectFilter::make('%s')->options() received a value => label map (SelectField's shape). "
-                ."SelectFilter wants a list: ->options(['%s']) or "
-                ."->options([['value' => '%s', 'label' => '...'], ...]).",
-                $this->key,
-                implode("', '", array_keys($options)),
-                array_key_first($options),
-            ));
+            $options = array_map(
+                static fn (int|string $value, string $label): array => [
+                    'value' => (string) $value,
+                    'label' => $label,
+                ],
+                array_keys($options),
+                array_values($options),
+            );
         }
 
         return $this->resolved = $options;

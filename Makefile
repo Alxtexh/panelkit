@@ -155,13 +155,17 @@ check-static-analysis: ## Run PHPStan with a bounded, actionable local diagnosti
 check-css-parity: ## Fail when stub, kit, and playground CSS drift on critical blocks
 	@scripts/check-css-parity.sh
 
+.PHONY: check-kit-css-complete
+check-kit-css-complete: ## Fail when the built/published kit CSS is missing design-system.css rules (e.g. a cssCodeSplit naming collision silently dropping them)
+	@scripts/check-kit-css-complete.sh
+
 .PHONY: release-check
-release-check: check-client check-css-parity check-page-shell check-public-api check-release-metadata check-bundle-budget check-dependencies check-static-analysis test-fast test-package ## Pre-tag: client/CSS/design, dependency, API, static analysis, package, metadata, and bundle checks
+release-check: check-client check-css-parity check-kit-css-complete check-page-shell check-public-api check-release-metadata check-bundle-budget check-dependencies check-static-analysis test-fast test-package ## Pre-tag: client/CSS/design, dependency, API, static analysis, package, metadata, and bundle checks
 	@echo "release-check ok: client mirror, CSS, page shell, API, metadata, bundle budget, and test gates passed."
 	@echo "Remember: demo UI must match the published kit (sync-client before tag)."
 
 .PHONY: release-check-full
-release-check-full: release-check test-playground-feature test-playground-performance verify-install verify-broadcast browser ## Full pre-release validation including consumer, transport, performance, and browser journeys
+release-check-full: release-check test-playground-feature test-playground-performance verify-install verify-fresh-install verify-broadcast browser ## Full pre-release validation including consumer, transport, performance, and browser journeys
 	@echo "release-check-full ok: release gates, consumer install, transport, performance, and browser journeys passed."
 
 .PHONY: split
@@ -175,6 +179,17 @@ split: ## Build the standalone package branches (see scripts/split.sh; nothing i
 .PHONY: verify-install
 verify-install: ## Install both packages as a stranger would and build against them
 	@scripts/verify-install.sh
+
+# `verify-install` resolves classes through the packaged artifact; it never
+# boots an application or serves a request. This is the check that does:
+# a real `composer create-project laravel/laravel`, `panel:install`, a
+# generated resource, and real HTTP requests against `php artisan serve` -
+# the pipeline whose gap once let a broken published CSS bundle ship (see
+# scripts/verify-fresh-install.sh's own header). Needs network; not part of
+# the fast `release-check` path.
+.PHONY: verify-fresh-install
+verify-fresh-install: ## Install, boot, and request a fresh consumer app over real HTTP
+	@scripts/verify-fresh-install.sh
 
 # THE ONE THING `BroadcastChannelTest` CANNOT TELL YOU. It proves who may
 # subscribe to what; this proves a message actually travels. The two failures

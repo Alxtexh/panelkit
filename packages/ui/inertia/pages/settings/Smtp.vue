@@ -156,11 +156,14 @@ async function sendTest() {
     <h1 class="sr-only">SMTP settings</h1>
 
     <!--
-        `pb-24` CLEARS THE FLOATING SAVE BAR - `ResourceForm.vue`'s same
-        comment. The bar is fixed to the bottom of `#pk-main`; without
-        reserved space it sits on top of the last field instead of below it.
+        `pb-40 sm:pb-24` CLEARS THE FLOATING SAVE BAR - `ResourceForm.vue`'s
+        same comment, including the `sm:` split (the bar stacks above
+        `PkBottomNav` below that breakpoint, so the handset exclusion zone
+        is taller than `pb-24` alone ever reserved). The bar is fixed to the
+        bottom of `#pk-main`; without reserved space it sits on top of the
+        last field instead of below it.
     -->
-    <div class="flex flex-col pb-24" :class="sectionClass">
+    <div class="flex flex-col pb-40 sm:pb-24" :class="sectionClass">
         <Heading
             variant="small"
             title="SMTP"

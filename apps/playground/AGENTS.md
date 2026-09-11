@@ -111,6 +111,7 @@ Panels registered in this application:
 - `reseller` - mounted at `/reseller`, guard `web`, tenant context
 - `superadmin` - mounted at `/superadmin`, guard `superadmins`, central context
 - `client` - mounted at `/client`, guard `customers`, tenant context
+- `authfixture` - mounted at `/authfixture`, guard `web`, tenant context
 
 Resources are discovered from:
 

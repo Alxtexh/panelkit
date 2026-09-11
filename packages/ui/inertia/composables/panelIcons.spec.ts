@@ -1,5 +1,6 @@
 import { Package, Settings } from '@lucide/vue'
 import { describe, expect, it } from 'vitest'
+import panelIconNames from './panel-icon-names.json'
 import { PANEL_ICONS, resolvePanelIcon } from './panelIcons'
 
 /**
@@ -25,5 +26,16 @@ describe('panelIcons', () => {
         expect(resolvePanelIcon('not-a-real-icon')).toBe(Package)
         expect(resolvePanelIcon(null)).toBe(Package)
         expect(resolvePanelIcon(undefined)).toBe(Package)
+    })
+
+    /**
+     * `panel-icon-names.json` is the vocabulary `panel:doctor` (PHP) validates
+     * a resource's `$icon` against, since PHP cannot `import` this file. A
+     * name added or removed here without updating that JSON would make the
+     * PHP-side check either miss a real typo or flag a perfectly valid one -
+     * this is what keeps the two lists from drifting apart silently.
+     */
+    it('keeps panel-icon-names.json in sync with PANEL_ICONS', () => {
+        expect([...panelIconNames].sort()).toEqual(Object.keys(PANEL_ICONS).sort())
     })
 })

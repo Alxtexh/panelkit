@@ -6,6 +6,7 @@ namespace Alxtexh\Panel\Schema;
 
 use Closure;
 use Alxtexh\Panel\Forms\Fields\Field;
+use Alxtexh\Panel\Infolists\Entry;
 
 /**
  * A node in a form or view schema.
@@ -202,6 +203,44 @@ abstract class Component
         }
 
         return $fields;
+    }
+
+    /**
+     * Every Entry anywhere beneath these nodes, at any depth - the infolist
+     * counterpart of `collectFields()` above.
+     *
+     * STOPS AT AN ENTRY, deliberately never recursing into one. A `Section`
+     * is a pure layout wrapper whose children ARE separate top-level record
+     * attributes, so recursing into it is correct; `RepeatableEntry`'s items
+     * describe the SHAPE of values INSIDE the one JSON column it itself
+     * reads, not further top-level attributes - and this never has to
+     * special-case that distinction, because `RepeatableEntry::schema()`
+     * stores its items on its own private property rather than the base
+     * `Component::$children` this walks, so they were never reachable here
+     * to begin with.
+     *
+     * @param  list<Component|Renderable>  $nodes
+     * @return list<Entry>
+     */
+    public static function collectEntries(array $nodes): array
+    {
+        $entries = [];
+
+        foreach ($nodes as $node) {
+            if ($node instanceof Entry) {
+                $entries[] = $node;
+
+                continue;
+            }
+
+            if (! $node instanceof self) {
+                continue;
+            }
+
+            $entries = [...$entries, ...self::collectEntries($node->children())];
+        }
+
+        return $entries;
     }
 
     /**

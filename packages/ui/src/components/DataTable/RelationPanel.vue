@@ -22,6 +22,7 @@
 import { router } from '@inertiajs/vue3'
 import { computed, useSlots } from 'vue'
 import type { SchemaColumn } from '../../composables/useSchemaColumns'
+import { formatMoney } from '../../lib/money'
 import PkEmptyState from '../primitives/PkEmptyState.vue'
 import TableShell from './TableShell.vue'
 import TableToolbar from './TableToolbar.vue'
@@ -86,9 +87,20 @@ const emptyColumns = computed(() =>
     props.columns.map((column) => ({ key: column.key, label: column.label, locked: true })),
 )
 
-function format(column: SchemaColumn, value: unknown): string {
+/**
+ * SAME BRANCHES AS `ResourceIndex.vue`'s own `render()` - money included.
+ *
+ * A related list is the one table on a record page with no per-column Vue
+ * slot dispatcher backing it (see the `<RelationPanel>` usage in
+ * `ResourceView.vue`: no `cell:<key>` templates, just this component's own
+ * formatting). `MoneyColumn` fell through to `String(value)` here for
+ * exactly the reason `ResourceView.vue`'s Infolist fallback once did - an
+ * order's line items showed `22.38` in its own summary tab while the same
+ * declaration rendered `US$22.38` on the order's main table.
+ */
+function format(column: SchemaColumn, value: unknown, row?: Record<string, unknown>): string {
     if (value === null || value === undefined || value === '') {
-        return 'None'
+        return '-'
     }
 
     if (column.type === 'date' || column.type === 'datetime') {
@@ -98,6 +110,10 @@ function format(column: SchemaColumn, value: unknown): string {
             day: 'numeric',
             ...(column.type === 'datetime' ? { hour: '2-digit', minute: '2-digit' } : {}),
         })
+    }
+
+    if (column.type === 'money') {
+        return formatMoney(column, value, row)
     }
 
     return typeof value === 'number' ? new Intl.NumberFormat().format(value) : String(value)
@@ -237,15 +253,15 @@ function onRowClick(row: Record<string, unknown>, event: MouseEvent): void {
                                     :href="`${recordBase}/${row.id}`"
                                     class="text-foreground underline-offset-2 hover:underline"
                                 >
-                                    {{ format(column, row[column.key]) }}
+                                    {{ format(column, row[column.key], row) }}
                                 </a>
                                 <span
                                     v-else-if="isEmpty(row[column.key])"
                                     class="text-muted-foreground"
                                 >
-                                    None
+                                    -
                                 </span>
-                                <template v-else>{{ format(column, row[column.key]) }}</template>
+                                <template v-else>{{ format(column, row[column.key], row) }}</template>
                             </slot>
                         </td>
                     </tr>

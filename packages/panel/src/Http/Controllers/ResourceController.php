@@ -16,9 +16,11 @@ use Alxtexh\Panel\Http\NestedRelation;
 use Alxtexh\Panel\Live\LiveConfig;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
+use Alxtexh\Panel\Schema\Component;
 use Alxtexh\Panel\Widgets;
 use Alxtexh\Panel\Workflow\WorkflowHistory;
 use Alxtexh\Panel\Workflow\WorkflowOverride;
+use Illuminate\Contracts\Database\Query\Expression as QueryExpression;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -539,11 +541,21 @@ final class ResourceController extends Controller
             abort_unless(self::childBelongs($class, $parent, $record), 404);
         }
 
-        // Fetched through the TABLE's select and joins, so joined columns like
-        // plan_name are present. The raw model carries only its own attributes,
-        // and a missing joined value renders as an em dash that reads like real
-        // data rather than an omission.
-        $row = $class::definition()->toListQuery($class::model())->find($id) ?? $record->toArray();
+        /*
+         * FETCHED THROUGH THE TABLE'S SELECT AND JOINS BY DEFAULT, so joined
+         * columns like plan_name are present - the raw model carries only its
+         * own attributes, and a missing joined value renders as an em dash
+         * that reads like real data rather than an omission.
+         *
+         * A RESOURCE WHOSE `infolist()` DECLARES ITS OWN ENTRIES DRIVES ITS
+         * OWN SELECTION FROM THOSE INSTEAD (`infolistSelect()` below), not
+         * from `table()->columns()` - an entry for an attribute the list
+         * happens not to display used to render `—` even though the value
+         * existed, because the View's query was really the List's.
+         */
+        $row = $class::definition()
+            ->toListQuery($class::model(), $this->infolistSelect($class))
+            ->find($id) ?? $record->toArray();
 
         $relationFormOptions = [];
 
@@ -563,7 +575,7 @@ final class ResourceController extends Controller
             'schema' => $parent === null
                 ? $class::schema()
                 : NestedContext::schema($class::schema(), $class, $parent),
-            'record' => [...$row, 'id' => $record->getKey()],
+            'record' => [...$row, 'id' => $record->getKey(), '_title' => $class::recordTitle($record)],
             'can' => $class::permissions(),
             'workflow' => self::workflowContext($class, $row, $record),
             'comments' => self::commentsContext($class, $record, $request),
@@ -584,8 +596,8 @@ final class ResourceController extends Controller
             // page or component knowing which driver is configured.
             'live' => LiveConfig::fromConfig()->toArray(),
             'breadcrumbs' => $parent === null
-                ? $this->trail($class, (string) ($record->name ?? "#{$record->getKey()}"))
-                : [...NestedContext::breadcrumbs($class, $parent), ['title' => (string) ($record->name ?? "#{$record->getKey()}"), 'href' => '#']],
+                ? $this->trail($class, $this->recordLabel($class, $record))
+                : [...NestedContext::breadcrumbs($class, $parent), ['title' => $this->recordLabel($class, $record), 'href' => '#']],
         ]);
     }
 
@@ -701,25 +713,36 @@ final class ResourceController extends Controller
         $form = $class::formDefinition();
         abort_if($form->fields() === [], 404, "Resource [{$resource}] has no form.");
 
+        $values = [
+            ...$form->valuesFor($record),
+            // `valuesFor()` read `custom_{key}` as a plain attribute and
+            // found nothing - the value actually lives unprefixed inside
+            // `custom`. Overriding those keys here, after the spread, is
+            // cheaper than teaching the generic form layer about one
+            // resource-specific storage convention (see
+            // RecordController::foldCustomFields()'s own note).
+            ...$this->customFieldValues($class::key(), $record),
+            // Carried so a stale save is rejected rather than silently
+            // overwriting another admin (addendum C).
+            '_updated_at' => $this->updatedAt($record),
+        ];
+
         return Inertia::render('ResourceForm', [
             'schema' => $parent === null
                 ? $class::schema()
                 : NestedContext::schema($class::schema(), $class, $parent),
-            'record' => ['id' => $record->getKey(), 'label' => (string) ($record->name ?? "#{$record->getKey()}")],
-            'values' => [
-                ...$form->valuesFor($record),
-                // `valuesFor()` read `custom_{key}` as a plain attribute and
-                // found nothing - the value actually lives unprefixed inside
-                // `custom`. Overriding those keys here, after the spread, is
-                // cheaper than teaching the generic form layer about one
-                // resource-specific storage convention (see
-                // RecordController::foldCustomFields()'s own note).
-                ...$this->customFieldValues($class::key(), $record),
-                // Carried so a stale save is rejected rather than silently
-                // overwriting another admin (addendum C).
-                '_updated_at' => $this->updatedAt($record),
-            ],
-            'formOptions' => $form->resolveOptions(),
+            'record' => ['id' => $record->getKey(), 'label' => $this->recordLabel($class, $record)],
+            'values' => $values,
+            /*
+             * `currentValueOptions()` AFTER `resolveOptions()`, spread order
+             * matters: a searchable relationship field is present in
+             * `resolveOptions()`'s own output too, as `[]` ("ships no
+             * options, the client searches") - this fills in the one entry
+             * that matters for an Edit page, the record's own existing
+             * value, so `FormFieldControl.vue` has a label instead of the
+             * raw foreign key on first paint. See both methods' docblocks.
+             */
+            'formOptions' => [...$form->resolveOptions(), ...$form->currentValueOptions($values)],
             'breadcrumbs' => $parent === null
                 ? $this->trail($class, 'Edit')
                 : [...NestedContext::breadcrumbs($class, $parent), ['title' => 'Edit', 'href' => '#']],
@@ -801,7 +824,7 @@ final class ResourceController extends Controller
             'mode' => $record === null ? 'create' : 'edit',
             'record' => $record === null
                 ? null
-                : ['id' => $record->getKey(), 'label' => (string) ($record->name ?? "#{$record->getKey()}")],
+                : ['id' => $record->getKey(), 'label' => $this->recordLabel($class, $record)],
             'values' => $record === null
                 ? $form->valuesFor(null)
                 : [
@@ -937,6 +960,81 @@ final class ResourceController extends Controller
                 CustomFieldFactory::formKey($d) => $custom[$d->key] ?? null,
             ])
             ->all();
+    }
+
+    /**
+     * The human label a breadcrumb or record chip shows for one record.
+     *
+     * `$record->name ?? "#{id}"` was the literal check before `recordTitle()`
+     * existed, and four call sites (`show()`'s and `edit()`'s breadcrumbs,
+     * `edit()`'s own record chip, and `modalFormPayload()`'s) never moved onto
+     * it once it did - so a resource whose `recordTitle()` correctly drove
+     * the View page's own H1 (Invoices, Tickets, Orders - anything identified
+     * by `invoice_number`/`subject`/`order_number` rather than a literal
+     * `name` column) still showed a raw `#102` in its OWN breadcrumb one line
+     * above that title, and again as the Edit page's record chip. Confirmed
+     * live: an Order's breadcrumb read "Orders > #2" directly under a page
+     * titled "ORD-1002".
+     *
+     * @param  class-string<Resource>  $class
+     */
+    private function recordLabel(string $class, Model $record): string
+    {
+        return $class::recordTitle($record) ?? "#{$record->getKey()}";
+    }
+
+    /**
+     * The View page's own value selection, when `infolist()` declares one.
+     *
+     * NULL MEANS "use the table's own select" - `infolist()` returning `[]`
+     * is the resource's own documented fallback (see `Resource::infolist()`'s
+     * docblock: "Empty means the view falls back to table columns"), and this
+     * preserves that literally rather than reimplementing it here.
+     *
+     * `Entry::dependsOn()` folds in - `ImageEntry::fallbackFrom()` is the
+     * reason it exists: a key read for rendering that is not the entry's own.
+     *
+     * THE WORKFLOW'S STATE COLUMN IS ALWAYS INCLUDED, when the resource has
+     * one, regardless of whether an infolist entry happens to also show it.
+     * `workflowContext()` below reads `$row[$workflow->rowKey()]`
+     * unconditionally to resolve the current state and its transitions - a
+     * resource whose infolist doesn't separately declare a `BadgeEntry` for
+     * that same column would otherwise lose its workflow badge silently the
+     * moment `infolist()` first gained any entries at all.
+     *
+     * @param  class-string<Resource>  $class
+     * @return list<string|QueryExpression>|null
+     */
+    private function infolistSelect(string $class): ?array
+    {
+        $entries = Component::collectEntries($class::infolist());
+
+        if ($entries === []) {
+            return null;
+        }
+
+        $select = [];
+
+        foreach ($entries as $entry) {
+            $select[] = $entry->selectExpression();
+
+            foreach ($entry->dependsOn() as $dependency) {
+                $select[] = $dependency;
+            }
+        }
+
+        $workflow = $class::resolvedWorkflow();
+
+        if ($workflow !== null) {
+            $select[] = $workflow->rowKey();
+        }
+
+        // Same split-then-rejoin `array_unique` cannot do directly over a mix
+        // of strings and `Expression` objects - see `Table::resolveSelect()`.
+        $strings = array_values(array_unique(array_filter($select, 'is_string')));
+        $expressions = array_values(array_filter($select, static fn ($c): bool => ! is_string($c)));
+
+        return [...$strings, ...$expressions];
     }
 
     /**

@@ -36,8 +36,43 @@ describe('RelationPanel', () => {
         expect(wrapper.text()).toContain('Comments')
         expect(wrapper.text()).toContain('Add')
         expect(wrapper.text()).toContain('Hello')
-        expect(wrapper.text()).toContain('None')
+        expect(wrapper.text()).not.toContain('None')
         expect(wrapper.find('.rounded-xl').exists()).toBe(true)
+    })
+
+    /**
+     * A relation tab is the one table with no per-column Vue slot dispatcher
+     * behind it - `ResourceView.vue` mounts `<RelationPanel>` with no
+     * `cell:<key>` templates, so this component's own `format()` is the only
+     * thing standing between a money column and a bare, unformatted number.
+     */
+    it('formats a money column the same way the main table does', () => {
+        const moneyColumns: SchemaColumn[] = [
+            { key: 'unit_price', label: 'Unit price', type: 'money', currency: 'USD' },
+        ]
+
+        const wrapper = mount(RelationPanel, {
+            props: {
+                columns: moneyColumns,
+                rows: [{ id: 1, unit_price: 2238 }],
+                loaded: true,
+            },
+        })
+
+        expect(wrapper.text()).toContain('$22.38')
+    })
+
+    it('shows a muted dash, not the word "None", for an empty cell', () => {
+        const wrapper = mount(RelationPanel, {
+            props: {
+                columns,
+                rows: [{ id: 1, title: 'Hello', note: null }],
+                loaded: true,
+            },
+        })
+
+        expect(wrapper.text()).not.toContain('None')
+        expect(wrapper.text()).toContain('-')
     })
 
     it('renders PkEmptyState when loaded with no rows', () => {

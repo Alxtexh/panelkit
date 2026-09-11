@@ -101,6 +101,8 @@ final class DoctorCommand extends Command
             $this->checkTrustedProxyAndHttps();
         } else {
             $this->checkPolicies($panels);
+            $this->checkNavigationIconPropertyName($panels);
+            $this->checkResourceIconNames($panels);
             $this->checkBroadcasting();
             $this->checkQueueIsReal($panels);
             $this->checkSessionLimit();
@@ -391,6 +393,130 @@ final class DoctorCommand extends Command
                 );
             }
         }
+    }
+
+    /**
+     * `$navigationIcon` IS FILAMENT'S PROPERTY NAME, NOT PANELKIT'S -
+     * PanelKit reads `static::$icon` (via `Resource::icon()`), so a resource
+     * declaring `protected static ?string $navigationIcon = 'receipt';`
+     * compiles cleanly, silently becomes an unused property on the
+     * subclass, and the resource keeps whatever `$icon` already resolves to
+     * - the inherited default `'list'` if never overridden. Six
+     * independently-built resources all made exactly this mistake at once
+     * (a natural one: `$navigationIcon` is literally Filament's own
+     * `Resource` property), and every one of them silently got the SAME
+     * generic list icon - with no error, no warning, nothing to say why.
+     *
+     * PHP CANNOT CATCH THIS ON ITS OWN - a subclass is always free to
+     * declare a property its parent does not have, and nothing about that
+     * is a syntax or type error. Reflection is the only way to see it: a
+     * resource that declares its OWN `$navigationIcon` (not inherited, so a
+     * genuine subclass-only property) almost certainly meant `$icon`.
+     */
+    private function checkNavigationIconPropertyName(PanelManager $panels): void
+    {
+        foreach ($panels->resources() as $key => $class) {
+            if (! (new \ReflectionClass($class))->hasProperty('navigationIcon')) {
+                continue;
+            }
+
+            $property = new \ReflectionProperty($class, 'navigationIcon');
+
+            if ($property->getDeclaringClass()->getName() !== $class) {
+                continue;
+            }
+
+            $this->problem(
+                "{$class::pluralLabel()} declares \$navigationIcon, which PanelKit never reads",
+                "[{$key}] declares a \$navigationIcon property - that is Filament's Resource property "
+                ."name, not PanelKit's. PanelKit reads \$icon (via Resource::icon()), so this resource "
+                ."is silently using the inherited default ('{$class::icon()}') instead of the icon you "
+                .'meant to set.',
+                "Rename the property to \$icon on {$class}, e.g. protected static string \$icon = "
+                ."'receipt';. See PANEL_ICONS in packages/ui/inertia/composables/panelIcons.ts for the "
+                .'supported names - an unrecognised one now warns in the browser console too.',
+            );
+        }
+    }
+
+    /**
+     * `$icon` NAMED CORRECTLY BUT NOT ONE OF THE ~60 THIS PACKAGE CURATES.
+     *
+     * A DIFFERENT FAILURE FROM `checkNavigationIconPropertyName()` above -
+     * that one catches the WRONG PROPERTY NAME (Filament's
+     * `$navigationIcon`); this one catches the RIGHT property holding a
+     * plausible but unregistered VALUE. `user-cog` is a real Lucide icon and
+     * a completely reasonable guess - PanelKit ships a curated ~60-name
+     * subset of Lucide's ~1600 rather than the whole set (see `PANEL_ICONS`'s
+     * own docblock for why: an unbounded dynamic import blows the kit's JS
+     * bundle budget), so a name outside it resolves to nothing and the
+     * client falls back to the generic `Package` icon - with `package`
+     * ALSO being a legitimately declared icon elsewhere, so the fallback is
+     * invisible. Confirmed live in a release-candidate mini-SaaS build: a
+     * Products resource using `user-cog` collided visually with every other
+     * resource that fell back the same way.
+     *
+     * READS THE JSON, NOT THE `.ts` FILE - PHP cannot `import` TypeScript,
+     * and this package's own `panelIcons.spec.ts` is what keeps
+     * `panel-icon-names.json` in sync with `PANEL_ICONS`'s real keys, so
+     * this check validates against the same vocabulary the client enforces
+     * rather than a second, hand-maintained PHP copy of it.
+     *
+     * SILENTLY SKIPPED WHEN THE MANIFEST IS ABSENT, deliberately - a
+     * from-source checkout that has not run `make sync-client` yet has
+     * nothing wrong with its resources' icons; that is a build-step gap
+     * `checkClientHalf()` already reports on its own terms, not this one's.
+     */
+    private function checkResourceIconNames(PanelManager $panels): void
+    {
+        $manifest = dirname(__DIR__, 2).'/resources/client/inertia/composables/panel-icon-names.json';
+
+        if (! is_file($manifest)) {
+            return;
+        }
+
+        $decoded = json_decode((string) file_get_contents($manifest), true);
+        $validNames = is_array($decoded) ? array_flip($decoded) : null;
+
+        if ($validNames === null) {
+            return;
+        }
+
+        /*
+         * TWO LOOPS, NOT ONE OVER A MERGED ARRAY - `Resource::pluralLabel()`
+         * has no equivalent on `Page` (only the singular `label()`), so a
+         * combined loop calling one name on both class kinds would fatal on
+         * the first page it reached rather than merely reading oddly.
+         */
+        foreach ($panels->resources() as $key => $class) {
+            $this->reportUnsupportedIcon($key, $class, $class::pluralLabel(), $validNames);
+        }
+
+        foreach ($panels->pages() as $key => $class) {
+            $this->reportUnsupportedIcon($key, $class, $class::label(), $validNames);
+        }
+    }
+
+    /** @param array<string, int> $validNames */
+    private function reportUnsupportedIcon(string $key, string $class, string $label, array $validNames): void
+    {
+        $icon = $class::icon();
+
+        if ($icon === '' || isset($validNames[$icon])) {
+            return;
+        }
+
+        $this->problem(
+            "{$label} declares an unsupported panel icon",
+            "[{$key}] declares \$icon = '{$icon}', which is not one of the names PanelKit's "
+            .'curated icon set recognises. It compiles and runs, but the sidebar silently falls '
+            .'back to the generic package icon - indistinguishable from every other resource '
+            .'that does the same, so this can recreate the exact "everything looks like the '
+            .'same icon" problem a curated set exists to prevent.',
+            "Pick a supported name from PANEL_ICONS in packages/ui/inertia/composables/panelIcons.ts "
+            ."(or panel-icon-names.json alongside it) for {$class}'s \$icon, e.g. "
+            ."protected static string \$icon = 'receipt';.",
+        );
     }
 
     private function checkBroadcasting(): void

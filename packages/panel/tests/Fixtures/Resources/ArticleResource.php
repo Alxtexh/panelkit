@@ -10,6 +10,7 @@ use Alxtexh\Panel\Actions\BulkAction;
 use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Forms\Fields\CheckboxField;
 use Alxtexh\Panel\Forms\Fields\FileUploadField;
+use Alxtexh\Panel\Forms\Fields\MoneyField;
 use Alxtexh\Panel\Forms\Fields\RepeaterField;
 use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Forms\Form;
@@ -29,6 +30,7 @@ use Alxtexh\Panel\Resources\Board;
 use Alxtexh\Panel\Resources\Resource;
 use Alxtexh\Panel\Tables\Columns\BadgeColumn;
 use Alxtexh\Panel\Tables\Columns\DateColumn;
+use Alxtexh\Panel\Tables\Columns\MoneyColumn;
 use Alxtexh\Panel\Tables\Columns\SelectColumn;
 use Alxtexh\Panel\Tables\Filters\SelectFilter;
 use Alxtexh\Panel\Tables\Columns\TextColumn;
@@ -146,6 +148,14 @@ final class ArticleResource extends Resource
              * testing.
              */
             FileUploadField::make('attachment')->accept(['pdf', 'txt'])->maxKilobytes(64),
+            /*
+             * SAME COLUMN AS `MoneyColumn::make('price')` BELOW AND
+             * `MoneyEntry::make('price')` in `infolist()` - the three-way
+             * agreement pass exists to prove exactly this: `articles.price`
+             * is minor units (cents), and List/View/Edit must all read that
+             * one stored integer the same way.
+             */
+            MoneyField::make('price')->currency('$'),
             RepeaterField::make('comments')
                 ->relationship('comments')
                 ->schema([
@@ -222,9 +232,35 @@ final class ArticleResource extends Resource
                     'archived' => 'warning',
                 ])
                 ->defaultColor('neutral'),
-            DateTimeEntry::make('created_at'),
+            /*
+             * QUALIFIED, unlike most entries here, because `tenants` (joined
+             * for `tenant_name` below) ALSO has a `created_at` column - the
+             * exact ambiguity `Column::from()`'s own docblock exists to name,
+             * now real the moment an infolist and a join share a query. Every
+             * OTHER entry above stays bare: none of `title`/`status`/`cover`/
+             * `meta`/`accent`/`snippet`/`extras`/`price` exist on `tenants`.
+             */
+            DateTimeEntry::make('created_at')->from('articles.created_at'),
             MoneyEntry::make('price')->currency('USD')->divideBy(100),
             ViewEntry::make('title')->label('Title preview')->view('article-title-preview'),
+            /*
+             * THE DOCUMENTED WAY TO SHOW A RELATIONSHIP VALUE ON AN INFOLIST:
+             * a real SQL join (declared once, on `table()`'s own `->query()`
+             * below - the same join a List column would use) plus `from()`,
+             * the identical mechanism `Column::from()` already has, now
+             * shared via `HasQualifiedSource`. `TextEntry::make('tenant.name')`
+             * (dot notation) is deliberately NOT what this is - PanelKit does
+             * not walk Eloquent relations per row for an infolist value; see
+             * `HasQualifiedSource`'s own docblock for why a join stays a join
+             * rather than becoming an N+1.
+             *
+             * ABSENT FROM `table()->columns()` ON PURPOSE - this is also the
+             * infolist/table decoupling regression case: before the fix, a
+             * View page's selection WAS the table's, so an entry for a value
+             * the list never displays rendered an em dash despite the value
+             * (and now the join) genuinely existing.
+             */
+            TextEntry::make('tenant_name')->label('Tenant')->from('tenants.name'),
         ];
     }
 
@@ -377,6 +413,12 @@ final class ArticleResource extends Resource
                     ])
                     ->resolver(),
                 DateColumn::make('created_at')->from('articles.created_at')->sortable()->withTime(),
+                /*
+                 * SAME COLUMN AS `MoneyField::make('price')` above and
+                 * `MoneyEntry::make('price')` in `infolist()` - see the
+                 * field's own comment for why all three read one column.
+                 */
+                MoneyColumn::make('price')->from('articles.price')->currency('USD'),
             ])
             /*
              * A DECLARED FILTER, which is the allowlist the query string is
@@ -389,6 +431,14 @@ final class ArticleResource extends Resource
                     ->column('articles.status')
                     ->options(['draft', 'published', 'archived']),
             ])
+            /*
+             * THE JOIN `infolist()`'s `tenant_name` entry reads through - see
+             * that entry's own comment. Declared once here, the same as a
+             * List column's join would be; `ResourceController::show()`
+             * applies it for the View page too, only the SELECTED VALUES
+             * differ between the two screens.
+             */
+            ->query(static fn ($query) => $query->leftJoin('tenants', 'tenants.id', '=', 'articles.tenant_id'))
             ->keyColumn('articles.id')
             /*
              * DECLARED ACTIONS, because the endpoint only runs what the

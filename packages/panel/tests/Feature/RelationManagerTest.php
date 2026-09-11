@@ -231,6 +231,110 @@ final class RelationManagerTest extends TestCase
         $this->assertFalse($schema['canEdit']);
     }
 
+    /**
+     * A BARE RELATIONMANAGER WITH NO `->sortable()` COLUMN USED TO 500.
+     *
+     * `ListQuery::run()` still throws "A list query must declare at least
+     * one sortable column" for a top-level Resource's own List page - that
+     * guardrail is unchanged and still covered elsewhere. This is the
+     * narrower, opt-in fallback `RelationManager::rows()` now applies:
+     * `sortableByKeyIfUnset()` sorts by the query's own key instead, which
+     * is already the tiebreaker every query appends unconditionally, so
+     * nothing about correctness changes - only whether an ordinary
+     * developer's very first RelationManager 500s on first load.
+     */
+    public function test_a_relation_manager_without_a_sortable_column_does_not_500(): void
+    {
+        $older = $this->comment('Older');
+        $newer = $this->comment('Newer');
+
+        $manager = \Alxtexh\Panel\Resources\RelationManager::make('comments', 'Comments')
+            ->related(Comment::class, 'comments.article_id')
+            ->table(fn (\Alxtexh\Panel\Tables\Table $table): \Alxtexh\Panel\Tables\Table => $table
+                ->columns([
+                    \Alxtexh\Panel\Tables\Columns\TextColumn::make('body')->from('comments.body'),
+                ])
+                ->keyColumn('comments.id'));
+
+        $result = $manager->rows(\Illuminate\Http\Request::create('/'), $this->article->getKey());
+
+        $bodies = array_column($result->records, 'body');
+
+        // Default direction is desc, so the most recently created row (the
+        // key column, used as the fallback sort) leads.
+        $this->assertSame([$newer->body, $older->body], $bodies);
+    }
+
+    /**
+     * A SEARCHABLE relationship() FIELD ON A BARE RELATIONMANAGER FAILS
+     * LOUDLY, not silently. Before this guardrail, the field's dropdown
+     * opened and its search box looked live - `relationPages()` on the
+     * client had no `pages.resource` to build a URL from, so no request
+     * ever fired and the client showed "No matches", indistinguishable
+     * from a related table that is genuinely empty.
+     */
+    public function test_a_searchable_relationship_field_without_a_nested_resource_throws_a_clear_error(): void
+    {
+        $manager = \Alxtexh\Panel\Resources\RelationManager::make('comments', 'Comments')
+            ->related(Comment::class, 'comments.article_id')
+            ->table(fn (\Alxtexh\Panel\Tables\Table $table): \Alxtexh\Panel\Tables\Table => $table
+                ->columns([
+                    \Alxtexh\Panel\Tables\Columns\TextColumn::make('body')->from('comments.body'),
+                ])
+                ->keyColumn('comments.id'))
+            ->form(fn (\Alxtexh\Panel\Forms\Form $form): \Alxtexh\Panel\Forms\Form => $form->schema([
+                \Alxtexh\Panel\Forms\Fields\SelectField::make('article_id')
+                    ->relationship(Article::class, 'title'),
+            ]));
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/article_id.*RelationManager \[comments\].*no field-options endpoint/s');
+
+        $manager->toSchema();
+    }
+
+    /**
+     * THE DOCUMENTED WORKAROUND STAYS SAFE: a bare RelationManager's own
+     * form may still use `SelectField::options([...])` (a fixed, small
+     * list, no search endpoint needed) without tripping the guardrail
+     * above - only `->relationship()`'s searchable flag does.
+     */
+    public function test_a_static_options_field_on_a_bare_relation_manager_does_not_throw(): void
+    {
+        $manager = \Alxtexh\Panel\Resources\RelationManager::make('comments', 'Comments')
+            ->related(Comment::class, 'comments.article_id')
+            ->table(fn (\Alxtexh\Panel\Tables\Table $table): \Alxtexh\Panel\Tables\Table => $table
+                ->columns([
+                    \Alxtexh\Panel\Tables\Columns\TextColumn::make('body')->from('comments.body'),
+                ])
+                ->keyColumn('comments.id'))
+            ->form(fn (\Alxtexh\Panel\Forms\Form $form): \Alxtexh\Panel\Forms\Form => $form->schema([
+                \Alxtexh\Panel\Forms\Fields\SelectField::make('status')
+                    ->options(['draft' => 'Draft', 'published' => 'Published']),
+            ]));
+
+        $schema = $manager->toSchema();
+
+        $this->assertSame('status', $schema['form']['fields'][0]['key'] ?? null);
+    }
+
+    /**
+     * A `->resource()`-BACKED RELATIONMANAGER IS EXEMPT, because it IS
+     * registered as a routable Resource under the parent (`PanelRoutes::
+     * within()`), which is what gives its fields a real field-options
+     * endpoint to search against - `CommentResource`'s own form uses
+     * `SelectField::relationship()` and must keep working.
+     */
+    public function test_a_resource_backed_relation_manager_with_relationship_search_does_not_throw(): void
+    {
+        $manager = \Alxtexh\Panel\Resources\RelationManager::make('comments', 'Comments')
+            ->resource(\Alxtexh\Panel\Tests\Fixtures\Resources\CommentResource::class);
+
+        $schema = $manager->toSchema();
+
+        $this->assertSame('comments', $schema['pages']['resource'] ?? null);
+    }
+
     public function test_a_linked_nested_resource_exposes_dedicated_pages(): void
     {
         $relations = $this->get("/articles/{$this->article->getKey()}")

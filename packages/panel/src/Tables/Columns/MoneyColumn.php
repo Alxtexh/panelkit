@@ -91,12 +91,21 @@ final class MoneyColumn extends Column
      * the value that survives is the one that differs from the default, which
      * is what the filter is for.
      *
+     * OVERRIDES `toArray()`, NOT `toSchema()`. `Column::toSchema()` is an
+     * alias - `return $this->toArray();` - kept only so a caller that treats
+     * every schema node the same way (layout, entries, columns) can call one
+     * method name; the table-rendering pipeline itself always calls
+     * `->toArray()` directly (`Table.php`'s column-serialisation loop, twice).
+     * An override on `toSchema()` here never ran: `currency`, `currencyColumn`
+     * and `major` never reached the client, and a list column rendered a bare
+     * `10,000.00` with no `$` regardless of `->currency('USD')`.
+     *
      * @return array<string, mixed>
      */
-    public function toSchema(): array
+    public function toArray(): array
     {
         return array_filter([
-            ...parent::toSchema(),
+            ...parent::toArray(),
             'currency' => $this->currency,
             'currencyColumn' => $this->currencyColumn,
             'major' => ! $this->minorUnits,

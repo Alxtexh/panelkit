@@ -24,13 +24,13 @@ declare const __VLS_component: import("vue").DefineComponent<__VLS_PublicProps, 
     cart: (key: string) => any;
     filter: (filters: CatalogFilters) => any;
     select: (key: string) => any;
-    "update:modelValue": (value: "grid" | "list") => any;
+    "update:modelValue": (value: "list" | "grid") => any;
     scan: (query: string) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_PublicProps> & Readonly<{
     onCart?: ((key: string) => any) | undefined;
     onFilter?: ((filters: CatalogFilters) => any) | undefined;
     onSelect?: ((key: string) => any) | undefined;
-    "onUpdate:modelValue"?: ((value: "grid" | "list") => any) | undefined;
+    "onUpdate:modelValue"?: ((value: "list" | "grid") => any) | undefined;
     onScan?: ((query: string) => any) | undefined;
 }>, {
     searchPlaceholder: string;

@@ -69,7 +69,7 @@ const remainder = computed(() => Math.max(0, tags.value.length - visible.value.l
 </script>
 
 <template>
-    <span v-if="tags.length === 0" class="text-muted-foreground text-sm font-normal">None</span>
+    <span v-if="tags.length === 0" class="text-muted-foreground text-sm font-normal">-</span>
     <span v-else class="inline-flex flex-wrap items-center gap-1">
         <PkBadge v-for="tag in visible" :key="tag" variant="secondary">
             {{ tag }}

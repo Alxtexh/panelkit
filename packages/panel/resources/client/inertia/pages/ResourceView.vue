@@ -146,7 +146,15 @@ const hasLayout = computed(() => (props.schema.infolist?.length ?? 0) > 0)
 const schemaColumns = toRef(() => props.schema.table.columns)
 const { byKey, badgeVariant } = useSchemaColumns(schemaColumns)
 
-const title = computed(() => String(props.record.name ?? `#${props.record.id}`))
+/**
+ * `_title` comes from `Resource::recordTitle()` - checked against whichever
+ * common display attribute the model actually carries (name, title,
+ * full_name, label, email), not just a literal `name`. `record.name` stays
+ * as a fallback for a host that hasn't rebuilt its published assets yet
+ * (an older `record` payload without `_title` at all), so this never
+ * regresses to a blank title on a stale deploy.
+ */
+const title = computed(() => String(props.record._title ?? props.record.name ?? `#${props.record.id}`))
 
 const page = usePage()
 
@@ -729,7 +737,7 @@ function confirmPending() {
 <template>
     <Head :title="title" />
 
-    <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4']">
+    <div :class="[PAGE_SHELL_COMPACT, 'pk-form-stack']">
         <PkPageHeader :title="title" :purpose="schema.label">
             <template
                 v-if="statusColumn && (workflow?.current || record[statusColumn.key] != null)"
@@ -784,8 +792,22 @@ function confirmPending() {
             full width below.
         -->
         <div :class="FORM_MEASURE">
-            <!-- Layout tree: tabs and sections, same components the form uses. -->
-            <template v-if="hasLayout">
+            <!--
+                Layout tree: tabs and sections, same components the form uses.
+
+                `pk-form-stack`, NOT A BARE `<template>`. Multiple root-level
+                Sections (Products' Details/Pricing & stock/Media &
+                description, say) were direct siblings of `FORM_MEASURE`
+                with no gap mechanism between them at all - not merely a
+                tight one, an absent one: `getBoundingClientRect()` showed
+                each card's border-box touching the next with zero pixels
+                between, relying entirely on each card's own shadow/ring to
+                read as separate. `RecordForm.vue` (Create/Edit) already
+                wraps its own `SchemaNode` stack in `pk-form-stack`; this
+                brings View into the same, already-density-aware token
+                rather than inventing a second spacing mechanism.
+            -->
+            <div v-if="hasLayout" class="pk-form-stack">
                 <InfoNode
                     v-for="(node, i) in schema.infolist"
                     :key="i"
@@ -793,7 +815,7 @@ function confirmPending() {
                     :record="record"
                     @action="runInfolistAction"
                 />
-            </template>
+            </div>
 
             <!-- Fallback: a definition list. One record's attributes read better as
                  labelled pairs than as a table row turned on its side. -->
@@ -887,7 +909,7 @@ function confirmPending() {
                                     <dd class="col-span-2 break-words">{{ v }}</dd>
                                 </div>
                             </dl>
-                            <span v-else class="text-muted-foreground font-normal">None</span>
+                            <span v-else class="text-muted-foreground font-normal">—</span>
                         </div>
 
                         <ImageCell
@@ -909,7 +931,7 @@ function confirmPending() {
                         >
                             {{
                                 record[column.key] == null || record[column.key] === ''
-                                    ? 'None'
+                                    ? '—'
                                     : render(column.key)
                             }}
                         </span>

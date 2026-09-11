@@ -21,11 +21,11 @@ type __VLS_PublicProps = __VLS_Props & {
 declare const _default: import("vue").DefineComponent<__VLS_PublicProps, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     cart: (key: string) => any;
     select: (key: string) => any;
-    "update:layout": (value: "grid" | "list") => any;
+    "update:layout": (value: "list" | "grid") => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_PublicProps> & Readonly<{
     onCart?: ((key: string) => any) | undefined;
     onSelect?: ((key: string) => any) | undefined;
-    "onUpdate:layout"?: ((value: "grid" | "list") => any) | undefined;
+    "onUpdate:layout"?: ((value: "list" | "grid") => any) | undefined;
 }>, {
     title: string;
     description: string | null;

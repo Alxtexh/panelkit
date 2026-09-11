@@ -140,6 +140,32 @@ export function usePanelNav() {
         resources.forEach(add)
         pages.forEach(add)
 
+        /*
+         * A DECLARED GROUP OF EXACTLY ONE IS THE SAME NOISE an ungrouped
+         * singleton already is (see `add()`'s own note above) - it just
+         * arrived by a different path. A fresh install with `->sidebarSettings()`
+         * on and none of the optional Mail/Payment/Environment/Sitemap pages
+         * enabled ends up with a "Settings" section holding exactly the
+         * built-in account-settings page, so a host got a two-click detour
+         * (expand the chevron, then click a child confusingly labelled
+         * "Settings" again, under a heading that already said "Settings")
+         * to reach one link a plain top-level item would have been.
+         *
+         * Demoted into the flat list here, before `groups` is built, so it
+         * is indistinguishable from an item that was never grouped at all -
+         * same place in the sidebar an ungrouped page would occupy, own
+         * icon, own label, no heading repeating it. A section keeps its
+         * heading the moment a second page joins it (own item, or a nested
+         * subgroup), which is the point where a heading starts pulling its
+         * weight.
+         */
+        for (const [name, section] of [...grouped.entries()]) {
+            if (section.items.length === 1 && section.subgroups.size === 0) {
+                ungrouped.push(section.items[0]!)
+                grouped.delete(name)
+            }
+        }
+
         return {
             primary: [
                 /*

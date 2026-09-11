@@ -47,6 +47,46 @@ present. `TagsColumn` accepts arrays, JSON array strings, or
 
 `locked()` keeps a column visible when the person hides others.
 
+### Computed values: `->from()` and `->fromRaw()`
+
+`->from('other_table.column')` reads a value from a JOINED table instead of
+the resource's own - the query still needs the join itself (`Table::query()`),
+this only says which column the result should be read from and aliases it
+back to the column's own key, so the row arrives under the key you declared
+rather than one nothing reads.
+
+`->fromRaw($sqlExpression)` goes one step further: a value the DATABASE
+COMPUTES rather than one it stores - a comparison between two columns, not a
+fact sitting in either. The panel's own Ticketing feature uses it for exactly
+that, an "unread" badge computed in the SELECT instead of with a per-row
+lookup (which would be an N+1 query the badge is not worth):
+
+```php
+BadgeColumn::make('unread')->label('')->fromRaw(
+    '(case when tickets.desk_read_at is null'
+    .' or (tickets.last_reply_at is not null'
+    .' and tickets.last_reply_at >= tickets.desk_read_at)'
+    ." then 'New' else '' end)"
+)->colors(['New' => 'danger']),
+```
+
+The expression is aliased to the column's own key automatically (`... as
+unread`), the same way `->from()` is - write `plans.name as plan_name` only
+when you need an alias OTHER than the column's own key; PanelKit adds the
+usual one for you.
+
+**This is developer-authored SQL, not a query builder call - treat it with
+the same care as any raw SQL string.** Everything passed to `fromRaw()` is
+interpolated into the query with nothing bound, so it must be a literal
+written in the resource class, never built from request input, a filter
+value, or anything else a visitor controls. There is no safe way to pass
+untrusted data through it.
+
+`Entry::fromRaw()` (infolists, see the next chapter) works identically -
+both `Column` and `Entry` share this exact mechanism, so a join declared once
+on `table()` can back a computed value on the List page, the View page, or
+both, without writing the alias-handling logic twice.
+
 ### Editable columns write, so they are guarded
 
 `ToggleColumn`, `SelectColumn`, and `TextInputColumn` post a single cell. That

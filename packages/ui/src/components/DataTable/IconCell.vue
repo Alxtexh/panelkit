@@ -56,15 +56,36 @@ const TONES: Record<string, string> = {
 
 /**
  * Booleans arrive as `true`, `1` or `"1"` depending on the driver, and their
- * falsy counterparts likewise. Both collapse to the two keys PHP maps against.
+ * falsy counterparts likewise. Both collapse to the two keys PHP maps
+ * against - `IconColumn::boolean()`/`IconEntry::boolean()` both say so in
+ * their own docblocks, but only the truthy half of that promise was ever
+ * implemented: `0` and `"0"` fell through to `String(props.value)` below,
+ * producing the lookup key `"0"` - which matches neither `boolean()`'s `'1'`
+ * key nor its `''` false key, so the icon/color/label all missed and the
+ * cell rendered the literal text "0".
+ *
+ * CONFIRMED LIVE: a Product's View page, `active` cast to `boolean` on the
+ * model, still arrives at the client as a raw `0` - `ResourceController::
+ * show()` reads the record through `ListQuery::find()`, which drops to
+ * `Builder::toBase()` for the joined-column select and returns an
+ * uncast `stdClass` row, not a hydrated Eloquent model. That is a separate,
+ * deeper architectural trade-off (`toBase()` is there so a list of
+ * thousands of rows does not hydrate a model per row) - not something to
+ * unwind here. This fix instead makes the CLIENT actually keep the promise
+ * its own docblock already made: normalise every falsy/truthy shape a
+ * boolean column can arrive in, whichever layer sent it raw.
  */
 const lookup = computed(() => {
-    if (typeof props.value === 'boolean') {
-        return props.value ? '1' : ''
-    }
-
     if (props.value === null || props.value === undefined) {
         return ''
+    }
+
+    if (props.value === false || props.value === 0 || props.value === '0') {
+        return ''
+    }
+
+    if (props.value === true || props.value === 1 || props.value === '1') {
+        return '1'
     }
 
     return String(props.value)

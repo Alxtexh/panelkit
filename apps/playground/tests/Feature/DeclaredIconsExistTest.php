@@ -127,4 +127,75 @@ final class DeclaredIconsExistTest extends TestCase
             'These render as a fallback dot in the handset navigation, which has no other icon source.',
         );
     }
+
+    /**
+     * AND THE DESKTOP SIDEBAR - the map the test above never checked.
+     *
+     * `test_every_navigation_icon_has_a_path()` compares declared navigation
+     * icons against `icons.ts`, which is what the HANDSET bar resolves
+     * through. The desktop sidebar resolves the exact same declared names
+     * through a SEPARATE map - `panelIcons.ts`'s `PANEL_ICONS`, a curated
+     * `Record<string, Component>` of `@lucide/vue` imports - and nothing
+     * compared the two. The failure mode is worse here than a fallback dot:
+     * `resolvePanelIcon()` falls back to the `Package` component, which is
+     * ALSO a real, legitimately-declared icon for other resources
+     * (`PlanResource`, `Cluster.php`) - so a missing icon doesn't read as
+     * broken, it reads as "every new resource gets the box icon", which is
+     * exactly the bug report that led here: most declared names (`webhook`,
+     * `message-circle`, `layout-template`, `scroll-text`, `flag`, `building`,
+     * `rocket`, `map`, `user-plus`, `folder`, `file`, `circle-check`) were
+     * simply absent from a 37-entry map while `@lucide/vue` - already a
+     * dependency - ships the icon for every one of them.
+     */
+    public function test_every_navigation_icon_exists_in_the_desktop_sidebar_map(): void
+    {
+        $map = file_get_contents(
+            base_path('../../packages/ui/inertia/composables/panelIcons.ts'),
+        );
+
+        $this->assertNotFalse($map, 'The desktop sidebar icon map moved; this test points at the wrong file.');
+
+        $declared = [];
+
+        foreach (glob(app_path('Panel/Resources/*.php')) as $file) {
+            $source = (string) file_get_contents($file);
+
+            preg_match_all("/\\\$icon\s*=\s*'([a-z0-9-]+)'/", $source, $property);
+            preg_match_all("/function icon\(\): string\s*\{\s*return '([a-z0-9-]+)'/", $source, $accessor);
+
+            foreach ([...$property[1], ...$accessor[1]] as $name) {
+                $declared[$name] = basename($file);
+            }
+        }
+
+        foreach ([app_path('Panel/Pages.php'), base_path('../../packages/panel/src/Trash/TrashBin.php')] as $file) {
+            preg_match_all("/'icon'\s*=>\s*'([a-z0-9-]+)'/", (string) file_get_contents($file), $matches);
+
+            foreach ($matches[1] as $name) {
+                $declared[$name] = basename($file);
+            }
+        }
+
+        $this->assertGreaterThan(8, count($declared), 'No navigation icons were found to check.');
+
+        $missing = [];
+
+        foreach ($declared as $name => $file) {
+            $quoted = preg_quote($name, '/');
+
+            // PANEL_ICONS keys are always quoted when hyphenated and often
+            // bare otherwise - same dual form as icons.ts above.
+            if (preg_match("/(^|\s)'?{$quoted}'?\s*:/m", $map) !== 1) {
+                $missing[] = "{$name} (declared in {$file})";
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $missing,
+            'These render as the generic Package/box icon in the DESKTOP sidebar - invisibly, because '
+            .'Package is also a legitimately-declared icon elsewhere, so a missing entry looks like a '
+            .'correct one rather than an obvious fallback.',
+        );
+    }
 }

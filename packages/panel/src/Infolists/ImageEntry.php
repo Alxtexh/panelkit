@@ -52,6 +52,12 @@ final class ImageEntry extends Entry
         return $this;
     }
 
+    /** The fallback-initials source is a second key this entry reads - see `Entry::dependsOn()`. */
+    public function dependsOn(): array
+    {
+        return [$this->fallbackFrom ?? 'name'];
+    }
+
     public function fallback(string $fallback): static
     {
         $this->fallback = in_array($fallback, ['initials', 'icon', 'none'], true) ? $fallback : 'initials';

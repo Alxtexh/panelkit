@@ -158,6 +158,36 @@ final class SelectRelationshipTest extends TestCase
         $this->assertSame('New article', $schema['createOptionActionLabel']);
     }
 
+    /**
+     * WITHOUT THIS, an Edit page for any `relationship()` field showed the
+     * raw foreign key instead of the related record's name until you opened
+     * the search and picked the same value again - `chosenLabel` on the
+     * client only ever learns a label from `pick()`, never from the value a
+     * record already has. `ResourceController::edit()` now resolves that
+     * one label via `Form::currentValueOptions()` and folds it into
+     * `formOptions`; this is the HTTP-level proof it actually reaches the
+     * page. See `SelectField::resolveCurrentOption()`'s own docblock.
+     */
+    public function test_edit_page_resolves_the_current_relationship_value_to_a_label(): void
+    {
+        $comment = \Alxtexh\Panel\Tests\Fixtures\Models\Comment::create([
+            'tenant_id' => $this->mine->id,
+            'article_id' => $this->article->getKey(),
+            'body' => 'Existing comment',
+        ]);
+
+        $props = $this->get("/articles/{$this->article->getKey()}/comments/{$comment->getKey()}/edit")
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $options = $props['formOptions']['article_id'] ?? [];
+
+        $this->assertSame([[
+            'value' => $this->article->getKey(),
+            'label' => 'Mine article',
+        ]], $options);
+    }
+
     public function test_another_tenants_id_fails_relationship_validation(): void
     {
         $foreign = Article::withoutGlobalScopes()

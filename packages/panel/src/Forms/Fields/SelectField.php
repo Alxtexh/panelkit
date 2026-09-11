@@ -584,4 +584,40 @@ final class SelectField extends Field
 
         return $out;
     }
+
+    /**
+     * The CURRENT VALUE's own label, for an Edit page.
+     *
+     * `resolveOptions()` deliberately ships nothing for a searchable
+     * `relationship()` field - the client searches instead of downloading a
+     * whole related table. But nobody resolved the ONE label that actually
+     * matters on first paint: the record's own existing value. The client
+     * had no label to show for it and fell back to the raw foreign key, so
+     * an Invoice's "Customer" field showed `94` instead of "Kay White"
+     * until you opened the search and picked the same customer again.
+     *
+     * Cheap by construction - one row, not a list - so it runs unconditionally
+     * for every searchable relationship field on an Edit page rather than
+     * needing its own opt-in.
+     *
+     * @return array{value: mixed, label: string}|null
+     */
+    public function resolveCurrentOption(mixed $value): ?array
+    {
+        if (! $this->searchable || $this->relatedModel === null || $this->titleAttribute === null) {
+            return null;
+        }
+
+        if ($value === null || $value === '' || ! is_scalar($value)) {
+            return null;
+        }
+
+        $row = $this->relatedModel::query()->find($value);
+
+        if ($row === null) {
+            return null;
+        }
+
+        return ['value' => $row->getKey(), 'label' => (string) $row->getAttribute($this->titleAttribute)];
+    }
 }

@@ -11,7 +11,7 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     compact: boolean;
     caption: string;
     style: string;
-    accent: string;
     mono: boolean;
+    accent: string;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

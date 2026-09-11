@@ -889,7 +889,7 @@ function layoutLabel(item: AnyLayoutItem): string {
             data-slot="dashboard-header"
         >
             <div class="min-w-0">
-                <h1 class="text-lg font-semibold tracking-tight sm:text-xl">
+                <h1>
                     {{ heading }}
                 </h1>
                 <p v-if="filterSummary" class="truncate text-xs text-muted-foreground">

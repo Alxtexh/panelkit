@@ -310,6 +310,52 @@ abstract class Resource
     }
 
     /**
+     * The attribute that best identifies a record to a human - shown as the
+     * View page's title instead of a raw ID.
+     *
+     * Checked in order against whichever of these attributes the model
+     * actually carries; the client used to try only a literal `name`
+     * (`ResourceView.vue`'s title fell back to `record.name ?? "#{id}"`), so
+     * any model whose obvious display field was `full_name`, `title`, or
+     * `label` showed its numeric ID as the page title instead - a raw `#5`
+     * reads as an accident, not a design choice, and is worse than a page
+     * that never tries to guess a name at all.
+     *
+     * EXPANDED, NOT JUST DOCUMENTED, after a six-resource consistency pass
+     * found this exact gap live: `TicketResource` (a plain `subject` column)
+     * showed `#54` as its View-page title with zero code changed, simply
+     * because `subject` was not on this list. `subject`/`number`/`code` are
+     * the same literal, ordinary-English-column-name candidates
+     * `MakeResourceCommand::inferTitleAttribute()` already uses to guess a
+     * RELATED model's display attribute for a generated `relationship()`
+     * field - proven safe there, reused here for the resource's own record.
+     *
+     * DELIBERATELY LITERAL, NOT PATTERN-MATCHED. `invoice_number` and
+     * `order_number` do not match `number` here, and are not meant to: a
+     * suffix-matching rule (anything ending in `_number`/`_code`) would also
+     * match a `phone_number` or `tracking_code` that was never meant to BE
+     * the record's identity, and a wrong guess silently mislabelling every
+     * record is worse than one that still falls through to `#id` and asks
+     * for an explicit override.
+     *
+     * Override when the model's display attribute isn't one of these -
+     * `InvoiceResource::recordTitle()` might return
+     * `$record->invoice_number`, or combine two columns.
+     */
+    public static function recordTitle(Model $record): ?string
+    {
+        foreach (['name', 'title', 'full_name', 'subject', 'number', 'code', 'label', 'email'] as $attribute) {
+            $value = $record->getAttribute($attribute);
+
+            if (is_string($value) && trim($value) !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Per-tenant feature flag, if the resource declares one.
      *
      * Spec S9 item 5: a disabled feature hides the resource from navigation AND

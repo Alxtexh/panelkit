@@ -881,7 +881,21 @@ final class InstallCommand extends Command
                 (string) file_get_contents($provider),
             ));
 
+            /*
+             * BOTH CHILDREN, THEN THE PARENT - `make:panel` creates
+             * `Panel/Admin/Resources` AND `Panel/Admin/Widgets`
+             * unconditionally (`MakePanelCommand::handle()`), but this used
+             * to `rmdir()` only `Resources` before `Panel/Admin` itself.
+             * `rmdir()` refuses a non-empty directory and fails silently
+             * here (the `@`) - so with `Widgets` still inside it,
+             * `Panel/Admin` was never actually removed, and a fresh install
+             * kept two directories nothing discovers (`Panel/Resources` is
+             * where `AdminPanelProvider` was just repointed to, above)
+             * sitting next to the real one, confirmed by a release-candidate
+             * mini-SaaS build.
+             */
             @rmdir(app_path('Panel/Admin/Resources'));
+            @rmdir(app_path('Panel/Admin/Widgets'));
             @rmdir(app_path('Panel/Admin'));
         }
 

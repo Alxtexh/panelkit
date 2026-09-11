@@ -35,7 +35,7 @@ persists at `PUT {panel}/settings/appearance`.
 final class Reports extends Page
 {
     protected static string $panel = 'admin';
-    protected static ?string $navigationGroup = 'Insights';
+    protected static ?string $group = 'Insights';
     protected static ?string $ability = 'view_reports';
 
     public static function props(): array
@@ -89,12 +89,12 @@ it.
 ## Navigation
 
 Entries come from resources and pages automatically. Sort and group with
-`$navigationGroup`, `$navigationSort` and `$navigationIcon`.
+`$group`, `$sort` and `$icon`.
 
 **Groups nest** with a slash:
 
 ```php
-protected static ?string $navigationGroup = 'Building/Reference';
+protected static ?string $group = 'Building/Reference';
 ```
 
 Declare entries that are not resources on the panel:

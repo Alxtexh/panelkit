@@ -31,12 +31,20 @@ const forwarded = useForwardPropsEmits(reactiveOmit(props, 'class'), emits)
 </script>
 
 <template>
+    <!--
+        `aria-invalid:border-destructive`, matching `Checkbox.vue`'s
+        already-established pattern one file over - Switch has a
+        transparent border in its unchecked/neutral state, so turning
+        it destructive-coloured on invalid is the same "always-visible
+        signal, ring only reinforces on focus" convention every other
+        control in this file uses, not a new one invented for Switch.
+    -->
     <SwitchRoot
         data-slot="switch"
         v-bind="forwarded"
         :class="
             cn(
-                'peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring/50 inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
+                'peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
                 props.class,
             )
         "
