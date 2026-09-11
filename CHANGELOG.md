@@ -4,6 +4,19 @@ All notable changes to PanelKit are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); dates are release-tag dates,
 not commit dates.
 
+## [1.5.2] - 2026-09-11
+
+### Fixed
+
+**`panel:blueprint`'s generated `AGENTS.md` linked to a documentation site
+that was never actually deployed.** v1.5.1's "Official documentation"
+section pointed at `https://alxtexh.github.io/panelkit/`, which has no
+GitHub Pages deployment behind it. Repointed both links to
+`github.com/Alxtexh/panelkit` directly (the docs source tree and
+`AI_BLUEPRINT.md`) — real, public, working URLs, unlike the Pages address.
+Re-run `php artisan panel:blueprint` in an existing application to pick
+this up.
+
 ## [1.5.1] - 2026-09-11
 
 ### Fixed
