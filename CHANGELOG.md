@@ -4,6 +4,28 @@ All notable changes to PanelKit are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); dates are release-tag dates,
 not commit dates.
 
+## [1.5.1] - 2026-09-11
+
+### Fixed
+
+**`panel:blueprint`'s generated `AGENTS.md` named five chart types as
+having no PHP equivalent when they actually do.** The `CLIENT_ONLY` widget
+catalogue claimed `SegmentedBar`, `HeatmapChart`, `ComboChart`,
+`PolarAreaChart`, and `RadarChart` were Vue-only — `ChartWidget::type()`
+has dispatched to all five since before this file was first written. An
+agent reading the old text could be talked out of using
+`ChartWidget::type('heatmap')` (and the other four) and hand-roll a
+duplicate Vue chart instead. Corrected; only `StatStrip` and `MiniStatCard`
+are genuinely Vue-only with no PHP constructor.
+
+### Added
+
+Every generated `AGENTS.md` now links to the official documentation site
+and the AI Blueprint (a new, deeper reference for AI coding agents building
+on PanelKit) from a new "Official documentation" section, right after the
+opening heading. Re-run `php artisan panel:blueprint` in an existing
+application to pick this up.
+
 ## [1.5.0] - 2026-09-11
 
 ### ⚠ Breaking change
